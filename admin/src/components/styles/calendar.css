@@ -1,0 +1,30 @@
+/* Change the color of calendar buttons */
+.fc .fc-button {
+    background-color: #007bff; /* Primary color */
+    border-color: #007bff;
+    color: #fff;
+  }
+  
+  .fc .fc-button:hover {
+    background-color: #0056b3; /* Darker primary color */
+    border-color: #004085;
+  }
+  
+  /* Change the color of the calendar text */
+  .fc .fc-daygrid-event {
+    color: #dc3545; /* Red text for events */
+  }
+  
+  
+  
+  /* Change the title color */
+  .fc-toolbar-title {
+    color: #343a40; /* Darker text color */
+  }
+  
+  .fc .fc-daygrid-day-number {
+    color: #0a0a0a; /* Change to your desired text color */
+    font-size: 15px; /* Adjust font size */
+  }
+
+  

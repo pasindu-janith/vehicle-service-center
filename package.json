@@ -1,0 +1,11 @@
+{
+  "name": "vehicle-service-center",
+  "version": "1.0.0",
+  "description": "vehicle service center web application admin app, user app and backend",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "nexora",
+  "license": "ISC"
+}

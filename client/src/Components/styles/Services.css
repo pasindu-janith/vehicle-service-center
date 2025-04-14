@@ -1,0 +1,16 @@
+/* Centering the title and adding styling */
+.service-card{
+  background: linear-gradient(-45deg, white 65%, rgb(207, 243, 255) 35%);
+  border-radius: 20px;
+  transition: transform 0.3s ease;
+}  
+  .bg-service{
+    background: linear-gradient(135deg, rgb(255, 210, 210) , rgb(255, 255, 255), rgb(197, 197, 197), rgb(255, 255, 255),rgb(255, 210, 210));
+  }
+
+  
+  .service-card:hover {
+    transform: scale(1.05);
+  }
+
+

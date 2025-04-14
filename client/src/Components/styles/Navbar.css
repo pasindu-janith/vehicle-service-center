@@ -1,0 +1,79 @@
+/* Sidebar styles */
+.sidebar {
+  position: fixed;
+  top: 0;
+  right: -250px;
+  width: 250px;
+  height: 100%;
+  background: #ffffff;
+  box-shadow: -2px 0 5px rgba(0, 0, 0, 0.5);
+  transition: right 0.3s ease;
+  z-index: 1050;
+  padding: 20px;
+}
+
+.sidebar.active {
+  right: 0;
+}
+
+.sidebar .btn-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+}
+
+.sidebar ul {
+  padding: 0;
+  list-style: none;
+}
+
+.sidebar .nav-link {
+  display: block;
+  padding: 10px;
+  font-size: 18px;
+  color: #000;
+  text-decoration: none;
+}
+
+.sidebar .nav-link:hover {
+  background-color: #f1f1f1;
+  border-radius: 5px;
+}
+
+/* Overlay styles */
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1040;
+}
+
+.nav-link{
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  padding-bottom: 7px;
+}
+
+.active-link {
+  color: #000;
+  border-bottom: 5px solid #f02d0a;
+}
+
+.navbar-color {
+  /* background: linear-gradient(to bottom, rgba(255, 255, 255, 1), rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.5), rgba(0, 0, 0, 0)); */
+  background-color: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+
+}
+.roboto {
+  font-family: "Roboto";
+  font-size: 16px;
+}
+/* Hide desktop elements on mobile */
+@media (max-width: 991.98px) {
+  .d-lg-flex {
+    display: none !important;
+  }
+}

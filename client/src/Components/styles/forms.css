@@ -1,0 +1,9 @@
+.field{
+    height: 45px;
+    border-radius: 5px;
+    border: 1px solid grey;
+}
+
+.buttons{
+    height: 50px;
+}

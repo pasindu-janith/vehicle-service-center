@@ -1,7 +1,29 @@
-import React from "react";
-
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const VehicleRegister = () => {
+  const navigate = useNavigate();
+  const [formData, setFormData] = useState({
+    email: "",
+    mobile: "",
+    password: "",
+    repassword: "",
+    fname: "",
+    lname: "",
+  });
+
+  // State for form submission
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Handle input changes
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({
+      ...formData,
+      [name]: value,
+    });
+  };
+
   return (
     <div className="container pt-3 vh-100">
       <div>
@@ -24,8 +46,16 @@ const VehicleRegister = () => {
               <label htmlFor="make" className="form-label">
                 Make (Brand)
               </label>
-              <select name="" id=""></select>
+              <select className="form-select" id="make" name="make">
+                <option value="">Select a brand</option>
+                <option value="toyota">Toyota</option>
+                <option value="honda">Honda</option>
+                <option value="ford">Ford</option>
+                <option value="nissan">Nissan</option>
+                {/* Add more options as needed */}
+              </select>
             </div>
+
             <div className="col-md-6">
               <label htmlFor="model" className="form-label">
                 Model

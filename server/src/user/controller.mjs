@@ -237,6 +237,31 @@ export const resetPassword = async (req, res) => {
 };
 
 
+export const registerVehicle = async (req, res) => {
+  try {
+    const { vehicle_no, user_id } = req.body;
+    const checkVehicle = await pool.query(
+      "SELECT * FROM vehicle WHERE vehicle_no = $1",
+      vehicle_no
+    );
+    if (checkVehicle.rows.length > 0) {
+      return res.status(400).send("Vehicle already exists");
+    }
+    const getMaxVehicle = await pool.query(
+      "SELECT COUNT(vehicle_id) as maxvehicle FROM vehicle"
+    );
+    const addVehicle = await pool.query(
+      "INSERT INTO vehicle (vehicle_id, vehicle_no, user_id) VALUES ($1, $2, $3)",
+      ["VEH00" + getMaxVehicle.rows[0].maxvehicle + 1, vehicle_no, user_id]
+    );
+    res.status(201).send("Vehicle Added");
+  } catch (error) {
+    console.log(error);
+    res.status(500).send("Internal Server Error");
+  }
+};
+
+
 
 
 

@@ -1,7 +1,13 @@
 import bcrypt from "bcrypt";
 import pool from "../../db.mjs";
 import { tokenGen, tokenGenLogin } from "../utils/jwt.mjs";
-import e from "express";
+import { verifyToken } from "../utils/jwt.mjs";
+import { sendEmail } from "../utils/email.mjs";
+import dotenv from "dotenv";
+import fs from 'fs';
+import path from 'path';
+
+dotenv.config();
 
 export const registerUser = async (req, res) => {
   try {
@@ -71,6 +77,9 @@ export const registerUser = async (req, res) => {
       6,
       "0"
     );
+
+    sendVerificationEmail(email);
+
     res.status(201).send({ message: "Success" });
   } catch (error) {
     console.log(error);
@@ -119,7 +128,7 @@ export const loginUser = async (req, res) => {
     });
 
     if (rememberMe) {
-      res.cookie("rememberUser", email, {
+      res.cookie("rememberUser", encodeURIComponent(email), {
         maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
         httpOnly: false, // Accessible by JavaScript
         secure: process.env.NODE_ENV === "production",
@@ -137,32 +146,142 @@ export const loginUser = async (req, res) => {
   }
 };
 
+//After clicking on the link at the email for verify email
 export const emailVerify = async (req, res) => {
   try {
-    const { email, token } = req.query;
-    const checkUser = await pool.query(
-      "SELECT email_verify_token FROM user WHERE email = $1",
-      [email]
-    );
-    if (checkUser.rows.length === 0) {
-      return res.status(400).send("Invalid Email");
+    const { token } = req.query;
+    if (!token) {
+      return res.status(400).send({ message: "Token not found" });
     }
-    const userData = checkUser.rows[0];
-    const tokenMatch = await bcrypt.compare(token, userData.email_verify_token);
-    if (!tokenMatch) {
+    const emailadd = verifyToken(token);
+    if (!emailadd) {
       return res.status(400).send({ message: "Invalid token" });
     }
+    const checkEmail = await pool.query(
+      "SELECT * FROM users WHERE email = $1",
+      [emailadd.email]
+    );
+    if (checkEmail.rows.length === 0) {
+      return res
+        .status(400)
+        .send({ message: "No registered email from this token" });
+    }
+
     const updateEmail = await pool.query(
       "UPDATE users SET isemailverified = $1 WHERE email=$2",
-      ["1", email]
+      ["1", emailadd.email]
     );
-    res.status(200).send("Email Verified");
+    res.status(200).send({ message: "Email verified" });
   } catch (error) {
     console.log(error);
     res.status(500).send({ message: "Internal Server Error" });
   }
 };
 
+//Resend the email verification link
+export const resendVerifyEmail = async (req, res) => {
+  try {
+    const { email } = req.body;
+    const checkEmail = await pool.query(
+      "SELECT * FROM users WHERE email = $1",
+      [email]
+    );
+    if (checkEmail.rows.length === 0) {
+      return res.status(400).send({ message: "Invalid Email" });
+    }
+    const user = checkEmail.rows[0];
+    if (user.isemailverified) {
+      return res
+        .status(200)
+        .send({ message: "Email already verified. Go to login!" });
+    }
+    sendVerificationEmail(email);
+    res.status(200).send({ message: "Email sent" });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({ message: "Internal Server Error" });
+  }
+};
+
+//Verify email function
+const sendVerificationEmail = async (email) => {
+  const token = tokenGen({ email });
+  sendEmail(
+    email,
+    "Auto Lanka Services, Email Verification",
+    `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Email Verification</title>
+      <style>
+        body {
+          font-family: 'Arial', sans-serif;
+          line-height: 1.6;
+          color:rgb(33, 33, 33);
+          max-width: 600px;
+          margin: 0 auto;
+          padding: 20px;
+        }
+        h1 {
+          color:rgb(133, 0, 0);
+          margin-bottom: 20px;
+          font-size: 24px;
+          text-align: center;
+        }
+        p {
+          margin-bottom: 25px;
+          font-size: 16px;
+        }
+        .btn {
+          background-color:rgb(140, 0, 0);
+          text-decoration: none; 
+          color: white;
+          padding: 12px 24px;
+          text-decoration: none;
+          border-radius: 4px;
+          font-weight: bold;
+          display: inline-block;
+        }
+        .btn:hover {
+          background-color:rgb(118, 0, 0);
+        }
+        .container {
+          background-color: #f9f9f9;
+          border: 1px solid #dddddd;
+          border-radius: 5px;
+          padding: 30px;
+        }
+        .footer {
+          margin-top: 30px;
+          font-size: 12px;
+          color: #777777;
+          text-align: center;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <h1>Auto Lanka Services Email Verification</h1>
+        <p>Thank you for registering with Auto Lanka Services. To complete your registration and activate your account, please verify your email address by clicking the button below:</p>
+        <div style="text-align: center;">
+          <a href="${process.env.CLIENT_URL}/signup/emailactivation?token=${token}" class="btn">Click here to verify</a>
+        </div>
+        <p style="margin-top: 25px;">If the button doesn't work, you can also copy and paste the following link into your browser:</p>
+        <p style="font-size: 14px;">${process.env.CLIENT_URL}/signup/emailactivation?token=${token}</p>
+      </div>
+      <div class="footer">
+        <p>This email was sent by Auto Lanka Services. If you didn't create an account, you can safely ignore this email.</p>
+      </div>
+    </body>
+    </html>
+    `
+  );
+};
+
+//Verify OTP after registration
 export const otpVerify = async (req, res) => {
   try {
     const { mobile, otp } = req.body;
@@ -189,79 +308,234 @@ export const otpVerify = async (req, res) => {
   }
 };
 
+//When user forgets password he will enter email and then this function will be called
 export const forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
-    const checkUser = await pool.query(
-      "SELECT * FROM users WHERE email = $1",
-      email
-    );
+    const checkUser = await pool.query("SELECT * FROM users WHERE email = $1", [
+      email,
+    ]);
     if (checkUser.rows.length === 0) {
-      return res.status(400).send("Invalid Email");
+      return res.status(400).send({ message: "Invalid Email" });
     }
-    const user = checkUser.rows[0];
-    //send email with token
-    res.status(200).send("Email Sent");
+    sendPasswordResetEmail(email);
+    res.status(200).send({ message: "Email sent" });
   } catch (error) {
     console.log(error);
-    res.status(500).send("Internal Server Error");
+    res.status(500).send({ message: "Internal Server Error" });
   }
 };
 
+//Verify email function
+const sendPasswordResetEmail = async (email) => {
+  const token = tokenGen({ email });
+  sendEmail(
+    email,
+    "Auto Lanka Services, Reset Account Password",
+    `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Reset Password</title>
+      <style>
+        body {
+          font-family: 'Arial', sans-serif;
+          line-height: 1.6;
+          color:rgb(33, 33, 33);
+          max-width: 600px;
+          margin: 0 auto;
+          padding: 20px;
+        }
+
+        h1 {
+          color:rgb(133, 0, 0);
+          margin-bottom: 20px;
+          font-size: 24px;
+          text-align: center;
+        }
+        p {
+          margin-bottom: 25px;
+          font-size: 16px;
+        }
+        .btn {
+          background-color:rgb(245, 161, 161);
+          color: white;
+          padding: 12px 24px;
+          text-decoration: none;
+          border-radius: 4px;
+          display: inline-block;
+        }
+        .btn:hover {
+          background-color:rgb(118, 0, 0);
+        }
+        .container {
+          background-color: #f9f9f9;
+          border: 1px solid #dddddd;
+          border-radius: 5px;
+          padding: 30px;
+        }
+        .footer {
+          margin-top: 30px;
+          font-size: 12px;
+          color: #777777;
+          text-align: center;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <h1>Auto Lanka Services Account Password Reset</h1>
+        <p>Click the following link to reset your password in your Auto Lanka Service online account:</p>
+        <div style="text-align: center;">
+          <a href="${process.env.CLIENT_URL}/login/reset-password?token=${token}" class="btn">Click to reset password</a>
+        </div>
+        <p style="margin-top: 25px;">If the button doesn't work, you can also copy and paste the following link into your browser:</p>
+        <p style="font-size: 14px;">${process.env.CLIENT_URL}/login/reset-password?token=${token}</p>
+      </div>
+      <div class="footer">
+        <p>This email was sent by Auto Lanka Services. If you didn't create an account, you can safely ignore this email.</p>
+      </div>
+    </body>
+    </html>
+    `
+  );
+};
+
+export const verifyResetPasswordToken = async (req, res) => {
+  try {
+    const { token } = req.query;
+    if (!token) {
+      return res.status(400).send({ message: "Token not found" });
+    }
+    const email = verifyToken(token);
+    if (!email) {
+      return res.status(400).send({ message: "Invalid token" });
+    }
+    const checkEmail = await pool.query(
+      "SELECT * FROM users WHERE email = $1",
+      [email.email]
+    );
+    if (checkEmail.rows.length === 0) {
+      return res
+        .status(400)
+        .send({ message: "Email not found. Check the link again." });
+    }
+    res.status(200).send({ message: "Token verified" });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({ message: "Internal Server Error" });
+  }
+};
+
+//After clicking on the link at the email for reset password
 export const resetPassword = async (req, res) => {
   try {
-    const { email, token, password } = req.body;
-    const checkUser = await pool.query(
-      "SELECT * FROM users WHERE email = $1",
-      email
-    );
+    const { token, password } = req.body;
+    const email = verifyToken(token);
+    const checkUser = await pool.query("SELECT * FROM users WHERE email = $1", [
+      email.email,
+    ]);
     if (checkUser.rows.length === 0) {
-      return res.status(400).send("Invalid Email");
-    }
-    const userData = checkUser.rows[0];
-    const tokenMatch = await bcrypt.compare(token, userData.email_verify_token);
-    if (!tokenMatch) {
-      return res.status(400).send("Invalid token");
+      return res.status(400).send({ message: "Invalid Email" });
     }
     const strPwd = String(password);
     const hashedPassword = await bcrypt.hash(strPwd, 10);
     const updatePassword = await pool.query(
       "UPDATE users SET password = $1 WHERE email=$2",
-      [hashedPassword, email]
+      [hashedPassword, email.email]
     );
-    res.status(200).send("Password Updated");
+    res.status(200).send({ message: "Password updated" });
+  } catch (error) {
+    res.status(500).send({ message: "Internal Server Error" });
+  }
+};
+
+//Load user data and give current user data
+export const loadUserData = async (req, res) => {
+  try {
+    const { token } = req.cookies;
+    if (!token) {
+      return res.status(401).send("Unauthorized");
+    }
+    const decodedToken = verifyToken(token);
+    if (!decodedToken) {
+      return res.status(401).send("Unauthorized");
+    }
+    const userID = decodedToken.userID;
+    const checkUser = await pool.query(
+      "SELECT * FROM users WHERE user_id = $1",
+      [userID]
+    );
+    if (checkUser.rows.length === 0) {
+      return res.status(400).send("Invalid User");
+    }
+    const user = checkUser.rows[0];
+    return res.status(200).send(user);
   } catch (error) {
     console.log(error);
     res.status(500).send("Internal Server Error");
   }
 };
 
+//Check if user is authorized
+export const authUser = async (req, res) => {
+  try {
+    const { token } = req.cookies;
+    if (!token) {
+      return res.status(401).send({ message: "No cookies available" });
+    }
+    const decodedToken = verifyToken(token);
+    if (!decodedToken) {
+      return res.status(401).send({ message: "Unauthorized" });
+    }
+    const userID = decodedToken.userID;
+    const checkUser = await pool.query(
+      "SELECT * FROM users WHERE user_id = $1",
+      [userID]
+    );
+    if (checkUser.rows.length === 0) {
+      return res.status(400).send({ message: "Invalid User" });
+    }
+    res.status(200).send({ message: "Authorized" });
+  } catch (error) {
+    res.status(500).send({ message: "Internal Server Error" });
+  }
+};
+
+//Logout function
+export const logout = async (req, res) => {
+  res.clearCookie("token");
+  res.status(200).send({ message: "Logged out" });
+};
 
 export const registerVehicle = async (req, res) => {
   try {
-    const { vehicle_no, user_id } = req.body;
+    const { vehicle_no, user_id, image_data } = req.body;
     const checkVehicle = await pool.query(
       "SELECT * FROM vehicle WHERE vehicle_no = $1",
-      vehicle_no
+      [vehicle_no]
     );
     if (checkVehicle.rows.length > 0) {
       return res.status(400).send("Vehicle already exists");
     }
+    
     const getMaxVehicle = await pool.query(
       "SELECT COUNT(vehicle_id) as maxvehicle FROM vehicle"
     );
+
     const addVehicle = await pool.query(
-      "INSERT INTO vehicle (vehicle_id, vehicle_no, user_id) VALUES ($1, $2, $3)",
-      ["VEH00" + getMaxVehicle.rows[0].maxvehicle + 1, vehicle_no, user_id]
+      "INSERT INTO vehicle (vehicle_id, vehicle_no, user_id, image_data) VALUES ($1, $2, $3, $4)",
+      ["VEH00" + (getMaxVehicle.rows[0].maxvehicle + 1), vehicle_no, user_id, image_data]
     );
+
+    // Save image file
+    const imagePath = path.join(__dirname, `../../uploads/${vehicle_no}.jpg`);
+    fs.writeFileSync(imagePath, image_data, 'base64');
     res.status(201).send("Vehicle Added");
   } catch (error) {
     console.log(error);
     res.status(500).send("Internal Server Error");
   }
 };
-
-
-
-
-

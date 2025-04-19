@@ -44,6 +44,19 @@ const VehicleRegister = () => {
             </div>
             <div className="col-md-6">
               <label htmlFor="make" className="form-label">
+                Vehicle Type
+              </label>
+              <select className="form-select" id="make" name="make">
+                <option value="">Select category</option>
+                <option value="car">Car</option>
+                <option value="van">Van</option>
+                <option value="motorcycle">Motorcycle</option>
+                <option value="jeep">Jeep</option>
+                {/* Add more options as needed */}
+              </select>
+            </div>
+            <div className="col-md-6">
+              <label htmlFor="make" className="form-label">
                 Make (Brand)
               </label>
               <select className="form-select" id="make" name="make">
@@ -69,6 +82,18 @@ const VehicleRegister = () => {
               />
             </div>
             <div className="col-md-6">
+              <label htmlFor="color" className="form-label">
+                Color
+              </label>
+              <input
+                type="text"
+                className="form-control"
+                id="color"
+                placeholder="eg., Red, Blue"
+                required
+              />
+            </div>
+            <div className="col-md-6">
               <label htmlFor="year" className="form-label">
                 Year of Manufacture
               </label>
@@ -80,30 +105,7 @@ const VehicleRegister = () => {
                 required
               />
             </div>
-            <div className="col-md-6">
-              <label htmlFor="vin" className="form-label">
-                Chassis (VIN) Number
-              </label>
-              <input
-                type="text"
-                className="form-control"
-                id="vin"
-                placeholder="Enter VIN"
-                required
-              />
-            </div>
-            <div className="col-md-6">
-              <label htmlFor="engineNumber" className="form-label">
-                Engine Number
-              </label>
-              <input
-                type="text"
-                className="form-control"
-                id="engineNumber"
-                placeholder="Enter Engine Number"
-                required
-              />
-            </div>
+            
             <div className="col-md-6">
               <label htmlFor="transmission" className="form-label">
                 Transmission Type

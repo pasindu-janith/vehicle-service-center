@@ -1,0 +1,32 @@
+/* Add a highlight for event dates */
+.react-calendar__tile.event-day {
+    background-color: #ffeb3b;
+    /* Yellow for event dates */
+    color: #000;
+    font-weight: bold;
+}
+
+.react-calendar__tile.event-day:hover {
+    background-color: #fbc02d;
+    /* Slightly darker yellow on hover */
+}
+
+.custom-calendar {
+    width: 100% !important;
+    /* Or set a fixed width like 350px */
+    max-width: 100%;
+    border: none;
+}
+
+.react-calendar__month-view__weekdays__weekday {
+    font-weight: bold;
+    font-size: 0.95rem;
+    color: #007bff;
+    /* Bootstrap primary color */
+    background-color: #f0f8ff;
+    text-align: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #dee2e6;
+    text-decoration: none !important;
+    border: none !important;
+}

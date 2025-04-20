@@ -118,7 +118,7 @@ export const loginUser = async (req, res) => {
     const cookieExpiration = rememberMe
       ? 7 * 24 * 60 * 60 * 1000
       : 24 * 60 * 60 * 1000; // 7 days or 1 day
-
+      
     res.cookie("token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production", // HTTPS only in production
@@ -453,6 +453,10 @@ export const resetPassword = async (req, res) => {
 };
 
 //Load user data and give current user data
+// This function retrieves the user data from the database based on the token in the cookies
+// It verifies the token and checks if the user exists in the database
+// If the user exists, it returns the user data in the response
+
 export const loadUserData = async (req, res) => {
   try {
     const { token } = req.cookies;
@@ -475,20 +479,21 @@ export const loadUserData = async (req, res) => {
     return res.status(200).send(user);
   } catch (error) {
     console.log(error);
-    res.status(500).send("Internal Server Error");
+    res.status(500).send("Internal Server Error"); // If the token is invalid or the user does not exist, it returns an error message
   }
 };
+
 
 //Check if user is authorized
 export const authUser = async (req, res) => {
   try {
     const { token } = req.cookies;
     if (!token) {
-      return res.status(401).send({ message: "No cookies available" });
+      return res.status(401).send({ message: "No cookies available" });   // This function checks if the user is authorized by verifying the token in the cookies
     }
     const decodedToken = verifyToken(token);
     if (!decodedToken) {
-      return res.status(401).send({ message: "Unauthorized" });
+      return res.status(401).send({ message: "Unauthorized" });   // It returns a 401 status if the token is not present or invalid, and a 200 status if the user is authorized
     }
     const userID = decodedToken.userID;
     const checkUser = await pool.query(
@@ -496,7 +501,7 @@ export const authUser = async (req, res) => {
       [userID]
     );
     if (checkUser.rows.length === 0) {
-      return res.status(400).send({ message: "Invalid User" });
+      return res.status(400).send({ message: "Invalid User" });   // It also checks if the user exists in the database and returns a 400 status if not
     }
     res.status(200).send({ message: "Authorized" });
   } catch (error) {
@@ -510,6 +515,11 @@ export const logout = async (req, res) => {
   res.status(200).send({ message: "Logged out" });
 };
 
+// Register vehicle function
+// This function registers a vehicle for a user
+// It checks if the vehicle already exists, and if not, it adds the vehicle to the database
+// It also saves the vehicle image to the server
+
 export const registerVehicle = async (req, res) => {
   try {
     const { vehicle_no, user_id, image_data } = req.body;
@@ -517,6 +527,7 @@ export const registerVehicle = async (req, res) => {
       "SELECT * FROM vehicle WHERE vehicle_no = $1",
       [vehicle_no]
     );
+
     if (checkVehicle.rows.length > 0) {
       return res.status(400).send("Vehicle already exists");
     }
@@ -532,10 +543,13 @@ export const registerVehicle = async (req, res) => {
 
     // Save image file
     const imagePath = path.join(__dirname, `../../uploads/${vehicle_no}.jpg`);
-    fs.writeFileSync(imagePath, image_data, 'base64');
+    fs.writeFileSync(imagePath, image_data, 'base64');    // The vehicle image is expected to be sent in base64 format in the request body
     res.status(201).send("Vehicle Added");
+
   } catch (error) {
     console.log(error);
     res.status(500).send("Internal Server Error");
   }
 };
+
+

@@ -105,7 +105,6 @@ const VehicleRegister = () => {
                 required
               />
             </div>
-            
             <div className="col-md-6">
               <label htmlFor="transmission" className="form-label">
                 Transmission Type

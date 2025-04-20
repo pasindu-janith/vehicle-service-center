@@ -6,19 +6,26 @@ import multer from "multer";
 import dotenv from "dotenv";
 import adminRouter from "./src/admin/routes.mjs";
 import userRouter from "./src/user/routes.mjs";
+import cookieParser from "cookie-parser";
 
 const app = express();
 
 const PORT = process.env.PORT || 5000;
 
 // Middleware
-app.use(cors()); // Enable CORS for all routes
+app.use(
+  cors({
+    origin: "http://localhost:5173", // Your frontend URL
+    credentials: true, // Required to allow cookies
+  })
+); 
+
 app.use(express.json()); // Parse JSON bodies
 app.use(express.urlencoded({ extended: true })); // Parse URL-encoded form data
+app.use(cookieParser()); 
 
-
-// Configure file storage using Multer
-const uploadDir = './uploads/';
+// Load environment variables
+const uploadDir = "./uploads/";
 
 // Ensure upload directory exists
 if (!fs.existsSync(uploadDir)) {
@@ -31,22 +38,24 @@ const storage = multer.diskStorage({
     cb(null, uploadDir);
   },
   filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
     const ext = path.extname(file.originalname);
-    cb(null, file.fieldname + '-' + uniqueSuffix + ext);
+    cb(null, file.fieldname + "-" + uniqueSuffix + ext);
   },
 });
 
 // File filter
 const fileFilter = (req, file, cb) => {
   const allowedFileTypes = /jpeg|jpg|png|gif/;
-  const extname = allowedFileTypes.test(path.extname(file.originalname).toLowerCase());
+  const extname = allowedFileTypes.test(
+    path.extname(file.originalname).toLowerCase()
+  );
   const mimetype = allowedFileTypes.test(file.mimetype);
 
   if (extname && mimetype) {
     return cb(null, true);
   } else {
-    cb(new Error('Error: Images Only! (jpeg, jpg, png, gif)'));
+    cb(new Error("Error: Images Only! (jpeg, jpg, png, gif)"));
   }
 };
 
@@ -57,7 +66,7 @@ const upload = multer({
   fileFilter: fileFilter,
 });
 
-app.use("/api/v1/user/",userRouter);
-app.use("/api/v1/admin/",adminRouter);
+app.use("/api/v1/user/", userRouter);
+app.use("/api/v1/admin/", adminRouter);
 
 app.listen(4000, () => console.log("Server is running on port 4000"));

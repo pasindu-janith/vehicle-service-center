@@ -1,0 +1,83 @@
+.overlapping-images-container {
+    position: relative;
+    height: 250px; /* Adjust as needed */
+  }
+  
+  .circle-image {
+    position: absolute;
+    border-radius: 50%;
+    border: 2px solid rgb(73, 73, 73);
+    background-size: cover;
+    background-position: center;
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  
+  /* Customize each circle with its own background image and position */
+  .circle-one {
+    width: 250px; /* Adjust as needed */
+    height: 250px; /* Adjust as needed */
+    top: 0;
+    left: 0;
+    background-image: url('./../../images/aboutus3.jpg'); /* Replace with actual image path */
+  }
+  
+  .circle-two {
+    top: 50px; /* Adjust to overlap with circle-one */
+    left: 180px; /* Adjust to overlap with circle-one */
+    width: 300px; /* Adjust as needed */
+    height: 300px; /* Adjust as needed */
+    background-image: url('./../../images/aboutus2.jpg'); /* Replace with actual image path */
+  }
+  
+  .circle-three {
+    top: 170px; /* Adjust to overlap with circle-two */
+    left: 30px; /* Adjust to overlap with circle-two */
+    width: 350px; /* Adjust as needed */
+    height: 350px; /* Adjust as needed */
+    background-image: url('./../../images/aboutus1.jpg'); /* Replace with actual image path */
+  }
+  
+  .bg-about{
+    min-height: 600px;
+    background-color: rgb(73, 73, 73);
+  }
+
+  .paragraph{
+    color: white;
+    font-size: 18px;
+  }
+ 
+  .scale-up {
+    transform: scale(1);
+    opacity: 1;
+    transition: 2s;
+  }
+  
+  .premium-banner {
+    background-color: #e81717; /* Red background */
+    color: white; /* White text color */
+    padding: 20px 30px; /* Space around the text */
+    clip-path: polygon(5% 0, 100% 0, 100% 100%, 0% 100%); /* Adjust shape */
+    font-size: 1.5rem;
+    font-weight: 400;
+  }
+  
+  .premium-banner h2 {
+    margin: 0;
+    font-weight: normal;
+  }
+  
+  .highlight {
+    font-weight: bold;
+    font-size: larger;
+  }
+  
+  tr{
+    border-bottom: 1px solid white;
+    font-size: 17px;
+  }
+
+  td{
+    padding: 10px;
+  }

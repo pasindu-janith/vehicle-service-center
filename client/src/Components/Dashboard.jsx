@@ -1,6 +1,4 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
-import images from "../Assets/assets";
 import { FaUserCircle, FaTools, FaClipboardList, FaCalendar } from "react-icons/fa";
 import { FaBell } from "react-icons/fa";
 import Calendar from "react-calendar";
@@ -54,7 +52,7 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="container pt-3" style={{ backgroundColor: "#f4f4f4" }}>
+    <div className="container pt-3 pb-4" style={{ backgroundColor: "#f4f4f4" }}>
       <div className="row g-4 mb-3">
         {/* Account Info Card */}
         <div className="col-md-4">

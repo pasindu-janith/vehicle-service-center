@@ -1,6 +1,5 @@
 import React from "react";
 
-
 const VehicleRegister = () => {
   return (
     <div className="container pt-3 vh-100">
@@ -37,7 +36,14 @@ const VehicleRegister = () => {
               <label htmlFor="make" className="form-label">
                 Make (Brand)
               </label>
-              <select name="" id=""></select>
+              <select className="form-select" id="make" name="make">
+                <option value="">Select a brand</option>
+                <option value="toyota">Toyota</option>
+                <option value="honda">Honda</option>
+                <option value="ford">Ford</option>
+                <option value="nissan">Nissan</option>
+                {/* Add more options as needed */}
+              </select>
             </div>
             <div className="col-md-6">
               <label htmlFor="model" className="form-label">
@@ -75,7 +81,7 @@ const VehicleRegister = () => {
                 required
               />
             </div>
-            
+
             <div className="col-md-6">
               <label htmlFor="transmission" className="form-label">
                 Transmission Type

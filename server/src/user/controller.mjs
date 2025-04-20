@@ -552,4 +552,31 @@ export const registerVehicle = async (req, res) => {
   }
 };
 
+// Load dashboard function
+// This function loads the dashboard for the user
+
+export const loadDashboard = async (req, res) => {
+  try {
+    const { token } = req.headers;
+    const decodedToken = verifyToken(token);
+    if (!decodedToken) {
+      return res.status(401).send("Unauthorized");
+    }
+    const userID = decodedToken.userID;
+    const checkUser = await pool.query(
+      "SELECT * FROM users WHERE user_id = $1",
+      [userID]
+    );
+    if (checkUser.rows.length === 0) {
+      return res.status(400).send("Invalid User");
+    }
+    const user = checkUser.rows[0];
+    res.status(200).send(user);
+  } catch (error) {
+    console.log(error);
+    res.status(500).send("Internal Server Error");
+  }
+};
+
+
 

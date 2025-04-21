@@ -1,0 +1,39 @@
+.call-button-container {
+  width: 210px;
+  position: absolute;
+  bottom: 5%;
+  left: 5%;
+}
+
+.btn-call {
+  background-color: rgba(0, 0, 0, 0.6); /* Background color */
+  color: white;
+  border-radius: 40px; /* Rounded button */
+  padding: 10px 20px;
+  border: 2px solid rgba(255, 255, 255, 0.5); /* Border with opacity */
+  display: inline-flex;
+  align-items: center;
+}
+
+.phone-icon {
+  color: #fcb916; /* Phone icon color */
+  font-size: 1.5rem;
+  margin-right: 10px;
+}
+
+.call-info {
+  display: flex;
+  flex-direction: column;
+  margin-left: 10px;
+}
+
+.call-text {
+  font-size: 0.9rem;
+  color: white;
+}
+
+.call-number {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: white;
+}

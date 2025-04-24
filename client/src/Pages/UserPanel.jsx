@@ -16,7 +16,6 @@ const UserPanel = () => {
         <Route path="/reservations" element={<Reservations />} />
         <Route path="/add-vehicle" element={<VehicleRegister />} />
         <Route path="/add-reservation" element={<NewReservation />} />
-
       </Routes>
       <UserPanelFooter />
     </div>

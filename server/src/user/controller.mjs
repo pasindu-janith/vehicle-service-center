@@ -4,8 +4,8 @@ import { tokenGen, tokenGenLogin } from "../utils/jwt.mjs";
 import { verifyToken } from "../utils/jwt.mjs";
 import { sendEmail } from "../utils/email.mjs";
 import dotenv from "dotenv";
-import fs from 'fs';
-import path from 'path';
+import fs from "fs";
+import path from "path";
 
 dotenv.config();
 
@@ -118,7 +118,7 @@ export const loginUser = async (req, res) => {
     const cookieExpiration = rememberMe
       ? 7 * 24 * 60 * 60 * 1000
       : 24 * 60 * 60 * 1000; // 7 days or 1 day
-      
+
     res.cookie("token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production", // HTTPS only in production
@@ -483,17 +483,16 @@ export const loadUserData = async (req, res) => {
   }
 };
 
-
 //Check if user is authorized
 export const authUser = async (req, res) => {
   try {
     const { token } = req.cookies;
     if (!token) {
-      return res.status(401).send({ message: "No cookies available" });   // This function checks if the user is authorized by verifying the token in the cookies
+      return res.status(401).send({ message: "No cookies available" }); // This function checks if the user is authorized by verifying the token in the cookies
     }
     const decodedToken = verifyToken(token);
     if (!decodedToken) {
-      return res.status(401).send({ message: "Unauthorized" });   // It returns a 401 status if the token is not present or invalid, and a 200 status if the user is authorized
+      return res.status(401).send({ message: "Unauthorized" }); // It returns a 401 status if the token is not present or invalid, and a 200 status if the user is authorized
     }
     const userID = decodedToken.userID;
     const checkUser = await pool.query(
@@ -501,7 +500,7 @@ export const authUser = async (req, res) => {
       [userID]
     );
     if (checkUser.rows.length === 0) {
-      return res.status(400).send({ message: "Invalid User" });   // It also checks if the user exists in the database and returns a 400 status if not
+      return res.status(400).send({ message: "Invalid User" }); // It also checks if the user exists in the database and returns a 400 status if not
     }
     res.status(200).send({ message: "Authorized" });
   } catch (error) {
@@ -522,33 +521,65 @@ export const logout = async (req, res) => {
 
 export const registerVehicle = async (req, res) => {
   try {
-    const { vehicle_no, user_id, image_data } = req.body;
-    const checkVehicle = await pool.query(
-      "SELECT * FROM vehicle WHERE vehicle_no = $1",
-      [vehicle_no]
+    const {
+      licensePlate,
+      vehicleType,
+      make,
+      model,
+      color,
+      year,
+      transmission,
+      fuelType,
+    } = req.body;
+
+    const imagePath = req.file ? `/uploads/${req.file.filename}` : null;
+
+    const addUser = await pool.query(
+      "INSERT INTO users (user_id, first_name, last_name, email, password, mobile_id, registered_date, user_type_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)",
+      [
+        "CUS" + (getMaxUser.rows[0].maxuser + 1),
+        fname,
+        lname,
+        email,
+        hashedPassword,
+        mobileid,
+        formattedDate,
+        "2",
+      ]
     );
 
-    if (checkVehicle.rows.length > 0) {
-      return res.status(400).send("Vehicle already exists");
-    }
-    
-    const getMaxVehicle = await pool.query(
-      "SELECT COUNT(vehicle_id) as maxvehicle FROM vehicle"
-    );
+    console.log("Received Vehicle Data:", vehicleData);
 
-    const addVehicle = await pool.query(
-      "INSERT INTO vehicle (vehicle_id, vehicle_no, user_id, image_data) VALUES ($1, $2, $3, $4)",
-      ["VEH00" + (getMaxVehicle.rows[0].maxvehicle + 1), vehicle_no, user_id, image_data]
-    );
-
-    // Save image file
-    const imagePath = path.join(__dirname, `../../uploads/${vehicle_no}.jpg`);
-    fs.writeFileSync(imagePath, image_data, 'base64');    // The vehicle image is expected to be sent in base64 format in the request body
-    res.status(201).send("Vehicle Added");
-
+    res.status(200).json({
+      message: "Vehicle registered successfully",
+    });
   } catch (error) {
-    console.log(error);
-    res.status(500).send("Internal Server Error");
+    console.error("Error handling form:", error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+// Load vehicle types function
+export const loadVehicleTypes = async (req, res) => {
+  try {
+    const result = await pool.query("SELECT vehicle_type_id, vehicle_type FROM vehicle_type ORDER BY vehicle_type ASC");
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: "No vehicle types found" });
+    }
+    res.json(result.rows);
+  } catch (err) {
+    console.error("Error fetching vehicle types:", err);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+export const loadVehicleBrands = async (req, res) => {
+  try {
+    const result = await pool.query("SELECT vehicle_brand_id, vehicle_brand FROM vehicle_brand ORDER BY vehicle_brand ASC");
+    res.json(result.rows);
+  } catch (err) {
+    console.error("Error fetching vehicle types:", err);
+    res.status(500).json({ error: "Internal Server Error" });
   }
 };
 

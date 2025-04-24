@@ -10,7 +10,11 @@ import {
   forgotPassword,
   resetPassword,
   verifyResetPasswordToken,
+  registerVehicle,
+  loadVehicleTypes,
+  loadVehicleBrands,
 } from "./controller.mjs";
+import upload from "../middleware/upload.mjs";
 
 //User functions here
 
@@ -27,5 +31,8 @@ userRouter.post("/resend-verify-email", resendVerifyEmail);
 userRouter.post("/forgot-password-process", forgotPassword);
 userRouter.get("/verify-password-token", verifyResetPasswordToken);
 userRouter.post("/reset-password", resetPassword);
+userRouter.post("/register-vehicle", upload.single("vehicleImage"), registerVehicle);
+userRouter.get("/loadVehicleTypes", loadVehicleTypes);
+userRouter.get("/loadVehicleBrands", loadVehicleBrands);
 
 export default userRouter;

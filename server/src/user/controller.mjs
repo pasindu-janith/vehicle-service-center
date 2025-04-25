@@ -1,6 +1,6 @@
 import bcrypt from "bcrypt";
 import pool from "../../db.mjs";
-import { tokenGen, tokenGenLogin } from "../utils/jwt.mjs";
+import { decodeToken, tokenGen, tokenGenLogin } from "../utils/jwt.mjs";
 import { verifyToken } from "../utils/jwt.mjs";
 import { sendEmail } from "../utils/email.mjs";
 import dotenv from "dotenv";
@@ -153,18 +153,31 @@ export const emailVerify = async (req, res) => {
     if (!token) {
       return res.status(400).send({ message: "Token not found" });
     }
-    const emailadd = verifyToken(token);
-    if (!emailadd) {
+
+    const decodedToken = decodeToken(token);
+    if (!decodedToken) {
       return res.status(400).send({ message: "Invalid token" });
     }
-    const checkEmail = await pool.query(
-      "SELECT * FROM users WHERE email = $1",
-      [emailadd.email]
+
+    const emailDecoded = decodedToken.email;
+    const checkIsVerified = await pool.query(
+      "SELECT * FROM users WHERE email = $1 AND isemailverified = $2",
+      [emailDecoded, "1"]
     );
+
+    if (checkIsVerified.rows.length > 0) {
+      return res.status(200).send({ message: "Email already verified" });
+    }
+
     if (checkEmail.rows.length === 0) {
       return res
         .status(400)
         .send({ message: "No registered email from this token" });
+    }
+
+    const emailadd = verifyToken(token);
+    if (!emailadd) {
+      return res.status(400).send({ message: "Invalid or Expired token" });
     }
 
     const updateEmail = await pool.query(
@@ -187,7 +200,7 @@ export const resendVerifyEmail = async (req, res) => {
       [email]
     );
     if (checkEmail.rows.length === 0) {
-      return res.status(400).send({ message: "Invalid Email" });
+      return res.status(400).send({ message: "Invalid Email address" });
     }
     const user = checkEmail.rows[0];
     if (user.isemailverified) {
@@ -208,7 +221,7 @@ const sendVerificationEmail = async (email) => {
   const token = tokenGen({ email });
   sendEmail(
     email,
-    "Auto Lanka Services, Email Verification",
+    "Shan Automobile and Hybrid Workshop, Email Verification",
     `
     <!DOCTYPE html>
     <html>
@@ -264,8 +277,8 @@ const sendVerificationEmail = async (email) => {
     </head>
     <body>
       <div class="container">
-        <h1>Auto Lanka Services Email Verification</h1>
-        <p>Thank you for registering with Auto Lanka Services. To complete your registration and activate your account, please verify your email address by clicking the button below:</p>
+        <h1>Shan Automobile and Hybrid Workshop Online. Email Verification</h1>
+        <p>Thank you for registering with Shan Automobile and Hybrid Workshop. To complete your registration and activate your account, please verify your email address by clicking the button below:</p>
         <div style="text-align: center;">
           <a href="${process.env.CLIENT_URL}/signup/emailactivation?token=${token}" class="btn">Click here to verify</a>
         </div>
@@ -273,7 +286,7 @@ const sendVerificationEmail = async (email) => {
         <p style="font-size: 14px;">${process.env.CLIENT_URL}/signup/emailactivation?token=${token}</p>
       </div>
       <div class="footer">
-        <p>This email was sent by Auto Lanka Services. If you didn't create an account, you can safely ignore this email.</p>
+        <p>This email was sent by Shan Automobile and Hybrid Workshop. If you didn't create an account, you can safely ignore this email.</p>
       </div>
     </body>
     </html>
@@ -331,7 +344,7 @@ const sendPasswordResetEmail = async (email) => {
   const token = tokenGen({ email });
   sendEmail(
     email,
-    "Auto Lanka Services, Reset Account Password",
+    "Shan Automobile and Hybrid Workshop, Reset Account Password",
     `
     <!DOCTYPE html>
     <html>
@@ -386,8 +399,8 @@ const sendPasswordResetEmail = async (email) => {
     </head>
     <body>
       <div class="container">
-        <h1>Auto Lanka Services Account Password Reset</h1>
-        <p>Click the following link to reset your password in your Auto Lanka Service online account:</p>
+        <h1>Shan Automobile and Hybrid Workshop Account Password Reset</h1>
+        <p>Click the following link to reset your password in your Shan Automobile and Hybrid Workshop online account:</p>
         <div style="text-align: center;">
           <a href="${process.env.CLIENT_URL}/login/reset-password?token=${token}" class="btn">Click to reset password</a>
         </div>
@@ -395,7 +408,7 @@ const sendPasswordResetEmail = async (email) => {
         <p style="font-size: 14px;">${process.env.CLIENT_URL}/login/reset-password?token=${token}</p>
       </div>
       <div class="footer">
-        <p>This email was sent by Auto Lanka Services. If you didn't create an account, you can safely ignore this email.</p>
+        <p>This email was sent by Shan Automobile and Hybrid Workshop. If you didn't create an account, you can safely ignore this email.</p>
       </div>
     </body>
     </html>
@@ -490,7 +503,7 @@ export const authUser = async (req, res) => {
     if (!token) {
       return res.status(401).send({ message: "No cookies available" }); // This function checks if the user is authorized by verifying the token in the cookies
     }
-    const decodedToken = verifyToken(token);
+    const decodedToken = decodeToken(token);
     if (!decodedToken) {
       return res.status(401).send({ message: "Unauthorized" }); // It returns a 401 status if the token is not present or invalid, and a 200 status if the user is authorized
     }
@@ -534,19 +547,19 @@ export const registerVehicle = async (req, res) => {
 
     const imagePath = req.file ? `/uploads/${req.file.filename}` : null;
 
-    const addUser = await pool.query(
-      "INSERT INTO users (user_id, first_name, last_name, email, password, mobile_id, registered_date, user_type_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)",
-      [
-        "CUS" + (getMaxUser.rows[0].maxuser + 1),
-        fname,
-        lname,
-        email,
-        hashedPassword,
-        mobileid,
-        formattedDate,
-        "2",
-      ]
-    );
+    // const addUser = await pool.query(
+    //   "INSERT INTO vehicles (license_plate, user_id, last_name, email, password, mobile_id, registered_date, user_type_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)",
+    //   [
+    //     "CUS" + (getMaxUser.rows[0].maxuser + 1),
+    //     fname,
+    //     lname,
+    //     email,
+    //     hashedPassword,
+    //     mobileid,
+    //     formattedDate,
+    //     "2",
+    //   ]
+    // );
 
     console.log("Received Vehicle Data:", vehicleData);
 
@@ -574,6 +587,26 @@ export const loadVehicleTypes = async (req, res) => {
 };
 
 export const loadVehicleBrands = async (req, res) => {
+  try {
+    const result = await pool.query("SELECT vehicle_brand_id, vehicle_brand FROM vehicle_brand ORDER BY vehicle_brand ASC");
+    res.json(result.rows);
+  } catch (err) {
+    console.error("Error fetching vehicle types:", err);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+export const loadFuelTypes = async (req, res) => {
+  try {
+    const result = await pool.query("SELECT fuel_type_id, fuel_type FROM fuel_type ORDER BY fuel_type ASC");
+    res.json(result.rows);
+  } catch (err) {
+    console.error("Error fetching vehicle types:", err);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+}
+
+export const loadTransmissionTypes = async (req, res) => {
   try {
     const result = await pool.query("SELECT vehicle_brand_id, vehicle_brand FROM vehicle_brand ORDER BY vehicle_brand ASC");
     res.json(result.rows);

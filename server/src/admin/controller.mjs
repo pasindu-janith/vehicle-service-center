@@ -5,11 +5,11 @@ import { tokenGenLogin } from "../utils/jwt.mjs";
 // Admin login controller
 export const adminLogin = async (req, res) => {
     try {
-      const { email, password, rememberMe } = req.body;
+      const { email, password } = req.body;
       
       const checkAdmin = await pool.query(
-        "SELECT * FROM admins WHERE email = $1 AND status = $2",
-        [email, "1"]
+        "SELECT * FROM users WHERE email = $1 AND status = $2 AND user_type = $3",
+        [email, "1", "1"]
       );
       
       if (checkAdmin.rows.length === 0) {

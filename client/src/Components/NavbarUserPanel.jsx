@@ -87,7 +87,7 @@ const NavbarUserPanel = () => {
               </Link>
             </li>
             <li className="nav-item">
-              <Link className="nav-link roboto" to="#contactus">
+              <Link className="nav-link roboto" to="/myaccount/settings">
                 Settings
               </Link>
             </li>

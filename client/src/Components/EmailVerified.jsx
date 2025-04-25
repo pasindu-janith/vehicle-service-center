@@ -35,7 +35,7 @@ const EmailVerify = () => {
         );
         const data = await response.json();
         if (response.ok) {
-          setSuccess(true);
+          setSuccess(true);        
         }
         setMessage(data.message);
       } catch (error) {
@@ -70,6 +70,7 @@ const EmailVerify = () => {
         }
       );
       if (response.ok) {
+
         setSent(true);
       } else {
         setIsResending(false);

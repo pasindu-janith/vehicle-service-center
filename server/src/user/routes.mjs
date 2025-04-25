@@ -13,6 +13,7 @@ import {
   registerVehicle,
   loadVehicleTypes,
   loadVehicleBrands,
+  loadFuelTypes,
 } from "./controller.mjs";
 import upload from "../middleware/upload.mjs";
 
@@ -34,5 +35,8 @@ userRouter.post("/reset-password", resetPassword);
 userRouter.post("/register-vehicle", upload.single("vehicleImage"), registerVehicle);
 userRouter.get("/loadVehicleTypes", loadVehicleTypes);
 userRouter.get("/loadVehicleBrands", loadVehicleBrands);
+userRouter.get("/loadFuelTypes", loadFuelTypes);
+
+
 
 export default userRouter;

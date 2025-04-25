@@ -83,7 +83,9 @@ const RegisterForm = () => {
         throw new Error(data.message || "Registration failed");
       }
 
-      toastr.success("Registration successful! Verify your mobile number to continue.");
+      toastr.success(
+        "Registration successful! Verify your mobile number to continue."
+      );
       navigate("/signup/otpverify", {
         state: { mobile: formData.mobile, email: formData.email },
       });
@@ -151,20 +153,27 @@ const RegisterForm = () => {
             required
           />
         </div>
-        {/* Password Input */}
         <div className="mb-3">
           <label htmlFor="mobile" className="form-label">
             Mobile Number
           </label>
-          <input
-            type="tel"
-            className="form-control field"
-            id="mobile"
-            name="mobile"
-            value={formData.mobile}
-            onChange={handleChange}
-            required
-          />
+          <div className="input-group">
+            <span className="input-group-text">+94</span>
+            <input
+              type="tel"
+              className="form-control field"
+              id="mobile"
+              name="mobile"
+              value={formData.mobile}
+              onChange={handleChange}
+              maxLength={9}
+              pattern="[0-9]{9}"
+              required
+            />
+          </div>
+          <div className="form-text">
+            Enter 9 digits after +94 (e.g., 712345678)
+          </div>
         </div>
         <div className="mb-3">
           <label htmlFor="password" className="form-label">

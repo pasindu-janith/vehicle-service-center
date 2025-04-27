@@ -50,7 +50,8 @@ const Herocard = () => {
             <div className="position-absolute text-white ms-md-4 ms-1 header">
               <h1 className="text-white  display-md-3 display-4 fw-bold">
                 Welcome to <br />
-                Shan Automobile and Hybrid Workshop
+                Shan Automobile and <br />
+                Hybrid Workshop
               </h1>
               <p className="fs-5 col-md-8 col-10">
                 Sri Lanka’s leading vehicle service center's official online

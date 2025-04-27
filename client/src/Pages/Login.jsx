@@ -36,7 +36,7 @@ const Login = () => {
   }, []);
 
   useEffect(() => {
-    const verifyToken = async () => {
+    const checkIsLogged = async () => {
       try {
         // This endpoint should verify the token in the cookie
         const response = await fetch(
@@ -54,8 +54,7 @@ const Login = () => {
         console.log(error);
       }
     };
-    
-    verifyToken();
+    checkIsLogged();
   });
 
   // Handle input changes
@@ -98,10 +97,7 @@ const Login = () => {
         throw new Error(data.message || "Login failed");
       }
       if (data.token) {
-        // Optionally store user info
         localStorage.setItem("user", JSON.stringify(data.user));
-
-        // Redirect to protected route
         navigate("/myaccount/dashboard");
       }
     } catch (error) {
@@ -191,7 +187,10 @@ const Login = () => {
                     Remember Me
                   </label>
                 </div>
-                <Link to="/login/forgot-password" className="text-decoration-none">
+                <Link
+                  to="/login/forgot-password"
+                  className="text-decoration-none"
+                >
                   Forgot Password?
                 </Link>
               </div>

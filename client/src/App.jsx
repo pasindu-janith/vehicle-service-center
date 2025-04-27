@@ -8,6 +8,7 @@ import "bootstrap/dist/js/bootstrap.bundle.min.js";
 import Dashboard from "./Pages/UserPanel";
 import toastr from "toastr";
 import ForgotPassword from "./Pages/ForgotPassword";
+import { UserProvider } from "./Context/UserContext";
 
 toastr.options = {
   closeButton: true,
@@ -30,16 +31,16 @@ toastr.options = {
 function App() {
   return (
     <>
-      <Router>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/services" element={<Services />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/login/*" element={<ForgotPassword />} />
-          <Route path="/signup/*" element={<SignUp />} />
-          <Route path="/myaccount/*" element={<Dashboard />} />
-        </Routes>
-      </Router>
+        <Router>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/services" element={<Services />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/login/*" element={<ForgotPassword />} />
+            <Route path="/signup/*" element={<SignUp />} />
+            <Route path="/myaccount/*" element={<Dashboard />} />
+          </Routes>
+        </Router>
     </>
   );
 }

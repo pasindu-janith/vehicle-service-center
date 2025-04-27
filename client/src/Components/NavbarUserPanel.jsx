@@ -33,6 +33,7 @@ const NavbarUserPanel = () => {
 
   const logout = async () => {
     try {
+      localStorage.removeItem("user");
       // This endpoint should verify the token in the cookie
       const response = await fetch("http://localhost:4000/api/v1/user/logout", {
         method: "GET",

@@ -1,19 +1,19 @@
-import React, { useState } from "react";
+import { useState, useEffect } from "react";
+import { data } from "react-router-dom";
+import toastr from "toastr";
+import "toastr/build/toastr.min.css";
 
 const ProfileSettings = () => {
   const [formProfileData, setProfileFormData] = useState({
-    licensePlate: "",
-    vehicleType: "",
-    make: "",
-    model: "",
-    color: "",
-    year: "",
-    transmission: "",
-    fuelType: "",
-    vehicleImage: null,
+    fname: "",
+    lname: "",
+    nic: "",
+    email: "",
+    mobile: "",
+    addressNo: "",
+    addressLane: "",
+    addressCity: "",
   });
-
-  const [accountFormData, setaccountFormData] = useState({});
 
   const handleChange = (e) => {
     const { id, value } = e.target;
@@ -23,31 +23,100 @@ const ProfileSettings = () => {
     }));
   };
 
-  const handleSubmit = async (e) => {
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const response = await fetch(
+          "http://localhost:4000/api/v1/user/getUserData",
+          {
+            method: "GET",
+            credentials: "include",
+          }
+        );
+        if (response.ok) {
+          const data = await response.json();
+          setProfileFormData((prev) => ({
+            ...prev,
+            fname: data.first_name || "",
+            lname: data.last_name || "",
+            nic: data.nicno || "",
+            email: data.email || "",
+            mobile: data.mobile_no || "",
+            addressNo: data.address_line1 || "",
+            addressLane: data.address_line2 || "",
+            addressCity: data.address_line3 || "",
+          }));
+        } else {
+          console.error("Error fetching user data:", response.statusText);
+        }
+      } catch (error) {
+        console.error("Error:", error);
+      }
+    };
+    fetchUserData();
+  }, []);
+
+  const handleProfileSubmit = async (e) => {
     e.preventDefault();
-    const formData = new FormData();
-    for (const key in formProfileData) {
-      formData.append(key, formProfileData[key]);
-    }
     try {
       const response = await fetch(
-        "http://localhost:4000/api/v1/user/updateProfile",
+        "http://localhost:4000/api/v1/user/updateUserProfileData",
         {
           method: "POST",
-          body: formData,
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(formProfileData),
           credentials: "include",
         }
       );
       if (response.ok) {
-        const data = await response.json();
-        console.log(data);
+        toastr.success("Profile updated successfully!");
       } else {
         console.error("Error updating profile:", response.statusText);
+        toastr.error(data.message || "Failed to update profile.");
       }
     } catch (error) {
       console.error("Error:", error);
     }
   };
+
+  const handleAccountSubmit = async (e) => {
+    e.preventDefault();
+    const oldPassword = document.getElementById("currentPassword").value;
+    const newPassword = document.getElementById("newPassword").value;
+    const confirmPassword = document.getElementById("confirmPassword").value;
+
+    if (newPassword !== confirmPassword) {
+      toastr.error("New password and confirmation do not match.");
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        "http://localhost:4000/api/v1/user/resetUserPassword",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            oldPassword,
+            newPassword,
+          }),
+          credentials: "include",
+        }
+      );
+      if (response.ok) {
+        toastr.success("Password updated successfully!");
+      } else {
+        console.error("Error updating password:", response.statusText);
+        toastr.error(data.message || "Failed to update password.");
+      }
+    } catch (error) {
+      console.error("Error:", error);
+    }
+  }
 
   return (
     <div className="container">
@@ -56,7 +125,7 @@ const ProfileSettings = () => {
           <h4>User Profile Data</h4>
         </div>
         <div className="card-body">
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleProfileSubmit}>
             <div className="row g-3">
               <div className="col-md-6">
                 <label htmlFor="color" className="form-label">
@@ -67,8 +136,8 @@ const ProfileSettings = () => {
                   className="form-control"
                   id="fname"
                   name="fname"
+                  value={formProfileData.fname}
                   onChange={handleChange}
-                  placeholder=""
                   required
                 />
               </div>
@@ -82,8 +151,8 @@ const ProfileSettings = () => {
                   className="form-control"
                   id="lname"
                   name="lname"
+                  value={formProfileData.lname}
                   onChange={handleChange}
-                  placeholder=""
                   required
                 />
               </div>
@@ -95,10 +164,10 @@ const ProfileSettings = () => {
                 <input
                   type="text"
                   className="form-control"
-                  id="fname"
-                  name="fname"
+                  id="nic"
+                  name="nic"
+                  value={formProfileData.nic}
                   onChange={handleChange}
-                  placeholder=""
                   required
                 />
               </div>
@@ -110,10 +179,27 @@ const ProfileSettings = () => {
                 <input
                   type="text"
                   className="form-control"
-                  id="lname"
-                  name="lname"
+                  id="mobile"
+                  name="mobile"
+                  value={formProfileData.mobile}
                   onChange={handleChange}
-                  placeholder=""
+                  disabled
+                  required
+                />
+              </div>
+
+              <div className="col-md-6">
+                <label htmlFor="lname" className="form-label">
+                  Email address
+                </label>
+                <input
+                  type="text"
+                  className="form-control"
+                  id="email"
+                  name="email"
+                  value={formProfileData.email}
+                  onChange={handleChange}
+                  disabled
                   required
                 />
               </div>
@@ -125,6 +211,7 @@ const ProfileSettings = () => {
                   className="form-control"
                   id="addressNo"
                   name="addressNo"
+                  value={formProfileData.addressNo}
                   onChange={handleChange}
                   placeholder="Address Number e.g. 123/A"
                   required
@@ -134,8 +221,9 @@ const ProfileSettings = () => {
                 <input
                   type="text"
                   className="form-control"
-                  id="lname"
-                  name="lname"
+                  id="addressLane"
+                  name="addressLane"
+                  value={formProfileData.addressLane}
                   onChange={handleChange}
                   placeholder="Lane/street"
                   required
@@ -145,15 +233,16 @@ const ProfileSettings = () => {
                 <input
                   type="text"
                   className="form-control"
-                  id="lname"
-                  name="lname"
+                  id="addressCity"
+                  name="addressCity"
+                  value={formProfileData.addressCity}
                   onChange={handleChange}
                   placeholder="City"
                   required
                 />
               </div>
             </div>
-            <button className="btn btn-danger mt-3">Update Profile</button>
+            <button type="submit" className="btn btn-danger mt-3">Update Profile</button>
           </form>
         </div>
       </div>
@@ -164,7 +253,7 @@ const ProfileSettings = () => {
         </div>
         <div className="card-body">
           <p>Reset your account password</p>
-          <form>
+          <form onSubmit={handleAccountSubmit}>
             <div className="mb-3">
               <label htmlFor="currentPassword" className="form-label">
                 Current Password

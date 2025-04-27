@@ -6,6 +6,7 @@ import { sendEmail } from "../utils/email.mjs";
 import dotenv from "dotenv";
 import fs from "fs";
 import path from "path";
+import { get } from "http";
 
 dotenv.config();
 
@@ -59,8 +60,14 @@ export const registerUser = async (req, res) => {
       "SELECT COUNT(user_id) AS maxuser FROM users"
     );
 
+    const addAddress = await pool.query(
+      "INSERT INTO addresses (address_line1) VALUES ($1) RETURNING address_id",
+      [""]
+    );
+    var addressID = addAddress.rows[0].address_id;
+
     const addUser = await pool.query(
-      "INSERT INTO users (user_id, first_name, last_name, email, password, mobile_id, registered_date, user_type_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)",
+      "INSERT INTO users (user_id, first_name, last_name, email, password, mobile_id, registered_date, user_type_id, address_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)",
       [
         "CUS" + (getMaxUser.rows[0].maxuser + 1),
         fname,
@@ -70,6 +77,7 @@ export const registerUser = async (req, res) => {
         mobileid,
         formattedDate,
         "2",
+        addressID,
       ]
     );
 
@@ -139,7 +147,17 @@ export const loginUser = async (req, res) => {
       // Clear any existing remember cookie
       res.clearCookie("rememberUser");
     }
-    res.status(200).send({ token: token, user: user.user_id });
+    res.status(200).send({
+      token: token,
+      user: {
+        userID: user.user_id,
+        email: user.email,
+        fname: user.first_name,
+        lname: user.last_name,
+        mobile: user.mobile_no,
+        nicno: user.nicno,
+      },
+    });
   } catch (error) {
     console.log(error);
     res.status(500).send("Internal Server Error");
@@ -527,10 +545,16 @@ export const logout = async (req, res) => {
   res.status(200).send({ message: "Logged out" });
 };
 
-// Register vehicle function
-// This function registers a vehicle for a user
-// It checks if the vehicle already exists, and if not, it adds the vehicle to the database
-// It also saves the vehicle image to the server
+const getUserIDFromToken = (token, res) => {
+  if (!token) {
+    return res.status(401).send({ message: "No cookies available" });
+  }
+  const decodedToken = decodeToken(token);
+  if (!decodedToken) {
+    return res.status(401).send({ message: "Unauthorized" });
+  }
+  return decodedToken.userID;
+};
 
 export const registerVehicle = async (req, res) => {
   try {
@@ -546,22 +570,50 @@ export const registerVehicle = async (req, res) => {
     } = req.body;
 
     const imagePath = req.file ? `/uploads/${req.file.filename}` : null;
+    const { token } = req.cookies;
+    const userID = getUserIDFromToken(token, res);
+    if (
+      !licensePlate ||
+      !vehicleType ||
+      !make ||
+      !model ||
+      !color ||
+      !year ||
+      !transmission ||
+      !fuelType
+    ) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
+    if (!imagePath) {
+      return res.status(400).json({ message: "Vehicle image is required" });
+    }
 
-    // const addUser = await pool.query(
-    //   "INSERT INTO vehicles (license_plate, user_id, last_name, email, password, mobile_id, registered_date, user_type_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)",
-    //   [
-    //     "CUS" + (getMaxUser.rows[0].maxuser + 1),
-    //     fname,
-    //     lname,
-    //     email,
-    //     hashedPassword,
-    //     mobileid,
-    //     formattedDate,
-    //     "2",
-    //   ]
-    // );
+    const checkVehicle = await pool.query(
+      "SELECT * FROM vehicles WHERE license_plate = $1",
+      [licensePlate]
+    );
+    if (checkVehicle.rows.length > 0) {
+      return res
+        .status(400)
+        .json({ message: "Vehicle already exists from this license" });
+    }
 
-    console.log("Received Vehicle Data:", vehicleData);
+    const addVehicle = await pool.query(
+      "INSERT INTO vehicles (license_plate, user_id, vehicle_type_id, vehicle_brand_id, model, color, make_year, status, fuel_type,transmission_type) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)",
+      [
+        licensePlate,
+        userID,
+        vehicleType,
+        make,
+        model,
+        color,
+        year,
+        "1",
+        fuelType,
+        transmission,
+      ]
+    );
+
 
     res.status(200).json({
       message: "Vehicle registered successfully",
@@ -575,7 +627,9 @@ export const registerVehicle = async (req, res) => {
 // Load vehicle types function
 export const loadVehicleTypes = async (req, res) => {
   try {
-    const result = await pool.query("SELECT vehicle_type_id, vehicle_type FROM vehicle_type ORDER BY vehicle_type ASC");
+    const result = await pool.query(
+      "SELECT vehicle_type_id, vehicle_type FROM vehicle_type ORDER BY vehicle_type ASC"
+    );
     if (result.rows.length === 0) {
       return res.status(404).json({ message: "No vehicle types found" });
     }
@@ -588,7 +642,9 @@ export const loadVehicleTypes = async (req, res) => {
 
 export const loadVehicleBrands = async (req, res) => {
   try {
-    const result = await pool.query("SELECT vehicle_brand_id, vehicle_brand FROM vehicle_brand ORDER BY vehicle_brand ASC");
+    const result = await pool.query(
+      "SELECT vehicle_brand_id, vehicle_brand FROM vehicle_brand ORDER BY vehicle_brand ASC"
+    );
     res.json(result.rows);
   } catch (err) {
     console.error("Error fetching vehicle types:", err);
@@ -598,17 +654,9 @@ export const loadVehicleBrands = async (req, res) => {
 
 export const loadFuelTypes = async (req, res) => {
   try {
-    const result = await pool.query("SELECT fuel_type_id, fuel_type FROM fuel_type ORDER BY fuel_type ASC");
-    res.json(result.rows);
-  } catch (err) {
-    console.error("Error fetching vehicle types:", err);
-    res.status(500).json({ error: "Internal Server Error" });
-  }
-}
-
-export const loadTransmissionTypes = async (req, res) => {
-  try {
-    const result = await pool.query("SELECT vehicle_brand_id, vehicle_brand FROM vehicle_brand ORDER BY vehicle_brand ASC");
+    const result = await pool.query(
+      "SELECT fuel_type_id, fuel_type FROM fuel_type ORDER BY fuel_type ASC"
+    );
     res.json(result.rows);
   } catch (err) {
     console.error("Error fetching vehicle types:", err);
@@ -616,28 +664,176 @@ export const loadTransmissionTypes = async (req, res) => {
   }
 };
 
-// Load dashboard function
-// This function loads the dashboard for the user
-
-export const loadDashboard = async (req, res) => {
+export const loadTransmissionTypes = async (req, res) => {
   try {
-    const { token } = req.headers;
-    const decodedToken = verifyToken(token);
-    if (!decodedToken) {
-      return res.status(401).send("Unauthorized");
+    const result = await pool.query(
+      "SELECT transmission_type_id,transmission_type FROM transmission_type ORDER BY transmission_type ASC"
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error("Error fetching vehicle types:", err);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+export const checkProfileUpdated = async (req, res) => {
+  try {
+    const { token } = req.cookies;
+    const userID = getUserIDFromToken(token, res);
+    const checkUser = await pool.query(
+      "SELECT nicno FROM users WHERE user_id = $1",
+      [userID]
+    );
+    if (checkUser.rows.length === 0) {
+      return res.status(400).send({ message: "Invalid User" });
     }
-    const userID = decodedToken.userID;
+    const user = checkUser.rows[0];
+    if (user.nicno) {
+      return res.status(200).send({ message: "Profile updated" });
+    } else {
+      return res.status(400).send({ message: "Profile not updated" });
+    }
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({ message: "Internal Server Error" });
+  }
+};
+
+export const loadAllUserData = async (req, res) => {
+  try {
+    const { token } = req.cookies;
+    const userID = getUserIDFromToken(token, res);
+
+    const checkUser = await pool.query(
+      "SELECT * FROM users LEFT JOIN addresses ON users.address_id = addresses.address_id LEFT JOIN mobile_number ON users.mobile_id = mobile_number.mobile_id WHERE users.user_id = $1",
+      [userID]
+    );
+    if (checkUser.rows.length === 0) {
+      return res.status(400).send({ message: "Invalid User" });
+    }
+    const user = checkUser.rows[0];
+    return res.status(200).send(user);
+  } catch (error) {
+    console.log(error);
+    res.status(500).send("Internal Server Error"); // If the token is invalid or the user does not exist, it returns an error message
+  }
+};
+
+export const updateUserProfileData = async (req, res) => {
+  try {
+    const { token } = req.cookies;
+    
+    const userID = getUserIDFromToken(token, res);
+    const {
+      fname,
+      lname,
+      nic,
+      email,
+      mobile,
+      addressNo,
+      addressLane,
+      addressCity,
+    } = req.body;
+
+    if (
+      !fname ||
+      !lname ||
+      !nic ||
+      !email ||
+      !mobile ||
+      !addressNo ||
+      !addressLane ||
+      !addressCity
+    ) {
+      return res.status(400).send({ message: "All fields are required" });
+    }
+
     const checkUser = await pool.query(
       "SELECT * FROM users WHERE user_id = $1",
       [userID]
     );
     if (checkUser.rows.length === 0) {
-      return res.status(400).send("Invalid User");
+      return res.status(400).send({ message: "Invalid User" });
     }
     const user = checkUser.rows[0];
-    res.status(200).send(user);
+
+    const updateUser = await pool.query(
+      "UPDATE users SET first_name = $1, last_name = $2, nicno = $3, email = $4 WHERE user_id = $5",
+      [fname, lname, nic, email, userID]
+    );
+    const updateAddress = await pool.query(
+      "UPDATE addresses SET address_line1 = $1, address_line2 = $2, address_line3 = $3 WHERE address_id=$4",
+      [addressNo, addressLane, addressCity, user.address_id]
+    );
+
+    const updateMobile = await pool.query(
+      "UPDATE mobile_number SET mobile_no = $1 WHERE mobile_id=$2",
+      [mobile, user.mobile_id]
+    );
+
+    return res.status(200).send({ message: "Profile updated" });
   } catch (error) {
     console.log(error);
-    res.status(500).send("Internal Server Error");
+    res.status(500).send("Internal Server Error"); // If the token is invalid or the user does not exist, it returns an error message
   }
 };
+
+export const loadAllUserVehicles = async (req, res) => {
+  try {
+    const { token } = req.cookies;
+    const userID = getUserIDFromToken(token, res);
+    const checkUser = await pool.query(
+      "SELECT * FROM users WHERE user_id = $1",
+      [userID]
+    );
+    if (checkUser.rows.length === 0) {
+      return res.status(400).send({ message: "Invalid User" });
+    }
+    const user = checkUser.rows[0];
+    const vehicles = await pool.query(
+      "SELECT * FROM vehicles WHERE user_id = $1",
+      [user.user_id]
+    );
+    return res.status(200).send(vehicles.rows);
+  } catch (error) {
+    console.log(error);
+    res.status(500).send("Internal Server Error"); // If the token is invalid or the user does not exist, it returns an error message
+  }
+}
+
+//use for reset password which is already logged in user
+// This function updates the user's password in the database after verifying the old password
+export const updateUserPassword = async (req, res) => {
+  try {
+    const { token } = req.cookies;
+    const userID = getUserIDFromToken(token, res);
+    const { oldPassword, newPassword } = req.body;
+
+    if (!oldPassword || !newPassword) {
+      return res.status(400).send({ message: "All fields are required" });
+    }
+
+    const checkUser = await pool.query(
+      "SELECT * FROM users WHERE user_id = $1",
+      [userID]
+    );
+    if (checkUser.rows.length === 0) {
+      return res.status(400).send({ message: "Invalid User" });
+    }
+    const user = checkUser.rows[0];
+    const passwordMatch = await bcrypt.compare(oldPassword, user.password);
+    if (!passwordMatch) {
+      return res.status(400).send({ message: "Invalid current password" });
+    }
+    const strPwd = String(newPassword);
+    const hashedPassword = await bcrypt.hash(strPwd, 10);
+    const updatePassword = await pool.query(
+      "UPDATE users SET password = $1 WHERE user_id=$2",
+      [hashedPassword, userID]
+    );
+    return res.status(200).send({ message: "Password updated" });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send("Internal Server Error"); // If the token is invalid or the user does not exist, it returns an error message
+  }
+}

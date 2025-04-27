@@ -1,11 +1,18 @@
-import React, { useState } from "react";
-import { FaUserCircle, FaTools, FaClipboardList, FaCalendar } from "react-icons/fa";
+import { useState } from "react";
+import {
+  FaUserCircle,
+  FaTools,
+  FaClipboardList,
+  FaCalendar,
+} from "react-icons/fa";
 import { FaBell } from "react-icons/fa";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import "./styles/Dashboard.css";
+import { useUser } from "../Context/UserContext";
 
 const Dashboard = () => {
+  const { user } = useUser();
   // Sample notifications
   const notifications = [
     {
@@ -43,7 +50,7 @@ const Dashboard = () => {
   };
 
   const handleDateClick = (date) => {
-    const event = events.find(event => event.date === formatDate(date));
+    const event = events.find((event) => event.date === formatDate(date));
     if (event) {
       setSelectedEvent(event);
     } else {
@@ -63,13 +70,14 @@ const Dashboard = () => {
                 <h5 className="card-title">Account information</h5>
               </div>
               <p className="mb-2">
-                <strong>Name:</strong> Pasindu Janith
+                <strong>Name:</strong>{" "}
+                {user ? user.fname + " " + user.lname : "N/A"}
               </p>
               <p className="mb-2">
-                <strong>Email:</strong> pasindu@example.com
+                <strong>Email:</strong> {user ? user.email : "N/A"}
               </p>
               <p className="mb-0">
-                <strong>Mobile:</strong> +1 234 567 890
+                <strong>Mobile:</strong> {user ? "+94"+ user.mobile : "N/A"} 
               </p>
             </div>
           </div>
@@ -186,9 +194,11 @@ const Dashboard = () => {
         {/* Calendar Widget with Events */}
         <div className="col-md-6">
           <div className="card">
-          <div className="card-header d-flex align-items-center">
+            <div className="card-header d-flex align-items-center">
               <FaCalendar size={20} className="me-2" />
-              <span><h6>Service Calendar</h6></span>
+              <span>
+                <h6>Service Calendar</h6>
+              </span>
             </div>
             <div className="card-body">
               <Calendar
@@ -213,7 +223,9 @@ const Dashboard = () => {
           <div className="card">
             <div className="card-header d-flex align-items-center">
               <FaBell size={20} className="me-2" />
-              <span><h6>Important Notifications</h6></span>
+              <span>
+                <h6>Important Notifications</h6>
+              </span>
             </div>
             <div className="card-body">
               {notifications.length === 0 ? (

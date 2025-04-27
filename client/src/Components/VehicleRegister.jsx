@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import toastr from "toastr";
 import "toastr/build/toastr.min.css";
 
@@ -7,6 +8,8 @@ const VehicleRegister = () => {
   const [vehicleTypes, setVehicleTypes] = useState([]);
   const [vehicleBrands, setVehicleBrands] = useState([]);
   const [fuelTypes, setFuelTypes] = useState([]);
+  const [profileUpdated, setProfileUpdated] = useState(true);
+  const [transmissionTypes, setTransmissionTypes] = useState([]);
   const [formData, setFormData] = useState({
     licensePlate: "",
     vehicleType: "",
@@ -90,10 +93,57 @@ const VehicleRegister = () => {
         console.error("Network error:", err);
       }
     };
-    loadFuelTypes();
 
+    const loadTransmissionTypes = async () => {
+      try {
+        const response = await fetch(
+          "http://localhost:4000/api/v1/user/loadTransmissionTypes",
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        if (response.ok) {
+          const data = await response.json();
+          setTransmissionTypes(data);
+        } else {
+          const error = await response.json();
+          console.error("Server error:", error);
+        }
+      } catch (err) {
+        console.error("Network error:", err);
+      }
+    };
+
+    loadFuelTypes();
     loadTypes();
     loadBrands();
+    loadTransmissionTypes();
+  }, []);
+
+  useEffect(() => {
+    const checkProfileStatus = async () => {
+      try {
+        const response = await fetch(
+          "http://localhost:4000/api/v1/user/profileUpdated",
+          {
+            method: "GET",
+            credentials: "include", // Include cookies in the request
+          }
+        );
+        if (response.ok) {
+          setProfileUpdated(true);
+        } else {
+          setProfileUpdated(false);
+        }
+      } catch (err) {
+        console.error("Network error:", err);
+      }
+    };
+
+    checkProfileStatus();
   }, []);
 
   const handleChange = (e) => {
@@ -106,6 +156,7 @@ const VehicleRegister = () => {
 
   const handleSelectChange = (e) => {
     const { id, value } = e.target;
+    
     setFormData((prev) => ({
       ...prev,
       [id]: value,
@@ -142,21 +193,24 @@ const VehicleRegister = () => {
         "http://localhost:4000/api/v1/user/register-vehicle",
         {
           method: "POST",
-          body: submissionData, //FormData includes the image file
+          body: submissionData,
+          credentials: "include",
         }
       );
 
       if (response.ok) {
         const result = await response.json();
-        toastr.success("Vehicle registered successfully!");
+        toastr.success(result.message || "Vehicle registered successfully!");
       } else {
         const error = await response.json();
-        console.error("Server error:", error);
-        toastr.error("Failed to submit. Please try again.");
+        if (error.message) {
+          toastr.error(error.message);
+        } else {
+          toastr.error("Failed to register vehicle. Please try again.");
+        }
       }
     } catch (err) {
-      console.error("Network error:", err);
-      alert("Something went wrong!");
+      toastr.error(err.message || "Network error. Please try again.");
     }
   };
 
@@ -164,6 +218,14 @@ const VehicleRegister = () => {
     <div className="container pt-3">
       <div>
         <h2 className="mb-4">Vehicle Information Form</h2>
+
+        {!profileUpdated && (
+          <div className="alert alert-danger" role="alert">
+            Update your profile information first to register a vehicle.
+            <Link to="/myaccount/settings">Update profile</Link>
+          </div>
+        )}
+
         <div className="card p-4 rounded shadow-sm">
           <form onSubmit={handleSubmit}>
             <div className="row g-3">
@@ -195,6 +257,9 @@ const VehicleRegister = () => {
                   id="vehicleType"
                   onChange={handleSelectChange}
                 >
+                  <option value="" disabled selected>
+                    Select Vehicle Type
+                  </option>
                   {vehicleTypes.map((type) => (
                     <option
                       key={type.vehicle_type_id}
@@ -214,6 +279,9 @@ const VehicleRegister = () => {
                   id="make"
                   onChange={handleSelectChange}
                 >
+                  <option value="" disabled selected>
+                    Select Vehicle Brand
+                  </option>
                   {vehicleBrands.map((brand) => (
                     <option
                       key={brand.vehicle_brand_id}
@@ -277,9 +345,17 @@ const VehicleRegister = () => {
                   onChange={handleSelectChange}
                   required
                 >
-                  <option value>Select Transmission</option>
-                  <option value="Manual">Manual</option>
-                  <option value="Automatic">Automatic</option>
+                  <option value="" disabled selected>
+                    Select Transmission Type
+                  </option>
+                  {transmissionTypes.map((transmission) => (
+                    <option
+                      key={transmission.transmission_type_id}
+                      value={transmission.transmission_type_id}
+                    >
+                      {transmission.transmission_type}
+                    </option>
+                  ))}
                 </select>
               </div>
               <div className="col-md-6">
@@ -292,11 +368,11 @@ const VehicleRegister = () => {
                   onChange={handleSelectChange}
                   required
                 >
-                  <option value>Select Fuel Type</option>
-                  <option value="Petrol">Petrol</option>
-                  <option value="Diesel">Diesel</option>
-                  <option value="Hybrid">Hybrid</option>
-                  <option value="Electric">Electric</option>
+                  {fuelTypes.map((fuel) => (
+                    <option key={fuel.fuel_type_id} value={fuel.fuel_type_id}>
+                      {fuel.fuel_type}
+                    </option>
+                  ))}
                 </select>
               </div>
               <div className="col-md-6">
@@ -325,9 +401,12 @@ const VehicleRegister = () => {
               </div>
             </div>
 
-            
             <div className="mt-4">
-              <button type="submit" className="btn btn-primary me-2">
+              <button
+                type="submit"
+                className="btn btn-primary me-2"
+                disabled={!profileUpdated}
+              >
                 Submit
               </button>
               <button

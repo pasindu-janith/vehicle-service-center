@@ -8,6 +8,7 @@ import VehicleRegister from "../Components/VehicleRegister";
 import NewReservation from "../Components/NewReservation";
 import UserPanelFooter from "../Components/UserPanelFooter";
 import ProfileSettings from "../Components/ProfileSettings";
+import { UserProvider } from "../Context/UserContext";
 
 const UserPanel = () => {
   const navigate = useNavigate();
@@ -18,10 +19,9 @@ const UserPanel = () => {
           "http://localhost:4000/api/v1/user/authUser",
           {
             method: "GET",
-            credentials: "include", // Ensures cookies are sent with the request
+            credentials: "include",
           }
         );
-
         if (!response.ok) {
           navigate("/login");
         }
@@ -34,16 +34,18 @@ const UserPanel = () => {
 
   return (
     <div className="pt-2" style={{ backgroundColor: "#f4f4f4" }}>
-      <NavbarUserPanel />
-      <Routes>
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/myvehicle" element={<MyVehicle />} />
-        <Route path="/reservations" element={<Reservations />} />
-        <Route path="/add-vehicle" element={<VehicleRegister />} />
-        <Route path="/add-reservation" element={<NewReservation />} />
-        <Route path="/settings" element={<ProfileSettings />} />
-      </Routes>
-      <UserPanelFooter />
+      <UserProvider>
+        <NavbarUserPanel />
+        <Routes>
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/myvehicle" element={<MyVehicle />} />
+          <Route path="/reservations" element={<Reservations />} />
+          <Route path="/add-vehicle" element={<VehicleRegister />} />
+          <Route path="/add-reservation" element={<NewReservation />} />
+          <Route path="/settings" element={<ProfileSettings />} />
+        </Routes>
+        <UserPanelFooter />
+      </UserProvider>
     </div>
   );
 };

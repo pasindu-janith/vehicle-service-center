@@ -569,6 +569,8 @@ export const registerVehicle = async (req, res) => {
       fuelType,
     } = req.body;
 
+    console.log(req.body);
+
     const imagePath = req.file ? `/uploads/${req.file.filename}` : null;
     const { token } = req.cookies;
     const userID = getUserIDFromToken(token, res);
@@ -599,7 +601,7 @@ export const registerVehicle = async (req, res) => {
     }
 
     const addVehicle = await pool.query(
-      "INSERT INTO vehicles (license_plate, user_id, vehicle_type_id, vehicle_brand_id, model, color, make_year, status, fuel_type,transmission_type) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)",
+      "INSERT INTO vehicles (license_plate, user_id, vehicle_type_id, vehicle_brand_id, model, color, make_year, status, fuel_type,transmission_type,imgpath) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)",
       [
         licensePlate,
         userID,
@@ -611,9 +613,9 @@ export const registerVehicle = async (req, res) => {
         "1",
         fuelType,
         transmission,
+        imagePath,
       ]
     );
-
 
     res.status(200).json({
       message: "Vehicle registered successfully",
@@ -722,7 +724,7 @@ export const loadAllUserData = async (req, res) => {
 export const updateUserProfileData = async (req, res) => {
   try {
     const { token } = req.cookies;
-    
+
     const userID = getUserIDFromToken(token, res);
     const {
       fname,
@@ -791,15 +793,15 @@ export const loadAllUserVehicles = async (req, res) => {
     }
     const user = checkUser.rows[0];
     const vehicles = await pool.query(
-      "SELECT * FROM vehicles WHERE user_id = $1",
-      [user.user_id]
+      "SELECT * FROM vehicles NATURAL JOIN vehicle_brand NATURAL JOIN vehicle_type WHERE user_id = $1 AND status=$2",
+      [user.user_id, "1"]
     );
     return res.status(200).send(vehicles.rows);
   } catch (error) {
     console.log(error);
     res.status(500).send("Internal Server Error"); // If the token is invalid or the user does not exist, it returns an error message
   }
-}
+};
 
 //use for reset password which is already logged in user
 // This function updates the user's password in the database after verifying the old password
@@ -836,4 +838,4 @@ export const updateUserPassword = async (req, res) => {
     console.log(error);
     res.status(500).send("Internal Server Error"); // If the token is invalid or the user does not exist, it returns an error message
   }
-}
+};

@@ -19,6 +19,7 @@ import {
   loadAllUserData,
   updateUserProfileData,
   updateUserPassword,
+  loadAllUserVehicles,
 } from "./controller.mjs";
 import upload from "../middleware/upload.mjs";
 
@@ -46,4 +47,5 @@ userRouter.get("/profileUpdated", checkProfileUpdated);
 userRouter.get("/getUserData", loadAllUserData);
 userRouter.post("/updateUserProfileData", updateUserProfileData);
 userRouter.post("/resetUserPassword", updateUserPassword);
+userRouter.get("/loadAllUserVehicles", loadAllUserVehicles);
 export default userRouter;

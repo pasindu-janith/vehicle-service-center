@@ -5,7 +5,8 @@ import dotenv from "dotenv";
 import adminRouter from "./src/admin/routes.mjs";
 import userRouter from "./src/user/routes.mjs";
 import cookieParser from "cookie-parser";
-
+import path from "path";
+import { fileURLToPath } from "url";
 const app = express();
 
 const PORT = process.env.PORT || 5000;
@@ -30,6 +31,12 @@ if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
 
+// Fix __dirname
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.use("/api/v1/user/", userRouter);
 app.use("/api/v1/admin/", adminRouter);

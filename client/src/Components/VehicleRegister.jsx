@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import toastr from "toastr";
 import "toastr/build/toastr.min.css";
 
@@ -21,6 +21,8 @@ const VehicleRegister = () => {
     fuelType: "",
     vehicleImage: null,
   });
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     const loadTypes = async () => {
@@ -201,6 +203,7 @@ const VehicleRegister = () => {
       if (response.ok) {
         const result = await response.json();
         toastr.success(result.message || "Vehicle registered successfully!");
+        navigate("/myaccount/myvehicle");
       } else {
         const error = await response.json();
         if (error.message) {
@@ -368,6 +371,9 @@ const VehicleRegister = () => {
                   onChange={handleSelectChange}
                   required
                 >
+                  <option value="" disabled selected>
+                    Select Fuel Type
+                  </option>
                   {fuelTypes.map((fuel) => (
                     <option key={fuel.fuel_type_id} value={fuel.fuel_type_id}>
                       {fuel.fuel_type}

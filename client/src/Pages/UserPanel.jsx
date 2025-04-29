@@ -9,6 +9,7 @@ import NewReservation from "../Components/NewReservation";
 import UserPanelFooter from "../Components/UserPanelFooter";
 import ProfileSettings from "../Components/ProfileSettings";
 import { UserProvider } from "../Context/UserContext";
+import { Payments } from "../Components/Payments";
 
 const UserPanel = () => {
   const navigate = useNavigate();
@@ -43,6 +44,7 @@ const UserPanel = () => {
           <Route path="/add-vehicle" element={<VehicleRegister />} />
           <Route path="/add-reservation" element={<NewReservation />} />
           <Route path="/settings" element={<ProfileSettings />} />
+          <Route path="/payments" element={<Payments />} />
         </Routes>
         <UserPanelFooter />
       </UserProvider>

@@ -83,7 +83,7 @@ const NavbarUserPanel = () => {
               </Link>
             </li>
             <li className="nav-item me-4">
-              <Link className="nav-link roboto" to="#expertise">
+              <Link className="nav-link roboto" to="/myaccount/payments">
                 Payments
               </Link>
             </li>

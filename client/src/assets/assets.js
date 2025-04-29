@@ -4,7 +4,7 @@ import banner3 from "../images/banner3.webp";
 import logo from "../images/logo.png";
 import serviceImg1 from "../images/mech-service.jpg";
 import serviceImg2 from "../images/collision-service.jpeg";
-import serviceImg3 from "../images/wash-service.jpg";
+import serviceImg3 from "../images/engine-scanning.jpeg";
 import serviceImg4 from "../images/wheel-service.webp";
 import serviceImg5 from "../images/lubricant-service.png";
 import serviceImg6 from "../images/interior-service.jpg";

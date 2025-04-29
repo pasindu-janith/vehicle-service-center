@@ -16,18 +16,11 @@ const services = [
     image: images.serviceImg2,
   },
   {
-    title: "Wash and Grooming",
+    title: "Vehicle scanning",
     id: 3,
     description:
       "Well illum qui dolorem eum fugiat quo voluptas nulla pariatur",
     image: images.serviceImg3,
-  },
-  {
-    title: "Wheel Services",
-    id: 4,
-    description:
-      "Well illum qui dolorem eum fugiat quo voluptas nulla pariatur",
-    image: images.serviceImg4,
   },
   {
     title: "Lubricant Services",
@@ -37,20 +30,12 @@ const services = [
     image: images.serviceImg5,
   },
   {
-    title: "Interior Services",
-    id: 6,
-    description:
-      "Well illum qui dolorem eum fugiat quo voluptas nulla pariatur",
-    image: images.serviceImg6,
-  },
-  {
     title: "Exterior Services",
     id: 7,
     description:
       "Well illum qui dolorem eum fugiat quo voluptas nulla pariatur",
     image: images.serviceImg7,
   },
-
   {
     title: "Engine Tune-up",
     id: 8,

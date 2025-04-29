@@ -3,14 +3,16 @@ import { Link } from "react-router-dom";
 
 const Reservations = () => {
   return (
-    <div className="container mt-4 vh-100">
+    <div className="container mt-4" style={{ minHeight: "100vh" }}>
       <div className="card">
         <div className="card-header">
           <h3 className="mb-0">Your Reservations</h3>
         </div>
         <div className="card-body">
           <div className="d-flex justify-content-end mb-3">
-            <Link to="/myaccount/add-reservation" className="btn btn-primary">New Reservation</Link>
+            <Link to="/myaccount/add-reservation" className="btn btn-primary">
+              New Reservation
+            </Link>
           </div>
           <table className="table table-striped">
             <thead>

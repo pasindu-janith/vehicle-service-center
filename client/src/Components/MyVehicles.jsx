@@ -13,7 +13,7 @@ const MyVehicle = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const verifyLoginStatus = async () => {
+    const loadAllUserVehicles = async () => {
       try {
         const response = await fetch(
           "http://localhost:4000/api/v1/user/loadAllUserVehicles",
@@ -26,14 +26,14 @@ const MyVehicle = () => {
           const data = await response.json();
           if (data && data.length > 0) {
             setVehicles(data);
-            setIsLoading(false);
           }
+          setIsLoading(false);
         }
       } catch (error) {
         console.log(error);
       }
     };
-    verifyLoginStatus();
+    loadAllUserVehicles();
   }, []);
 
   const vehicles1 = [
@@ -93,8 +93,8 @@ const MyVehicle = () => {
 
   return (
     <div
-      className="container pt-3 vh-100"
-      style={{ backgroundColor: "#f4f4f4" }}
+      className="container pt-3"
+      style={{ backgroundColor: "#f4f4f4", minHeight: '100vh' }}
     >
       <h2 className="mb-3">My Vehicles</h2>
 

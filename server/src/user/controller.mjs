@@ -178,19 +178,22 @@ export const emailVerify = async (req, res) => {
     }
 
     const emailDecoded = decodedToken.email;
-    const checkIsVerified = await pool.query(
-      "SELECT * FROM users WHERE email = $1 AND isemailverified = $2",
-      [emailDecoded, "1"]
+    const checkEmail = await pool.query(
+      "SELECT isemailverified FROM users WHERE email = $1",
+      [emailDecoded]
     );
-
-    if (checkIsVerified.rows.length > 0) {
-      return res.status(200).send({ message: "Email already verified" });
-    }
 
     if (checkEmail.rows.length === 0) {
       return res
         .status(400)
         .send({ message: "No registered email from this token" });
+    }
+
+    const user = checkEmail.rows[0];
+    if (user.isemailverified) {
+      return res
+        .status(200)
+        .send({ message: "Email verified successfully!" });
     }
 
     const emailadd = verifyToken(token);
@@ -202,7 +205,7 @@ export const emailVerify = async (req, res) => {
       "UPDATE users SET isemailverified = $1 WHERE email=$2",
       ["1", emailadd.email]
     );
-    res.status(200).send({ message: "Email verified" });
+    res.status(200).send({ message: "Email verified successfully!" });
   } catch (error) {
     console.log(error);
     res.status(500).send({ message: "Internal Server Error" });
@@ -569,8 +572,6 @@ export const registerVehicle = async (req, res) => {
       fuelType,
     } = req.body;
 
-    console.log(req.body);
-
     const imagePath = req.file ? `/uploads/${req.file.filename}` : null;
     const { token } = req.cookies;
     const userID = getUserIDFromToken(token, res);
@@ -671,6 +672,16 @@ export const loadTransmissionTypes = async (req, res) => {
     const result = await pool.query(
       "SELECT transmission_type_id,transmission_type FROM transmission_type ORDER BY transmission_type ASC"
     );
+    res.json(result.rows);
+  } catch (err) {
+    console.error("Error fetching vehicle types:", err);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+export const loadServiceTypes = async (req, res) => {
+  try {
+    const result = await pool.query("SELECT * FROM service_type");
     res.json(result.rows);
   } catch (err) {
     console.error("Error fetching vehicle types:", err);

@@ -13,6 +13,14 @@ import {
   registerVehicle,
   loadVehicleTypes,
   loadVehicleBrands,
+  loadFuelTypes,
+  checkProfileUpdated,
+  loadTransmissionTypes,
+  loadAllUserData,
+  updateUserProfileData,
+  updateUserPassword,
+  loadAllUserVehicles,
+  loadServiceTypes,
 } from "./controller.mjs";
 import upload from "../middleware/upload.mjs";
 
@@ -34,5 +42,13 @@ userRouter.post("/reset-password", resetPassword);
 userRouter.post("/register-vehicle", upload.single("vehicleImage"), registerVehicle);
 userRouter.get("/loadVehicleTypes", loadVehicleTypes);
 userRouter.get("/loadVehicleBrands", loadVehicleBrands);
+userRouter.get("/loadFuelTypes", loadFuelTypes);
+userRouter.get("/loadTransmissionTypes", loadTransmissionTypes);
+userRouter.get("/profileUpdated", checkProfileUpdated);
+userRouter.get("/getUserData", loadAllUserData);
+userRouter.post("/updateUserProfileData", updateUserProfileData);
+userRouter.post("/resetUserPassword", updateUserPassword);
+userRouter.get("/loadAllUserVehicles", loadAllUserVehicles);
+userRouter.get("/loadServiceTypes", loadServiceTypes);
 
 export default userRouter;

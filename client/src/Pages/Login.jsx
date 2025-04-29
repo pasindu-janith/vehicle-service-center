@@ -15,6 +15,8 @@ const Login = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
 
+  const [isLoading, setIsLoading] = useState(true);
+
   useEffect(() => {
     const getCookie = (name) => {
       const value = `; ${document.cookie}`;
@@ -36,7 +38,7 @@ const Login = () => {
   }, []);
 
   useEffect(() => {
-    const verifyToken = async () => {
+    const checkIsLogged = async () => {
       try {
         // This endpoint should verify the token in the cookie
         const response = await fetch(
@@ -48,14 +50,15 @@ const Login = () => {
         );
         if (response.ok) {
           navigate("/myaccount/dashboard");
+        } else {
+          setIsLoading(false);
         }
       } catch (error) {
         // Token invalid or expired - stay on login page
         console.log(error);
       }
     };
-    
-    verifyToken();
+    checkIsLogged();
   });
 
   // Handle input changes
@@ -98,10 +101,7 @@ const Login = () => {
         throw new Error(data.message || "Login failed");
       }
       if (data.token) {
-        // Optionally store user info
         localStorage.setItem("user", JSON.stringify(data.user));
-
-        // Redirect to protected route
         navigate("/myaccount/dashboard");
       }
     } catch (error) {
@@ -139,93 +139,96 @@ const Login = () => {
                 style={{ width: "150px" }}
               />
             </Link>
-            <h1 className="fw-bolder">Login</h1>
-            <h3 className="mb-4">Login to your account</h3>
-            <form onSubmit={handleSubmit}>
-              {/* Email Input */}
-              <div className="mb-3">
-                <label htmlFor="email" className="form-label">
-                  Email address
-                </label>
-                <input
-                  type="email"
-                  className="form-control field"
-                  id="email"
-                  name="email"
-                  placeholder="Enter your email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
 
-              {/* Password Input */}
-              <div className="mb-3">
-                <label htmlFor="password" className="form-label">
-                  Password
-                </label>
-                <input
-                  type="password"
-                  className="form-control field"
-                  id="password"
-                  name="password"
-                  placeholder="Enter your password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-
-              {/* Remember Me and Forgot Password */}
-              <div className="d-flex justify-content-between align-items-center mb-3">
-                <div className="form-check">
-                  <input
-                    className="form-check-input"
-                    type="checkbox"
-                    id="rememberMe"
-                    name="rememberMe"
-                    checked={rememberMe}
-                    onChange={(e) => setRememberMe(e.target.checked)}
-                  />
-                  <label className="form-check-label" htmlFor="rememberMe">
-                    Remember Me
-                  </label>
+            {isLoading ? (
+              <div className="d-flex justify-content-center align-items-center vh-100">
+                <div className="spinner-border text-danger" style={{width:"4rem", height: "4rem"}} role="status">
+                  <span className="visually-hidden">Loading...</span>
                 </div>
-                <Link to="/login/forgot-password" className="text-decoration-none">
-                  Forgot Password?
-                </Link>
               </div>
+            ) : (
+              <>
+                <h1 className="fw-bolder">Login</h1>
+                <h3 className="mb-4">Login to your account</h3>
+                <form onSubmit={handleSubmit}>
+                  {/* Email Input */}
+                  <div className="mb-3">
+                    <label htmlFor="email" className="form-label">
+                      Email address
+                    </label>
+                    <input
+                      type="email"
+                      className="form-control field"
+                      id="email"
+                      name="email"
+                      placeholder="Enter your email"
+                      value={formData.email}
+                      onChange={handleChange}
+                      required
+                    />
+                  </div>
 
-              {/* Submit Button */}
-              <button
-                type="submit"
-                className="btn btn-danger w-100 buttons"
-                disabled={isSubmitting}
-              >
-                Login
-              </button>
-            </form>
+                  {/* Password Input */}
+                  <div className="mb-3">
+                    <label htmlFor="password" className="form-label">
+                      Password
+                    </label>
+                    <input
+                      type="password"
+                      className="form-control field"
+                      id="password"
+                      name="password"
+                      placeholder="Enter your password"
+                      value={formData.password}
+                      onChange={handleChange}
+                      required
+                    />
+                  </div>
 
-            {/* Divider */}
-            <div className="text-center mt-4 mb-3">
-              <span className="text-muted">Don't have an account?</span>
-              <Link to="/signup/register" className="text-decoration-none ms-2">
-                Sign Up
-              </Link>
-            </div>
-            {/* <div className="d-flex align-items-center mb-3">
-              <div className="border-bottom flex-grow-1"></div>
-              <span className="px-3 text-muted">or</span>
-              <div className="border-bottom flex-grow-1"></div>
-            </div>
-            <button className="btn btn-outline-secondary col-12 align-items-center buttons">
-              <img
-                src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/1200px-Google_%22G%22_logo.svg.png"
-                alt="Google Logo"
-                style={{ width: "20px", height: "20px" }}
-              />
-              &nbsp;&nbsp;Login with Google
-            </button> */}
+                  {/* Remember Me and Forgot Password */}
+                  <div className="d-flex justify-content-between align-items-center mb-3">
+                    <div className="form-check">
+                      <input
+                        className="form-check-input"
+                        type="checkbox"
+                        id="rememberMe"
+                        name="rememberMe"
+                        checked={rememberMe}
+                        onChange={(e) => setRememberMe(e.target.checked)}
+                      />
+                      <label className="form-check-label" htmlFor="rememberMe">
+                        Remember Me
+                      </label>
+                    </div>
+                    <Link
+                      to="/login/forgot-password"
+                      className="text-decoration-none"
+                    >
+                      Forgot Password?
+                    </Link>
+                  </div>
+
+                  {/* Submit Button */}
+                  <button
+                    type="submit"
+                    className="btn btn-danger w-100 buttons"
+                    disabled={isSubmitting}
+                  >
+                    Login
+                  </button>
+                </form>
+
+                <div className="text-center mt-4 mb-3">
+                  <span className="text-muted">Don't have an account?</span>
+                  <Link
+                    to="/signup/register"
+                    className="text-decoration-none ms-2"
+                  >
+                    Sign Up
+                  </Link>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>

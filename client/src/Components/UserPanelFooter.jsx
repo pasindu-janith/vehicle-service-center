@@ -9,7 +9,7 @@ const UserPanelFooter = () => {
     >
       <div className="row text-center py-3">
         <p className="text-white mb-1">
-          Contact Auto Lanka services: 0913324433
+          Contact Shan Automobile and Hybrid Workshop: 0913324433
         </p>
         <a href="#" className="text-white me-3" style={{ textDecoration: "none" }}>
           <FaWhatsapp size={24} className="mb-1" /> WhatsApp

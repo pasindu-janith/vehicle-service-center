@@ -8,10 +8,10 @@ const ServiceType = () => {
 
   const service = services.find((service) => service.id === parseInt(value));
   return (
-    <div
+    <div 
       className="container"
       style={{ marginTop: "100px", minHeight: "500px" }}
-    >
+    > 
       <div className="row">
         <div className="col-md-5 d-flex justify-content-center align-items-center">
           <img

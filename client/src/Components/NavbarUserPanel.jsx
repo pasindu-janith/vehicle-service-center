@@ -33,6 +33,7 @@ const NavbarUserPanel = () => {
 
   const logout = async () => {
     try {
+      localStorage.removeItem("user");
       // This endpoint should verify the token in the cookie
       const response = await fetch("http://localhost:4000/api/v1/user/logout", {
         method: "GET",
@@ -82,12 +83,12 @@ const NavbarUserPanel = () => {
               </Link>
             </li>
             <li className="nav-item me-4">
-              <Link className="nav-link roboto" to="#expertise">
+              <Link className="nav-link roboto" to="/myaccount/payments">
                 Payments
               </Link>
             </li>
             <li className="nav-item">
-              <Link className="nav-link roboto" to="#contactus">
+              <Link className="nav-link roboto" to="/myaccount/settings">
                 Settings
               </Link>
             </li>

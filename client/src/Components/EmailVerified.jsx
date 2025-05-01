@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import images from "../assets/assets";
 import "./styles/forms.css";
 import toastr from "toastr";
+import { div } from "framer-motion/client";
 
 const EmailVerify = () => {
   const navigate = useNavigate();
@@ -19,6 +20,7 @@ const EmailVerify = () => {
   const [email, setEmail] = useState("");
   const [isResending, setIsResending] = useState(false);
   const [message, setMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
   useEffect(() => {
     const verifyEmail = async () => {
       try {
@@ -37,6 +39,7 @@ const EmailVerify = () => {
         if (response.ok) {
           setSuccess(true);
         }
+        setIsLoading(false);
         setMessage(data.message);
       } catch (error) {
         console.log(error);
@@ -82,7 +85,12 @@ const EmailVerify = () => {
 
   return (
     <div className="text-center mb-4">
-      {success && (
+      {isLoading && (
+        <div className="spinner-border text-danger" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </div>
+      )}
+      {success && !isLoading && (
         <>
           <img
             src={images.successicon}
@@ -90,8 +98,7 @@ const EmailVerify = () => {
             className="mb-3 mt-2"
             style={{ width: "110px" }}
           />
-          <h3>Email Verification successful</h3>
-          <p>Now you can log into your account!</p>
+          <h3 className="mb-5">{message}</h3>
           <div className="text-center mt-3">
             <button
               onClick={goToLogin}
@@ -103,7 +110,7 @@ const EmailVerify = () => {
         </>
       )}
 
-      {!success && (
+      {!success && !isLoading && (
         <>
           <img
             src={images.erroricon}
@@ -128,13 +135,17 @@ const EmailVerify = () => {
                 onChange={handleChange}
                 required
               />
-              <button type="submit" className="btn btn-danger" disabled={isResending}>
+              <button
+                type="submit"
+                className="btn btn-danger"
+                disabled={isResending}
+              >
                 {isResending ? "Sending..." : "Resend"}
               </button>
             </form>
           </div>
           <div id="resend-success" className={`${sent ? "" : "d-none"}`}>
-            <p style={{ fontSize: "17px" }}>
+            <p className="text-success" style={{ fontSize: "17px" }}>
               Email sent successfully. Check your inbox and click on the
               verification link at the mail setnt by us. If it is not in the
               inbox check your spam folder.

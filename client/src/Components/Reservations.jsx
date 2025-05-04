@@ -19,7 +19,9 @@ const Reservations = () => {
           if (data && data.length > 0) {
             setReservations(data);
             setIsLoading(false);
-          }
+          }else {
+            setIsLoading(false);
+          } 
         }
       } catch (error) {
         console.error("Error loading reservations:", error);
@@ -45,6 +47,7 @@ const Reservations = () => {
               <thead>
                 <tr>
                   <th>Reservation ID</th>
+                  <th>Vehicle</th>
                   <th>Date</th>
                   <th>Time</th>
                   <th>Service</th>
@@ -72,8 +75,9 @@ const Reservations = () => {
                   reservations.map((reservation) => (
                     <tr key={reservation.reservation_id}>
                       <td>{reservation.reservation_id}</td>
+                      <td>{reservation.vehicle_id}</td>
                       <td>{new Date(reservation.reserve_date).toISOString().split("T")[0]}</td>
-                      <td>{reservation.start_time}</td>
+                      <td>{reservation.start_time} - {reservation.end_time}</td>
                       <td>{reservation.service_name}</td>
                       <td>
                         <span

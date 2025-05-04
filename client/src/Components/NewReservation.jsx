@@ -70,8 +70,6 @@ const NewReservation = () => {
       ...prev,
       serviceEndTime: formattedEndTime,
     }));
-
-    console.log("End Time:", formData.serviceEndTime);
   };
 
   const handleSelectChange = (e) => {
@@ -85,7 +83,7 @@ const NewReservation = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
- 
+
     const data = {
       vehicleID: formData.vehicle,
       serviceType: formData.serviceType,
@@ -95,7 +93,6 @@ const NewReservation = () => {
       note: formData.notes,
     };
 
-    console.log(data);
     try {
       const response = await fetch(
         "http://localhost:4000/api/v1/user/createReservation",
@@ -110,6 +107,9 @@ const NewReservation = () => {
       );
       if (response.ok) {
         toastr.success("Reservation created successfully!");
+      } else {
+        const errorData = await response.json();
+        toastr.error(errorData.message || "Failed to create reservation.");
       }
     } catch (error) {
       console.log(error.message);
@@ -184,7 +184,6 @@ const NewReservation = () => {
           </div>
           <p className="text-muted small">{serviceDescription}</p>
 
-          {/* Date Picker */}
           <div className="mb-3">
             <label htmlFor="serviceDate" className="form-label">
               Preferred Date <span className="text-danger">*</span>
@@ -195,6 +194,7 @@ const NewReservation = () => {
               id="serviceDate"
               name="serviceDate"
               value={formData.serviceDate || ""}
+              min={new Date().toISOString().split("T")[0]} // Disable previous days
               onChange={(e) => {
                 const value = e.target.value;
                 setFormData((prev) => ({
@@ -263,7 +263,9 @@ const NewReservation = () => {
                 }));
               }}
             />
+             <p className="text-muted small">Service end time can be varied based on the workshop workload.</p>
           </div>
+         
 
           {/* Notes */}
           <div className="mb-3">

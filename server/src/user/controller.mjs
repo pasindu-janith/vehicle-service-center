@@ -5,7 +5,7 @@ import { verifyToken } from "../utils/jwt.mjs";
 import { sendEmail } from "../utils/email.mjs";
 import dotenv from "dotenv";
 import fs from "fs";
-import path from "path";
+import path, { parse } from "path";
 import { get } from "http";
 
 dotenv.config();
@@ -191,9 +191,7 @@ export const emailVerify = async (req, res) => {
 
     const user = checkEmail.rows[0];
     if (user.isemailverified) {
-      return res
-        .status(200)
-        .send({ message: "Email verified successfully!" });
+      return res.status(200).send({ message: "Email verified successfully!" });
     }
 
     const emailadd = verifyToken(token);
@@ -845,6 +843,213 @@ export const updateUserPassword = async (req, res) => {
       [hashedPassword, userID]
     );
     return res.status(200).send({ message: "Password updated" });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send("Internal Server Error"); // If the token is invalid or the user does not exist, it returns an error message
+  }
+};
+
+// export const createReservation = async (req, res) => {
+//   try {
+//     const { token } = req.cookies;
+//     const userID = getUserIDFromToken(token, res);
+//     const { vehicleID, serviceType, serviceDate, serviceStartTime, serviceEndTime, note } = req.body;
+
+//     if (!vehicleID || !serviceType || !serviceDate || !serviceTime) {
+//       return res.status(400).send({ message: "All fields are required" });
+//     }
+
+//     const checkUser = await pool.query(
+//       "SELECT * FROM users WHERE user_id = $1",
+//       [userID]
+//     );
+//     if (checkUser.rows.length === 0) {
+//       return res.status(400).send({ message: "Invalid User" });
+//     }
+
+//     const serviceTypes = await pool.query(
+//       "SELECT * FROM service_type WHERE service_type_id = $1",
+//       [serviceType]
+//     );
+
+//     if (serviceTypes.rows.length === 0) {
+//       return res.status(400).send({ message: "Invalid Service Type" });
+//     }
+
+//     const service_type = serviceTypes.rows[0];
+
+//     const checkVehicleReservation = await pool.query(
+//       "SELECT * FROM reservations WHERE vehicle_id = $1 AND start_time  AND reservation_status = $2",
+//       [vehicleID, userID]
+//     );
+
+//     //slots walata bedala thiyenne reservation ekak thiyenawada balanna
+//     //1 slot = 15 mins
+//     //40 slots each day morning 8 to evening 6
+
+//     const existingReservations = await pool.query(
+//       "SELECT COUNT(*) AS count FROM reservations WHERE reserve_date = $1 AND start_time < $2 AND end_time > $3 AND service_type_id = $4 AND reservation_status = $5",
+//       [serviceDate, serviceTime, serviceTime, service_type.service_type_id, "1"]
+//     );
+
+//     const currentCount = parseInt(existingReservations.rows[0].count, 10);
+
+//     if (currentCount >= service_type.max_reservations) {
+//       return res
+//         .status(400)
+//         .send({
+//           message:
+//             "Max reservations reached during this time. Try another time slot.",
+//         });
+//     }
+
+//     const startTime = new Date(`${serviceDate}T${serviceTime}`);
+//     const endTime = new Date(
+//       startTime.getTime() + service_type.duration * 60000
+//     );
+
+//     // Format as HH:mm:ss
+//     const formattedEndTime = endTime.toTimeString().slice(0, 8);
+
+//     const addReservation = await pool.query(
+//       "INSERT INTO reservations (vehicle_id, service_type_id, reserve_date, start_time, end_time, notes, reservation_status) VALUES ($1, $2, $3, $4, $5, $6, $7)",
+//       [
+//         vehicleID,
+//         serviceType,
+//         serviceDate,
+//         serviceTime,
+//         formattedEndTime,
+//         note,
+//         "1",
+//       ]
+//     );
+
+//     return res.status(200).send({ message: "Reservation created" });
+//   } catch (error) {
+//     console.log(error);
+//     res.status(500).send("Internal Server Error"); // If the token is invalid or the user does not exist, it returns an error message
+//   }
+// };
+
+export const createReservation = async (req, res) => {
+  try {
+    const { token } = req.cookies;
+    const userID = getUserIDFromToken(token, res);
+    const {
+      vehicleID,
+      serviceType,
+      serviceDate,
+      serviceStartTime,
+      serviceEndTime,
+      note,
+    } = req.body;
+
+    if (
+      !vehicleID ||
+      !serviceType ||
+      !serviceDate ||
+      !serviceStartTime ||
+      !serviceEndTime
+    ) {
+      return res.status(400).send({ message: "All fields are required" });
+    }
+
+    const checkUser = await pool.query(
+      "SELECT * FROM users WHERE user_id = $1",
+      [userID]
+    );
+    if (checkUser.rows.length === 0) {
+      return res.status(400).send({ message: "Invalid User" });
+    }
+
+    const serviceTypes = await pool.query(
+      "SELECT * FROM service_type WHERE service_type_id = $1",
+      [serviceType]
+    );
+
+    if (serviceTypes.rows.length === 0) {
+      return res.status(400).send({ message: "Invalid Service Type" });
+    }
+
+    const service_type = serviceTypes.rows[0];
+
+    // Check for overlapping reservation for the same vehicle
+    const vehicleOverlapCheck = await pool.query(
+      `SELECT * FROM reservations
+       WHERE vehicle_id = $1
+         AND reserve_date = $2
+         AND NOT (end_time <= $3 OR start_time >= $4)
+         AND reservation_status = $5`,
+      [vehicleID, serviceDate, serviceStartTime, serviceEndTime, "1"]
+    );
+
+    if (vehicleOverlapCheck.rows.length > 0) {
+      return res.status(400).send({
+        message:
+          "This vehicle already has a reservation during the selected time.",
+      });
+    }
+
+    // Check how many reservations exist at this time slot for this service type
+    const existingReservations = await pool.query(
+      `SELECT COUNT(*) AS count FROM reservations
+       WHERE reserve_date = $1
+         AND NOT (end_time <= $2 OR start_time >= $3)
+         AND service_type_id = $4
+         AND reservation_status = $5`,
+      [serviceDate, serviceStartTime, serviceEndTime, serviceType, "1"]
+    );
+
+    const currentCount = parseInt(existingReservations.rows[0].count, 10);
+    if (currentCount >= parseInt(service_type.max_count, 10)) {
+      return res.status(400).send({
+        message:
+          "Max reservations reached during this time. Try another time slot.",
+      });
+    }
+
+    // Add reservation
+    await pool.query(
+      `INSERT INTO reservations 
+        (vehicle_id, service_type_id, reserve_date, start_time, end_time, notes, reservation_status)
+       VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING reservation_id`,
+      [
+        vehicleID,
+        serviceType,
+        serviceDate,
+        serviceStartTime,
+        serviceEndTime,
+        note,
+        "1",
+      ]
+    );
+
+    return res.status(200).send({ message: "Reservation created" });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).send("Internal Server Error");
+  }
+};
+
+export const loadAllUserReservations = async (req, res) => {
+  try {
+    const { token } = req.cookies;
+    const userID = getUserIDFromToken(token, res);
+    const checkUser = await pool.query(
+      "SELECT * FROM users WHERE user_id = $1",
+      [userID]
+    );
+    if (checkUser.rows.length === 0) {
+      return res.status(400).send({ message: "Invalid User" });
+    }
+    const user = checkUser.rows[0];
+    const reservations = await pool.query(
+      `SELECT * FROM reservations NATURAL JOIN service_type INNER JOIN reservation_status 
+      ON reservations.reservation_status=reservation_status.reservation_status_id WHERE vehicle_id 
+      IN (SELECT license_plate FROM vehicles WHERE user_id = $1 AND status=$2)`,
+      [userID, "1"]
+    );
+    return res.status(200).send(reservations.rows);
   } catch (error) {
     console.log(error);
     res.status(500).send("Internal Server Error"); // If the token is invalid or the user does not exist, it returns an error message

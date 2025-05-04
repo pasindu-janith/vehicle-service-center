@@ -1,10 +1,21 @@
-import React, { useEffect, useState } from "react";
+import { form } from "framer-motion/client";
+import { useEffect, useState } from "react";
+import toastr from "toastr";
 
 const NewReservation = () => {
   const [serviceTypes, setServiceTypes] = useState([]);
   const [vehicles, setVehicles] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [serviceDescription, setServiceDescription] = useState("");
+  const [serviceDuration, setServiceDuration] = useState(0);
+  const [formData, setFormData] = useState({
+    vehicle: "",
+    serviceType: "",
+    serviceDate: null,
+    serviceTime: null,
+    serviceEndTime: "",
+    notes: "",
+  });
 
   useEffect(() => {
     const loadServiceTypes = async () => {
@@ -18,7 +29,6 @@ const NewReservation = () => {
         if (response.ok) {
           const data = await response.json();
           setServiceTypes(data);
-          console.log("Service Types Loaded:", data);
         }
       } catch (error) {
         console.error("Error loading service types:", error);
@@ -46,20 +56,69 @@ const NewReservation = () => {
       }
     };
     loadAllUserVehicles();
-
     loadServiceTypes();
   }, []);
 
-  const handleSubmit = (e) => {
+  const calculateEndTime = (value) => {
+    const startTime = new Date(`1970-01-01T${value}`);
+    const endTime = new Date(startTime.getTime() + serviceDuration * 60000);
+
+    // Format to HH:mm:ss
+    const formattedEndTime = endTime.toTimeString().slice(0, 5);
+
+    setFormData((prev) => ({
+      ...prev,
+      serviceEndTime: formattedEndTime,
+    }));
+
+    console.log("End Time:", formData.serviceEndTime);
+  };
+
+  const handleSelectChange = (e) => {
+    const { id, value } = e.target;
+
+    setFormData((prev) => ({
+      ...prev,
+      [id]: value,
+    }));
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const formData = new FormData(e.target);
-    const data = Object.fromEntries(formData.entries());
-    console.log("Form Data Submitted:", data);
+ 
+    const data = {
+      vehicleID: formData.vehicle,
+      serviceType: formData.serviceType,
+      serviceDate: formData.serviceDate,
+      serviceEndTime: formData.serviceEndTime,
+      serviceStartTime: formData.serviceTime,
+      note: formData.notes,
+    };
+
+    console.log(data);
+    try {
+      const response = await fetch(
+        "http://localhost:4000/api/v1/user/createReservation",
+        {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(data),
+        }
+      );
+      if (response.ok) {
+        toastr.success("Reservation created successfully!");
+      }
+    } catch (error) {
+      console.log(error.message);
+    }
   };
 
   return (
-    <div className="container pt-3 d-flex justify-content-center vh-100">
-      <div className="card p-4 rounded shadow-sm col-md-6">
+    <div className="container pt-3 d-flex justify-content-center">
+      <div className="card p-4 rounded shadow-sm col-md-6 col-12">
         <form onSubmit={handleSubmit}>
           <h4 className="mb-4">New Service Reservation</h4>
           {/* Vehicle Selection */}
@@ -72,6 +131,7 @@ const NewReservation = () => {
               id="vehicle"
               name="vehicle"
               required
+              onChange={handleSelectChange}
             >
               <option selected disabled value>
                 Choose...
@@ -104,7 +164,9 @@ const NewReservation = () => {
                 );
                 if (selectedService) {
                   setServiceDescription(selectedService.description);
+                  setServiceDuration(selectedService.duration);
                 }
+                handleSelectChange(e);
               }}
             >
               <option selected disabled value>
@@ -114,7 +176,6 @@ const NewReservation = () => {
                 <option
                   key={service.service_type_id}
                   value={service.service_type_id}
-                  onChange={() => setServiceDescription(service.description)}
                 >
                   {service.service_name}
                 </option>
@@ -133,22 +194,77 @@ const NewReservation = () => {
               className="form-control"
               id="serviceDate"
               name="serviceDate"
+              value={formData.serviceDate || ""}
+              onChange={(e) => {
+                const value = e.target.value;
+                setFormData((prev) => ({
+                  ...prev,
+                  serviceDate: value,
+                }));
+              }}
               required
             />
           </div>
-          {/* Time Picker */}
+
           <div className="mb-3">
             <label htmlFor="serviceTime" className="form-label">
               Preferred Time <span className="text-danger">*</span>
             </label>
-            <input
-              type="time"
-              className="form-control"
+            <select
+              className="form-select"
               id="serviceTime"
               name="serviceTime"
               required
+              onChange={(e) => {
+                const value = e.target.value;
+                if (value !== "") {
+                  setFormData((prev) => ({
+                    ...prev,
+                    serviceTime: value,
+                  }));
+                  calculateEndTime(value); // pass the new value directly
+                }
+              }}
+            >
+              <option selected disabled value>
+                Choose a time
+              </option>
+              {Array.from({ length: (18 - 8) * 4 }, (_, index) => {
+                const hours = 8 + Math.floor(index / 4);
+                const minutes = (index % 4) * 15;
+                const time = `${hours.toString().padStart(2, "0")}:${minutes
+                  .toString()
+                  .padStart(2, "0")}:00`;
+                return (
+                  <option key={time} value={time}>
+                    {time.slice(0, 5)}
+                  </option>
+                );
+              })}
+            </select>
+          </div>
+
+          {/* Service Description */}
+          <div className="mb-3">
+            <label htmlFor="serviceDescription" className="form-label">
+              Service End Time (Approximated)
+            </label>
+            <input
+              type="text"
+              className="form-control"
+              id="serviceEndTime"
+              name="serviceEndTime"
+              disabled
+              value={formData.serviceEndTime}
+              onChange={(e) => {
+                setFormData((prev) => ({
+                  ...prev,
+                  serviceEndTime: e.target.value,
+                }));
+              }}
             />
           </div>
+
           {/* Notes */}
           <div className="mb-3">
             <label htmlFor="notes" className="form-label">
@@ -160,7 +276,13 @@ const NewReservation = () => {
               name="notes"
               rows={3}
               placeholder="E.g. Request for pickup, explain specific issues..."
-              defaultValue={""}
+              value={formData.notes}
+              onChange={(e) => {
+                setFormData((prev) => ({
+                  ...prev,
+                  notes: e.target.value,
+                }));
+              }}
             />
           </div>
           {/* Submit Button */}

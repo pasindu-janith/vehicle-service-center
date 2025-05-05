@@ -1,5 +1,6 @@
 import { form } from "framer-motion/client";
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import toastr from "toastr";
 
 const NewReservation = () => {
@@ -17,6 +18,7 @@ const NewReservation = () => {
     notes: "",
   });
 
+  const navigate = useNavigate();
   useEffect(() => {
     const loadServiceTypes = async () => {
       try {
@@ -107,6 +109,7 @@ const NewReservation = () => {
       );
       if (response.ok) {
         toastr.success("Reservation created successfully!");
+        navigate("/myaccount/reservations");
       } else {
         const errorData = await response.json();
         toastr.error(errorData.message || "Failed to create reservation.");

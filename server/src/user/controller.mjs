@@ -625,6 +625,32 @@ export const registerVehicle = async (req, res) => {
   }
 };
 
+export const deleteVehicle = async (req, res) => {
+  try {
+    const vehicleID  = req.query.licensePlate;
+    const { token } = req.cookies;
+    const userID = getUserIDFromToken(token, res);
+    if (!vehicleID) {
+      return res.status(400).send({ message: "Vehicle ID is required" });
+    }
+    const checkVehicle = await pool.query(
+      "SELECT * FROM vehicles WHERE license_plate = $1 AND user_id = $2",
+      [vehicleID, userID]
+    );
+    if (checkVehicle.rows.length === 0) {
+      return res.status(400).send({ message: "Vehicle not found" });
+    }
+    const deleteVehicl = await pool.query(
+      "UPDATE vehicles SET status = $1 WHERE license_plate = $2",
+      ["0", vehicleID]
+    );
+    res.status(200).send({ message: "Vehicle deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting vehicle:", error);
+    res.status(500).send({ message: "Internal Server Error" });
+  }
+};
+
 // Load vehicle types function
 export const loadVehicleTypes = async (req, res) => {
   try {
@@ -849,88 +875,6 @@ export const updateUserPassword = async (req, res) => {
   }
 };
 
-// export const createReservation = async (req, res) => {
-//   try {
-//     const { token } = req.cookies;
-//     const userID = getUserIDFromToken(token, res);
-//     const { vehicleID, serviceType, serviceDate, serviceStartTime, serviceEndTime, note } = req.body;
-
-//     if (!vehicleID || !serviceType || !serviceDate || !serviceTime) {
-//       return res.status(400).send({ message: "All fields are required" });
-//     }
-
-//     const checkUser = await pool.query(
-//       "SELECT * FROM users WHERE user_id = $1",
-//       [userID]
-//     );
-//     if (checkUser.rows.length === 0) {
-//       return res.status(400).send({ message: "Invalid User" });
-//     }
-
-//     const serviceTypes = await pool.query(
-//       "SELECT * FROM service_type WHERE service_type_id = $1",
-//       [serviceType]
-//     );
-
-//     if (serviceTypes.rows.length === 0) {
-//       return res.status(400).send({ message: "Invalid Service Type" });
-//     }
-
-//     const service_type = serviceTypes.rows[0];
-
-//     const checkVehicleReservation = await pool.query(
-//       "SELECT * FROM reservations WHERE vehicle_id = $1 AND start_time  AND reservation_status = $2",
-//       [vehicleID, userID]
-//     );
-
-//     //slots walata bedala thiyenne reservation ekak thiyenawada balanna
-//     //1 slot = 15 mins
-//     //40 slots each day morning 8 to evening 6
-
-//     const existingReservations = await pool.query(
-//       "SELECT COUNT(*) AS count FROM reservations WHERE reserve_date = $1 AND start_time < $2 AND end_time > $3 AND service_type_id = $4 AND reservation_status = $5",
-//       [serviceDate, serviceTime, serviceTime, service_type.service_type_id, "1"]
-//     );
-
-//     const currentCount = parseInt(existingReservations.rows[0].count, 10);
-
-//     if (currentCount >= service_type.max_reservations) {
-//       return res
-//         .status(400)
-//         .send({
-//           message:
-//             "Max reservations reached during this time. Try another time slot.",
-//         });
-//     }
-
-//     const startTime = new Date(`${serviceDate}T${serviceTime}`);
-//     const endTime = new Date(
-//       startTime.getTime() + service_type.duration * 60000
-//     );
-
-//     // Format as HH:mm:ss
-//     const formattedEndTime = endTime.toTimeString().slice(0, 8);
-
-//     const addReservation = await pool.query(
-//       "INSERT INTO reservations (vehicle_id, service_type_id, reserve_date, start_time, end_time, notes, reservation_status) VALUES ($1, $2, $3, $4, $5, $6, $7)",
-//       [
-//         vehicleID,
-//         serviceType,
-//         serviceDate,
-//         serviceTime,
-//         formattedEndTime,
-//         note,
-//         "1",
-//       ]
-//     );
-
-//     return res.status(200).send({ message: "Reservation created" });
-//   } catch (error) {
-//     console.log(error);
-//     res.status(500).send("Internal Server Error"); // If the token is invalid or the user does not exist, it returns an error message
-//   }
-// };
-
 export const createReservation = async (req, res) => {
   try {
     const { token } = req.cookies;
@@ -1050,6 +994,57 @@ export const loadAllUserReservations = async (req, res) => {
       [userID, "1"]
     );
     return res.status(200).send(reservations.rows);
+  } catch (error) {
+    console.log(error);
+    res.status(500).send("Internal Server Error"); // If the token is invalid or the user does not exist, it returns an error message
+  }
+};
+
+export const cancelReservation = async (req, res) => {
+  try {
+    const reservationID = req.query.rid;
+
+    if (!reservationID) {
+      return res.status(400).send({ message: "Reservation ID is required" });
+    }
+
+    const checkReservation = await pool.query(
+      "SELECT * FROM reservations WHERE reservation_id = $1",
+      [reservationID]
+    );
+    if (checkReservation.rows.length === 0) {
+      return res.status(400).send({ message: "Invalid Reservation ID" });
+    }
+
+    const cancelReservation = await pool.query(
+      "UPDATE reservations SET reservation_status = $1 WHERE reservation_id=$2",
+      ["4", reservationID]
+    );
+
+    return res.status(200).send({ message: "Reservation cancelled" });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send("Internal Server Error"); // If the token is invalid or the user does not exist, it returns an error message
+  }
+};
+
+export const loadAllUserNotifications = async (req, res) => {
+  try {
+    const { token } = req.cookies;
+    const userID = getUserIDFromToken(token, res);
+    const checkUser = await pool.query(
+      "SELECT * FROM users WHERE user_id = $1",
+      [userID]
+    );
+    if (checkUser.rows.length === 0) {
+      return res.status(400).send({ message: "Invalid User" });
+    }
+    const user = checkUser.rows[0];
+    const notifications = await pool.query(
+      `SELECT * FROM notifications WHERE user_id = $1`,
+      [userID]
+    );
+    return res.status(200).send(notifications.rows);
   } catch (error) {
     console.log(error);
     res.status(500).send("Internal Server Error"); // If the token is invalid or the user does not exist, it returns an error message

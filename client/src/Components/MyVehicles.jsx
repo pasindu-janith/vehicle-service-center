@@ -36,65 +36,50 @@ const MyVehicle = () => {
     loadAllUserVehicles();
   }, []);
 
-  const vehicles1 = [
-    {
-      id: 1,
-      number: "KW-5467",
-      model: "Toyota Yaris 2016",
-      category: "Car",
-      color: "White",
-      image: images.toyota,
-      serviceRecords: [
-        {
-          date: "2024-04-01",
-          type: "Oil Change",
-          center: "ABC Service Center",
-          cost: "Rs. 7500",
-        },
-        {
-          date: "2024-01-10",
-          type: "Brake Service",
-          center: "DEF Auto",
-          cost: "Rs. 12000",
-        },
-      ],
-    },
-    {
-      id: 2,
-      number: "CP-1234",
-      model: "Nissan March 2015",
-      category: "Car",
-      color: "Black",
-      image: images.toyota, // You can change image
-      serviceRecords: [
-        {
-          date: "2024-03-15",
-          type: "Tire Replacement",
-          center: "XYZ Tyres",
-          cost: "Rs. 20000",
-        },
-      ],
-    },
-    // Add more vehicles if needed
-  ];
-
-  const [showModal, setShowModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedVehicle, setSelectedVehicle] = useState(null);
 
-  const handleOpenModal = (vehicle) => {
+  const handleOpenDeleteModal = (vehicle) => {
     setSelectedVehicle(vehicle);
-    setShowModal(true);
+    setShowDeleteModal(true);
   };
 
-  const handleCloseModal = () => {
-    setShowModal(false);
+  const handleCloseDeleteModal = () => {
+    setShowDeleteModal(false);
     setSelectedVehicle(null);
+  };
+
+  const deleteVehicle = async () => {
+    try {
+      const response = await fetch(
+        `http://localhost:4000/api/v1/user/deleteVehicle?licensePlate=${selectedVehicle.license_plate}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+        }
+      );
+      if (response.ok) {
+        setVehicles((prevVehicles) =>
+          prevVehicles.filter(
+            (vehicle) => vehicle.license_plate !== selectedVehicle.license_plate
+          )
+        );
+        handleCloseDeleteModal();
+      } else {
+        console.error("Failed to delete vehicle");
+      }
+    } catch (error) {
+      console.error("Error deleting vehicle:", error);
+    }
   };
 
   return (
     <div
       className="container pt-3"
-      style={{ backgroundColor: "#f4f4f4", minHeight: '100vh' }}
+      style={{ backgroundColor: "#f4f4f4", minHeight: "100vh" }}
     >
       <h2 className="mb-3">My Vehicles</h2>
 
@@ -149,7 +134,7 @@ const MyVehicle = () => {
                     </button>
 
                     <button
-                      onClick={() => setSelectedVehicle(vehicle)}
+                      onClick={() => handleOpenDeleteModal(vehicle)}
                       className="btn btn-danger mt-1 me-1"
                     >
                       <MdDelete size={20} /> Delete vehicle
@@ -181,7 +166,7 @@ const MyVehicle = () => {
       </div>
 
       {/* Service Records Modal */}
-      {showModal && selectedVehicle && (
+      {/* { && selectedVehicle && (
         <div
           className="modal d-block"
           tabIndex="-1"
@@ -231,7 +216,7 @@ const MyVehicle = () => {
                 <button
                   type="button"
                   className="btn btn-secondary"
-                  onClick={handleCloseModal}
+                  onClick={handleCloseDeleteModal}
                 >
                   Close
                 </button>
@@ -239,10 +224,10 @@ const MyVehicle = () => {
             </div>
           </div>
         </div>
-      )}
+      )} */}
 
       {/* Delete Confirmation Modal */}
-      {selectedVehicle && (
+      {selectedVehicle && showDeleteModal && (
         <div
           className="modal d-block"
           tabIndex="-1"
@@ -255,7 +240,7 @@ const MyVehicle = () => {
                 <button
                   type="button"
                   className="btn-close"
-                  onClick={() => setSelectedVehicle(null)}
+                  onClick={() => handleCloseDeleteModal()}
                 ></button>
               </div>
               <div className="modal-body">
@@ -268,7 +253,7 @@ const MyVehicle = () => {
                 <button
                   type="button"
                   className="btn btn-secondary"
-                  onClick={() => setSelectedVehicle(null)}
+                  onClick={() => handleCloseDeleteModal()}
                 >
                   Cancel
                 </button>
@@ -283,7 +268,7 @@ const MyVehicle = () => {
                           selectedVehicle.license_plate
                       )
                     );
-                    setSelectedVehicle(null);
+                    deleteVehicle(selectedVehicle.license_plate);
                   }}
                 >
                   Delete

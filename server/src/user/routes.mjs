@@ -21,6 +21,10 @@ import {
   updateUserPassword,
   loadAllUserVehicles,
   loadServiceTypes,
+  createReservation,
+  loadAllUserReservations,
+  cancelReservation,
+  deleteVehicle,
 } from "./controller.mjs";
 import upload from "../middleware/upload.mjs";
 
@@ -50,5 +54,9 @@ userRouter.post("/updateUserProfileData", updateUserProfileData);
 userRouter.post("/resetUserPassword", updateUserPassword);
 userRouter.get("/loadAllUserVehicles", loadAllUserVehicles);
 userRouter.get("/loadServiceTypes", loadServiceTypes);
-
+userRouter.post("/createReservation", createReservation);
+userRouter.post("/createReservation", createReservation);
+userRouter.get("/loadAllUserReservations", loadAllUserReservations);
+userRouter.put("/cancelReservation", cancelReservation);
+userRouter.put("/deleteVehicle", deleteVehicle);
 export default userRouter;

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   FaUserCircle,
   FaTools,
@@ -32,11 +32,66 @@ const Dashboard = () => {
     },
   ];
 
-  const events = [
-    { date: "2025-04-20", title: "Oil Change Appointment" },
-    { date: "2025-04-22", title: "Tire Replacement" },
-    { date: "2025-04-25", title: "Brake Inspection" },
-  ];
+  const [events, setEvents] = useState([]);
+
+  const [pendingServices, setPendingServices] = useState(0);
+  const [ongoingServices, setOngoingServices] = useState(0);
+  useEffect(() => {
+    const loadReservations = async () => {
+      try {
+        const response = await fetch(
+          "http://localhost:4000/api/v1/user/loadAllUserReservations",
+          {
+            method: "GET",
+            credentials: "include",
+          }
+        );
+        if (response.ok) {
+          const data = await response.json();
+          if (data && data.length > 0) {
+            // Normalize date to 'YYYY-MM-DD'
+            var countPending = 0;
+            var countOngoing = 0;
+            const formattedEvents = data.reduce((acc, item) => {
+              const date = item.reserve_date.split("T")[0];
+              const title =
+                item.vehicle_id +
+                  " " +
+                  item.service_name +
+                  " at " +
+                  item.start_time || "Reserved";
+              if (item.status_name === "Pending") {
+                countPending++;
+              }
+              if (item.status_name === "Ongoing") {
+                countOngoing++;
+              }
+              const existingEvent = acc.find((event) => event.date === date);
+              if (existingEvent) {
+                existingEvent.title += `, ${title}`;
+              } else {
+                acc.push({ date, title });
+              }
+              return acc;
+            }, []);
+
+            setEvents(formattedEvents);
+            setPendingServices(countPending);
+            setOngoingServices(countOngoing);
+          }
+        }
+      } catch (error) {
+        console.error("Error loading reservations:", error);
+      }
+    };
+    loadReservations();
+  }, []);
+
+  // const events = [
+  //   { date: "2025-04-20", title: "Oil Change Appointment" },
+  //   { date: "2025-04-22", title: "Tire Replacement" },
+  //   { date: "2025-04-25", title: "Brake Inspection" },
+  // ];
 
   const [date, setDate] = useState(new Date());
   const [selectedEvent, setSelectedEvent] = useState(null);
@@ -77,7 +132,7 @@ const Dashboard = () => {
                 <strong>Email:</strong> {user ? user.email : "N/A"}
               </p>
               <p className="mb-0">
-                <strong>Mobile:</strong> {user ? "+94"+ user.mobile : "N/A"} 
+                <strong>Mobile:</strong> {user ? "+94" + user.mobile : "N/A"}
               </p>
             </div>
           </div>
@@ -89,7 +144,7 @@ const Dashboard = () => {
             <div className="card-body d-flex flex-column justify-content-center align-items-center text-center">
               <FaTools size={32} className="mb-2" />
               <h5 className="card-title">Ongoing Services</h5>
-              <h1 className="display-4">3</h1>
+              <h1 className="display-4">{ongoingServices}</h1>
             </div>
           </div>
         </div>
@@ -100,7 +155,7 @@ const Dashboard = () => {
             <div className="card-body d-flex flex-column justify-content-center align-items-center text-center">
               <FaClipboardList size={32} className="mb-2" />
               <h5 className="card-title">Pending Reservations</h5>
-              <h1 className="display-4">2</h1>
+              <h1 className="display-4">{pendingServices}</h1>
             </div>
           </div>
         </div>
@@ -205,7 +260,6 @@ const Dashboard = () => {
                 className="custom-calendar"
                 onChange={setDate}
                 value={date}
-                minDate={new Date()}
                 tileClassName={({ date }) =>
                   isEventDay(date) ? "event-day" : null
                 }

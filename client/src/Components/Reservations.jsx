@@ -4,7 +4,6 @@ import { Link } from "react-router-dom";
 const Reservations = () => {
   const [reservations, setReservations] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-
   const [selectedReservation, setSelectedReservation] = useState(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -166,7 +165,7 @@ const Reservations = () => {
                               className="btn btn-sm btn-success"
                               onClick={() => {
                                 setSelectedReservation(reservation);
-                                setShowDeleteModal(true);
+                                window.location.href = `/payment/${reservation.reservation_id}`;
                               }}
                             >
                               Payment

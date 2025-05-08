@@ -5,6 +5,7 @@ import { tokenGenLogin } from "../utils/jwt.mjs";
 // Admin login controller
 export const adminLogin = async (req, res) => {
     try {
+      console.log("Login request received:", req.body);
       const { email, password } = req.body;
       
       const checkAdmin = await pool.query(

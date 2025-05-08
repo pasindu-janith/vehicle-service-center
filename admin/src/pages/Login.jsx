@@ -1,38 +1,28 @@
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
-import axios from "axios";
+import React, { useState }, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import axios from "axios";import axios from "axios";
 
 const Login = () => {
-  // Step 1: Declare state for email, password, and error message
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [errorMessage, setErrorMessage] = useState("");
+  const [email, setEmail] = useState("");             // State for email
+  const [password, setPassword] = useState("");       // State for password
+  const navigate = useNavigate();
 
-  // Step 2: Handle form submission
-  const handleSubmit = async (e) => {
-    e.preventDefault(); // Prevent page reload on submit
-
-    // Step 3: Check if email and password are entered
-    if (!email || !password) {
-      setErrorMessage("Please enter both email and password");
-      return;
-    }
+  const handleLogin = async (e) => {
+    e.preventDefault(); // Prevent page refresh
 
     try {
-      // Step 4: Send login request to backend
-      const response = await axios.post("http://localhost:4000/admin/login", {
-        email,
-        password,
-      });
+      const response = await axios.post(
+        "http://localhost:4000/api/v1/admin/login",
+        { email, password },
+        { withCredentials: true } // Important to send cookies
+      );
 
-      if (response.data.token) {
-        // Successful login, redirect to dashboard
-        // You can use history.push or Link to navigate to the dashboard
-        window.location.href = "/dashboard";
+      if (response.status === 200) {
+        // Login success, navigate to dashboard
+        navigate("/dashboard");
       }
-    } catch (error) {
-      // Step 5: Show error message if login fails
-      setErrorMessage(error.response ? error.response.data.message : "Login failed");
+    } catch (err) {
+      alert("Login failed: " + (err.response?.data?.message || "Unknown error"));
     }
   };
 
@@ -47,14 +37,16 @@ const Login = () => {
           </div>
           <div className="card-body">
             <p className="login-box-msg">Sign in to dashboard</p>
-            <form onSubmit={handleSubmit}> {/* Step 6: Attach handleSubmit */}
+
+            <form onSubmit={handleLogin}>
               <div className="input-group mb-3">
                 <input
                   type="email"
                   className="form-control"
                   placeholder="Email"
-                  value={email}  // Step 7: Bind email to state
-                  onChange={(e) => setEmail(e.target.value)}  // Step 8: Handle email change
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
                 />
                 <div className="input-group-append">
                   <div className="input-group-text">
@@ -67,8 +59,9 @@ const Login = () => {
                   type="password"
                   className="form-control"
                   placeholder="Password"
-                  value={password} // Step 9: Bind password to state
-                  onChange={(e) => setPassword(e.target.value)} // Step 10: Handle password change
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
                 />
                 <div className="input-group-append">
                   <div className="input-group-text">
@@ -91,6 +84,7 @@ const Login = () => {
                 </button>
               </div>
             </form>
+
             <p className="mb-1">
               <a href="forgot-password.html">I forgot my password</a>
             </p>

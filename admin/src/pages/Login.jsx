@@ -1,28 +1,50 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import axios from "axios";
 
 const Login = () => {
-  const [email, setEmail] = useState("");             // State for email
-  const [password, setPassword] = useState("");       // State for password
+  const [formData, setFormData] = useState({ email: "", password: "" });
+  const [rememberMe, setRememberMe] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
-    e.preventDefault(); // Prevent page refresh
+    e.preventDefault();
+
+    if (formData.email === "" || formData.password === "") {
+      toastr.warning("Please fill all the fields.");
+      return;
+    }
 
     try {
-      const response = await axios.post(
-        "http://localhost:4000/api/v1/admin/login",
-        { email, password },
-        { withCredentials: true } // Important to send cookies
-      );
+      setIsSubmitting(true);
 
-      if (response.status === 200) {
-        // Login success, navigate to dashboard
+      const response = await fetch("http://localhost:4000/api/v1/admin/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+          rememberMe: rememberMe,
+        }),
+        credentials: "include", // To send cookies
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Login failed");
+      }
+
+      if (data.token) {
+        localStorage.setItem("admin", JSON.stringify(data.admin));
         navigate("/dashboard");
       }
-    } catch (err) {
-      alert("Login failed: " + (err.response?.data?.message || "Unknown error"));
+    } catch (error) {
+      toastr.error(error.message);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -44,8 +66,10 @@ const Login = () => {
                   type="email"
                   className="form-control"
                   placeholder="Email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  value={formData.email}
+                  onChange={(e) =>
+                    setFormData({ ...formData, email: e.target.value })
+                  }
                   required
                 />
                 <div className="input-group-append">
@@ -59,8 +83,10 @@ const Login = () => {
                   type="password"
                   className="form-control"
                   placeholder="Password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  value={formData.password}
+                  onChange={(e) =>
+                    setFormData({ ...formData, password: e.target.value })
+                  }
                   required
                 />
                 <div className="input-group-append">
@@ -69,17 +95,28 @@ const Login = () => {
                   </div>
                 </div>
               </div>
+
               <div className="row">
                 <div className="col-8">
                   <div className="icheck-primary">
-                    <input type="checkbox" id="remember" />
+                    <input
+                      type="checkbox"
+                      id="remember"
+                      checked={rememberMe}
+                      onChange={(e) => setRememberMe(e.target.checked)}
+                    />
                     <label htmlFor="remember">Remember Me</label>
                   </div>
                 </div>
               </div>
+
               <div className="col-12 mt-2 mb-3">
-                <button type="submit" className="btn btn-primary btn-block">
-                  Sign In
+                <button
+                  type="submit"
+                  className="btn btn-primary btn-block"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? "Signing In..." : "Sign In"}
                 </button>
               </div>
             </form>

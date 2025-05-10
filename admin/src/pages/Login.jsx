@@ -2,16 +2,26 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 const Login = () => {
-  const [formData, setFormData] = useState({ email: "", password: "" });
-  const [rememberMe, setRememberMe] = useState(false);
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+    rememberMe: false,
+  });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
+
+  const handleChange = (e) => {
+    const { id, value } = e.target;
+    setFormData((prevData) => ({
+      ...prevData,
+      [id]: value,
+    }));
+  };
 
   const handleLogin = async (e) => {
     e.preventDefault();
 
     if (formData.email === "" || formData.password === "") {
-      toastr.warning("Please fill all the fields.");
       return;
     }
 
@@ -26,9 +36,9 @@ const Login = () => {
         body: JSON.stringify({
           email: formData.email,
           password: formData.password,
-          rememberMe: rememberMe,
+          rememberMe: formData.rememberMe,
         }),
-        credentials: "include", // To send cookies
+        credentials: "include", // Include credentials for cross-origin requests
       });
 
       const data = await response.json();
@@ -42,7 +52,8 @@ const Login = () => {
         navigate("/dashboard");
       }
     } catch (error) {
-      toastr.error(error.message);
+      console.error("Login error:", error);
+      alert(error.message || "An error occurred during login.");
     } finally {
       setIsSubmitting(false);
     }
@@ -53,12 +64,14 @@ const Login = () => {
       <div className="login-box">
         <div className="card card-outline card-primary">
           <div className="card-header text-center">
-            <a href="../../index2.html" className="h1">
-              <b>Auto Lanka</b> Services
-            </a>
+            <h1 className="h1">
+              <b>Shan  Automobile</b><br />
+              <small>Admin Login</small>
+
+            </h1>
           </div>
           <div className="card-body">
-            <p className="login-box-msg">Sign in to dashboard</p>
+            <p className="login-box-msg">Sign in to administration dashboard</p>
 
             <form onSubmit={handleLogin}>
               <div className="input-group mb-3">
@@ -66,10 +79,9 @@ const Login = () => {
                   type="email"
                   className="form-control"
                   placeholder="Email"
+                  id="email"
                   value={formData.email}
-                  onChange={(e) =>
-                    setFormData({ ...formData, email: e.target.value })
-                  }
+                  onChange={handleChange}
                   required
                 />
                 <div className="input-group-append">
@@ -83,10 +95,9 @@ const Login = () => {
                   type="password"
                   className="form-control"
                   placeholder="Password"
+                  id="password"
                   value={formData.password}
-                  onChange={(e) =>
-                    setFormData({ ...formData, password: e.target.value })
-                  }
+                  onChange={handleChange}
                   required
                 />
                 <div className="input-group-append">
@@ -101,9 +112,14 @@ const Login = () => {
                   <div className="icheck-primary">
                     <input
                       type="checkbox"
-                      id="remember"
-                      checked={rememberMe}
-                      onChange={(e) => setRememberMe(e.target.checked)}
+                      id="rememberMe"
+                      checked={formData.rememberMe}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          rememberMe: e.target.checked,
+                        })
+                      }
                     />
                     <label htmlFor="remember">Remember Me</label>
                   </div>

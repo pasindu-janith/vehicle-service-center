@@ -11,13 +11,20 @@ const app = express();
 
 const PORT = process.env.PORT || 5000;
 
-// Middleware
+const allowedOrigins = ["http://localhost:5173", "http://localhost:3001"];
+
 app.use(
   cors({
-    origin: "http://localhost:5173", // Your frontend URL
-    credentials: true, // Required to allow cookies
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true,
   })
-); 
+);
 
 app.use(express.json()); // Parse JSON bodies
 app.use(express.urlencoded({ extended: true })); // Parse URL-encoded form data

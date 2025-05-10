@@ -196,9 +196,17 @@ const Vehicle = () => {
                     </div>
                     <div className="col-md-5">
                       <div className="form-group">
-                        <label htmlFor="exampleInputEmail1">
-                          Vehicle Number
-                        </label>
+                        <label htmlFor="vehicleno">Vehicle Number</label>
+                        <input
+                          type="text"
+                          className="form-control"
+                          id="vehicleno"
+                          name="vehicleno"
+                        />
+                      </div>
+
+                      <div className="form-group">
+                        <label htmlFor="exampleInputEmail1">Type</label>
                         <input
                           type="text"
                           className="form-control"
@@ -206,19 +214,7 @@ const Vehicle = () => {
                         />
                       </div>
                       <div className="form-group">
-                        <label htmlFor="exampleInputEmail1">
-                          Brand
-                        </label>
-                        <input
-                          type="text"
-                          className="form-control"
-                          id="exampleInputEmail1"
-                        />
-                      </div>
-                      <div className="form-group">
-                        <label htmlFor="exampleInputEmail1">
-                          Type
-                        </label>
+                        <label htmlFor="brand">Brand</label>
                         <input
                           type="text"
                           className="form-control"
@@ -253,12 +249,33 @@ const Vehicle = () => {
                       id="exampleInputPassword1"
                     />
                   </div>
-                  <label>Registered Since: 2023/04/13</label>
+                  <div className="row">
+                    <div className="col-md-6">
+                      <div className="form-group">
+                        <label htmlFor="brand">Transmission</label>
+                        <input
+                          type="text"
+                          className="form-control"
+                          id="exampleInputEmail1"
+                        />
+                      </div>
+                    </div>
+                    <div className="col-md-6">
+                      <div className="form-group">
+                        <label htmlFor="brand">Fuel</label>
+                        <input
+                          type="text"
+                          className="form-control"
+                          id="exampleInputEmail1"
+                        />
+                      </div>
+                    </div>
+                  </div>
                 </div>
                 {/* /.card-body */}
                 <div className="card-footer">
-                  <button type="submit" className="btn btn-primary">
-                    Submit
+                  <button type="reset" className="btn btn-primary">
+                    Reset
                   </button>
                 </div>
               </form>

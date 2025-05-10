@@ -151,7 +151,7 @@ const Dashboard = () => {
 
         {/* Pending Reservations Card */}
         <div className="col-md-4">
-          <div className="card text-white bg-warning h-100">
+          <div className="card text-white bg-info h-100">
             <div className="card-body d-flex flex-column justify-content-center align-items-center text-center">
               <FaClipboardList size={32} className="mb-2" />
               <h5 className="card-title">Pending Reservations</h5>
@@ -164,7 +164,7 @@ const Dashboard = () => {
       <div className="row mb-3">
         <div className="col-md-12">
           <div className="card">
-            <div className="card-header">
+            <div className="card-header bg-secondary text-white">
               <h5>Service Status Overview</h5>
             </div>
             <div className="card-body">
@@ -249,7 +249,7 @@ const Dashboard = () => {
         {/* Calendar Widget with Events */}
         <div className="col-md-6">
           <div className="card">
-            <div className="card-header d-flex align-items-center">
+            <div className="card-header bg-primary text-white d-flex align-items-center">
               <FaCalendar size={20} className="me-2" />
               <span>
                 <h6>Service Calendar</h6>
@@ -274,8 +274,8 @@ const Dashboard = () => {
           </div>
         </div>
         <div className="col-md-6">
-          <div className="card">
-            <div className="card-header d-flex align-items-center">
+          <div className="card h-100 overflow-hidden">
+            <div className="card-header bg-primary text-white d-flex align-items-center">
               <FaBell size={20} className="me-2" />
               <span>
                 <h6>Important Notifications</h6>

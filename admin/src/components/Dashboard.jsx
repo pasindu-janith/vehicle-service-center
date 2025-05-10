@@ -147,19 +147,26 @@ const Dashboard = () => {
               <div className="small-box bg-info">
                 <div className="inner">
                   <h3>150</h3>
-                  <p>New Orders</p>
+                  <p>Pending Reservations (Today)</p>
+                </div>
+              </div>
+            </div>
+            <div className="col-lg-3 col-6">
+              {/* small box */}
+              <div className="small-box bg-warning">
+                <div className="inner">
+                  <h3>150</h3>
+                  <p>Pending Reservations(All)</p>
                 </div>
               </div>
             </div>
             {/* ./col */}
             <div className="col-lg-3 col-6">
               {/* small box */}
-              <div className="small-box bg-success">
+              <div className="small-box bg-info">
                 <div className="inner">
-                  <h3>
-                    53<sup style={{ fontSize: 20 }}>%</sup>
-                  </h3>
-                  <p>Bounce Rate</p>
+                  <h3>12</h3>
+                  <p>Completed Reservations (Today)</p>
                 </div>
               </div>
             </div>
@@ -169,21 +176,53 @@ const Dashboard = () => {
               <div className="small-box bg-warning">
                 <div className="inner">
                   <h3>44</h3>
-                  <p>User Registrations</p>
+                  <p>Ongoing Reservations(All)</p>
                 </div>
               </div>
             </div>
             {/* ./col */}
             <div className="col-lg-3 col-6">
               {/* small box */}
-              <div className="small-box bg-danger">
+              <div className="small-box bg-warning">
                 <div className="inner">
-                  <h3>65</h3>
-                  <p>Unique Visitors</p>
+                  <h3>150</h3>
+                  <p>Stared Services(Today)</p>
+                </div>
+              </div>
+            </div>
+            <div className="col-lg-3 col-6">
+              {/* small box */}
+              <div className="small-box bg-info">
+                <div className="inner">
+                  <h3>
+                    53<sup style={{ fontSize: 20 }}>%</sup>
+                  </h3>
+                  <p>Working rate (Current)</p>
                 </div>
               </div>
             </div>
             {/* ./col */}
+
+            {/* ./col */}
+            <div className="col-lg-3 col-6">
+              {/* small box */}
+              <div className="small-box bg-warning">
+                <div className="inner">
+                  <h3>150</h3>
+                  <p>Payments Done(Today)</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="col-lg-3 col-6">
+              {/* small box */}
+              <div className="small-box bg-info">
+                <div className="inner">
+                  <h3>150</h3>
+                  <p>Registered Users</p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
         {/* BAR CHART */}
@@ -229,7 +268,7 @@ const Dashboard = () => {
             </div>
             <div className="col-md-6">
               {/* DONUT CHART */}
-              <div className="card card-success">
+              <div className="card card-primary">
                 <div className="card-header">
                   <h3 className="card-title">Donut Chart</h3>
                   <div className="card-tools">

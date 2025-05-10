@@ -122,22 +122,20 @@ const MyVehicle = () => {
                       </tbody>
                     </table>
 
-                    <a href="#" className="btn btn-primary mt-1 me-1">
-                      <IoMdInformationCircleOutline size={20} /> More info
-                    </a>
+                    
 
                     <button
                       onClick={() => handleOpenModal(vehicle)}
                       className="btn btn-primary mt-1 me-1"
                     >
-                      Service records
+                      <IoMdInformationCircleOutline size={20} /> More info
                     </button>
 
                     <button
                       onClick={() => handleOpenDeleteModal(vehicle)}
                       className="btn btn-danger mt-1 me-1"
                     >
-                      <MdDelete size={20} /> Delete vehicle
+                      <MdDelete size={20} /> Delete
                     </button>
                   </div>
                 </div>

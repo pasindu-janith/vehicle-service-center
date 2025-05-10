@@ -2,6 +2,29 @@ import { Link } from "react-router-dom";
 import images from "./../assets/assets";
 
 const Sidebar = () => {
+
+  const handleLogout = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await fetch("http://localhost:4000/api/v1/admin/logout", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include", // Include credentials for cross-origin requests
+      });
+
+      if (!response.ok) {
+        throw new Error("Logout failed");
+      }
+
+      localStorage.removeItem("admin");
+      window.location.href = "/login"; // Redirect to login page after logout
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
+  }
+
   return (
     <aside className="main-sidebar sidebar-dark-primary elevation-4">
       {/* Brand Logo */}
@@ -111,12 +134,12 @@ const Sidebar = () => {
                 </p>
               </Link>
             </li>
-            <li className="nav-item">
+            {/* <li className="nav-item">
               <Link to="/login" className="nav-link">
                 <i className="nav-icon fas fa-chart-pie" />
                 <p>Progress</p>
               </Link>
-            </li>
+            </li> */}
             <li className="nav-item">
               <Link to="/profile" className="nav-link">
                 <i className="nav-icon fas fa-user-cog" />
@@ -124,7 +147,7 @@ const Sidebar = () => {
               </Link>
             </li>
             <li className="nav-item">
-              <Link to="/login" className="nav-link">
+              <Link onClick={handleLogout} className="nav-link">
                 <i className="nav-icon fas fa-sign-out-alt" />
                 <p>Log out</p>
               </Link>

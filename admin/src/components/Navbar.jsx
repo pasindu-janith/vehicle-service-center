@@ -1,3 +1,6 @@
+import React from "react";
+import { Link } from "react-router-dom";
+
 const Navbar = () => {
   return (
     <nav className="main-header navbar navbar-expand navbar-white navbar-light">
@@ -9,9 +12,9 @@ const Navbar = () => {
           </a>
         </li>
         <li className="nav-item d-none d-sm-inline-block">
-          <a href="index3.html" className="nav-link">
+          <Link to="http://localhost:5173/" className="nav-link">
             Home
-          </a>
+          </Link>
         </li>
         
       </ul>

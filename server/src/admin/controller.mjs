@@ -24,10 +24,10 @@ export const adminLogin = async (req, res) => {
         return res.status(400).send({ message: "Invalid credentials" });
       }
   
-      const token = tokenGenLogin({ adminID: admin.admin_id, email: admin.email });
+      const token = tokenGenLogin({ adminID: admin.user_id, email: admin.email });
       const cookieExpiration =  24 * 60 * 60 * 1000;
   
-      res.cookie("admin_token", token, {
+      res.cookie("adminToken", token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: "strict",
@@ -36,7 +36,7 @@ export const adminLogin = async (req, res) => {
       });
   
      
-      res.status(200).send({ token, admin: admin.admin_id });
+      res.status(200).send({ token, admin: admin.user_id });
     }  catch (error) {
         console.log(error);
         res.status(500).send("Internal Server Error");

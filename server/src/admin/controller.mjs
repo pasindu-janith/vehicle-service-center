@@ -5,15 +5,16 @@ import { tokenGenLogin } from "../utils/jwt.mjs";
 // Admin login controller
 export const adminLogin = async (req, res) => {
     try {
+      
       console.log("Login request received:", req.body);
-      const { email, password } = req.body;
+      const { email, password } = req.body; //
       
       const checkAdmin = await pool.query(
         "SELECT * FROM users WHERE email = $1 AND status = $2 AND user_type_id = $3",
         [email, "1", "1"]
       );
       
-      if (checkAdmin.rows.length === 0) {
+      if (checkAdmin.rows.length === 0) {        //
         return res.status(400).send({ message: "Invalid admin credentials" });
       }
   

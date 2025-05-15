@@ -30,7 +30,7 @@ const Sidebar = () => {
       {/* Brand Logo */}
       <a href="index3.html" className="brand-link">
         <span className="brand-text font-weight-light">
-          Auto Lanka Services
+          Shan Automobile
         </span>
       </a>
       {/* Sidebar */}

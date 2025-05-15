@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import $ from "jquery";
 import "datatables.net-dt";
 import "datatables.net-responsive-dt";
@@ -8,29 +8,51 @@ import "datatables.net-responsive-dt/css/responsive.dataTables.css";
 import "datatables.net-buttons-dt/css/buttons.dataTables.css";
 
 const ServicesOngoing = () => {
-  useEffect(() => {
-    const $table = $("#example2");
+  const [tableData, setTableData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const tableRef = useRef(null);
+  const dtInstance = useRef(null); // To store the DataTable instance
 
-    // Initialize the DataTable only if it's not already initialized
-    if (!$.fn.DataTable.isDataTable($table)) {
-      const table = $table.DataTable({
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await fetch(
+          "http://localhost:4000/api/v1/admin/loadOngoingServices"
+        );
+        if (response.ok) {
+          const jsonData = await response.json();
+          setTableData(jsonData);
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  useEffect(() => {
+    // Only initialize or reinitialize DataTables if data is loaded
+    if (!loading && tableData.length > 0) {
+      const $table = $(tableRef.current);
+
+      // Destroy existing instance before reinitializing
+      if ($.fn.DataTable.isDataTable($table)) {
+        $table.DataTable().destroy();
+      }
+
+      dtInstance.current = $table.DataTable({
         paging: true,
         lengthChange: true,
         searching: true,
         ordering: true,
         info: true,
-        autoWidth: false,
+        autoWidth: true,
         responsive: true,
       });
     }
-
-    // Cleanup: Destroy only the DataTable instance, not the table element
-    return () => {
-      if ($.fn.DataTable.isDataTable($table)) {
-        $table.DataTable().destroy();
-      }
-    };
-  }, []);
+  }, [tableData, loading]); // Re-run only when data is updated
 
   return (
     <section className="content pt-2">
@@ -41,168 +63,67 @@ const ServicesOngoing = () => {
               <div className="card-header bg-primary">
                 <h3 className="card-title">Ongoing Services</h3>
               </div>
-              {/* /.card-header */}
               <div className="card-body">
                 <table
+                  ref={tableRef}
                   id="example2"
                   className="table table-bordered table-hover"
                 >
                   <thead>
                     <tr>
-                      <th>Service ID</th>
+                      <th>Reservation ID</th>
                       <th>Vehicle No</th>
+                      <th>Service Name</th>
                       <th>Time start</th>
                       <th>Time due</th>
                       <th>Description</th>
+                      <th>Controls</th>
                     </tr>
                   </thead>
                   <tbody>
-                    <tr>
-                      <td>Trident</td>
-                      <td>Internet Explorer 4.0</td>
-                      <td>Win 95+</td>
-                      <td> 4</td>
-                      <td>X</td>
-                    </tr>
-                    <tr>
-                      <td>Trident</td>
-                      <td>Internet Explorer 5.0</td>
-                      <td>Win 95+</td>
-                      <td>5</td>
-                      <td>C</td>
-                    </tr>
-                    <tr>
-                      <td>Trident</td>
-                      <td>Internet Explorer 5.5</td>
-                      <td>Win 95+</td>
-                      <td>5.5</td>
-                      <td>A</td>
-                    </tr>
-                    <tr>
-                      <td>Trident</td>
-                      <td>Internet Explorer 6</td>
-                      <td>Win 98+</td>
-                      <td>6</td>
-                      <td>A</td>
-                    </tr>
-                    <tr>
-                      <td>Trident</td>
-                      <td>Internet Explorer 7</td>
-                      <td>Win XP SP2+</td>
-                      <td>7</td>
-                      <td>A</td>
-                    </tr>
-                    <tr>
-                      <td>Trident</td>
-                      <td>AOL browser (AOL desktop)</td>
-                      <td>Win XP</td>
-                      <td>6</td>
-                      <td>A</td>
-                    </tr>
-                    <tr>
-                      <td>Gecko</td>
-                      <td>Firefox 1.0</td>
-                      <td>Win 98+ / OSX.2+</td>
-                      <td>1.7</td>
-                      <td>A</td>
-                    </tr>
-                    <tr>
-                      <td>Gecko</td>
-                      <td>Firefox 1.5</td>
-                      <td>Win 98+ / OSX.2+</td>
-                      <td>1.8</td>
-                      <td>A</td>
-                    </tr>
-                    <tr>
-                      <td>Gecko</td>
-                      <td>Firefox 2.0</td>
-                      <td>Win 98+ / OSX.2+</td>
-                      <td>1.8</td>
-                      <td>A</td>
-                    </tr>
-                    <tr>
-                      <td>Gecko</td>
-                      <td>Firefox 3.0</td>
-                      <td>Win 2k+ / OSX.3+</td>
-                      <td>1.9</td>
-                      <td>A</td>
-                    </tr>
-                    <tr>
-                      <td>Gecko</td>
-                      <td>Camino 1.0</td>
-                      <td>OSX.2+</td>
-                      <td>1.8</td>
-                      <td>A</td>
-                    </tr>
-                    <tr>
-                      <td>Gecko</td>
-                      <td>Camino 1.5</td>
-                      <td>OSX.3+</td>
-                      <td>1.8</td>
-                      <td>A</td>
-                    </tr>
-                    <tr>
-                      <td>Gecko</td>
-                      <td>Netscape 7.2</td>
-                      <td>Win 95+ / Mac OS 8.6-9.2</td>
-                      <td>1.7</td>
-                      <td>A</td>
-                    </tr>
-                    <tr>
-                      <td>Gecko</td>
-                      <td>Netscape Browser 8</td>
-                      <td>Win 98SE+</td>
-                      <td>1.7</td>
-                      <td>A</td>
-                    </tr>
-                    <tr>
-                      <td>Gecko</td>
-                      <td>Netscape Navigator 9</td>
-                      <td>Win 98+ / OSX.2+</td>
-                      <td>1.8</td>
-                      <td>A</td>
-                    </tr>
-                    <tr>
-                      <td>Gecko</td>
-                      <td>Mozilla 1.0</td>
-                      <td>Win 95+ / OSX.1+</td>
-                      <td>1</td>
-                      <td>A</td>
-                    </tr>
-                    <tr>
-                      <td>Gecko</td>
-                      <td>Mozilla 1.1</td>
-                      <td>Win 95+ / OSX.1+</td>
-                      <td>1.1</td>
-                      <td>A</td>
-                    </tr>
-                    <tr>
-                      <td>Gecko</td>
-                      <td>Mozilla 1.2</td>
-                      <td>Win 95+ / OSX.1+</td>
-                      <td>1.2</td>
-                      <td>A</td>
-                    </tr>
-                    <tr>
-                      <td>Gecko</td>
-                      <td>Mozilla 1.3</td>
-                      <td>Win 95+ / OSX.1+</td>
-                      <td>1.3</td>
-                      <td>A</td>
-                    </tr>
-                    <tr>
-                      <td>Gecko</td>
-                      <td>Mozilla 1.4</td>
-                      <td>Win 95+ / OSX.1+</td>
-                      <td>1.4</td>
-                      <td>A</td>
-                    </tr>
+                    {tableData.length > 0 ? (
+                      tableData.map((row) => (
+                        <tr key={row.reservation_id}>
+                          <td>{row.reservation_id}</td>
+                          <td>{row.vehicle_id}</td>
+                          <td>{row.service_name}</td>
+                          <td>{row.start_time}</td>
+                          <td>{row.end_time}</td>
+                          <td>{row.notes}</td>
+                          <td>
+                            <button
+                              className="btn btn-success btn-sm me-2"
+                              onClick={() => {
+                                // Handle button click
+                                console.log("Button clicked for ID:", row.reservation_id);
+                              }}
+                            >
+                              End
+                            </button>
+
+                            <button
+                              className="btn btn-primary btn-sm"
+                              onClick={() => {
+                                // Handle button click
+                                console.log("Button clicked for ID:", row.reservation_id);
+                              }}
+                            >
+                              Customer
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="7" className="text-center">
+                          No ongoing services found.
+                        </td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>
-              {/* /.card-body */}
             </div>
-            {/* /.card */}
           </div>
         </div>
       </div>

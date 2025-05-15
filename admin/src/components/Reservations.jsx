@@ -43,7 +43,7 @@ const Reservations = () => {
           <div className="col-12">
             <div className="card">
               <div className="card-header bg-secondary">
-                <h4>Service Reservations</h4>
+                Service Reservations(Pending)
               </div>
               {/* /.card-header */}
               <div className="card-body">

@@ -7,6 +7,9 @@ const Login = () => {
     password: "",
     rememberMe: false,
   });
+
+  
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
 
@@ -36,7 +39,7 @@ const Login = () => {
         body: JSON.stringify({
           email: formData.email,
           password: formData.password,
-          rememberMe: formData.rememberMe,
+          rememberMe: formData.rememberMe
         }),
         credentials: "include", // Include credentials for cross-origin requests
       });
@@ -48,7 +51,7 @@ const Login = () => {
       }
 
       if (data.token) {
-        localStorage.setItem("admin", JSON.stringify(data.admin));
+        // localStorage.setItem("admin", JSON.stringify(data.admin));
         navigate("/dashboard");
       }
     } catch (error) {

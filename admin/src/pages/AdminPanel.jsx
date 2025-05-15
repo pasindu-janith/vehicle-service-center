@@ -1,9 +1,9 @@
 import Dashboard from "./../components/Dashboard";
 import Navbar from "./../components/Navbar";
 import Payment from "./../components/Payment";
-import Services from "./../components/Services";
 import Sidebar from "./../components/Sidebar";
-import { Routes, Route } from "react-router-dom";
+import { useEffect } from "react";
+import { Routes, Route, useNavigate } from "react-router-dom";
 import Profile from "./../components/Profile";
 import Schedule from "./../components/Schedule";
 import ServicesOngoing from "./../components/ServicesOngoing";
@@ -15,6 +15,27 @@ import Vehicle from "./../components/Vehicle";
 import Messages from "./../components/Messages";
 
 const AdminPanel = () => {
+  const navigate = useNavigate();
+  useEffect(() => {
+    const verifyLoginStatus = async () => {
+      try {
+        const response = await fetch(
+          "http://localhost:4000/api/v1/admin/authAdmin",
+          {
+            method: "GET",
+            credentials: "include",
+          }
+        );
+        if (!response.ok) {
+          navigate("/login");
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    };
+    verifyLoginStatus();
+  }, []);
+
   return (
     <div className="wrapper">
       <Navbar />
@@ -33,7 +54,6 @@ const AdminPanel = () => {
           <Route path="/customers" element={<Customers />} />
           <Route path="/vehicles" element={<Vehicle />} />
           <Route path="/message" element={<Messages />} />
-
         </Routes>
       </div>
     </div>

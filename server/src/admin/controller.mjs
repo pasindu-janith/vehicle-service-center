@@ -1,12 +1,15 @@
 import bcrypt from "bcrypt";
 import pool from "../../db.mjs";
-import { tokenGenLogin } from "../utils/jwt.mjs";
+import { decodeToken, tokenGen, tokenGenLogin } from "../utils/jwt.mjs";
+import { verifyToken } from "../utils/jwt.mjs";
+import { sendEmail } from "../utils/email.mjs";
+import dotenv from "dotenv";
 
 // Admin login controller
 export const adminLogin = async (req, res) => {
   try {
     console.log("Login request received:", req.body);
-    const { email, password } = req.body;
+    const { email, password, rememberMe } = req.body;
 
     const checkAdmin = await pool.query(
       "SELECT * FROM users WHERE email = $1 AND status = $2 AND user_type_id = $3",
@@ -52,39 +55,26 @@ export const adminLogout = async (req, res) => {
   }
 };
 
-export const getAdmin = async (req, res) => {
+
+export const authAdmin = async (req, res) => {
   try {
-    const adminId = req.params.id;
-    const admin = await pool.query("SELECT * FROM users WHERE user_id = $1", [
-      adminId,
-    ]);
-
-    if (admin.rows.length === 0) {
-      return res.status(404).send({ message: "Admin not found" });
+    const { adminToken } = req.cookies;
+    if (!adminToken) {
+      return res.status(401).send({ message: "No cookies available" }); // This function checks if the user is authorized by verifying the token in the cookies
     }
-
-    res.status(200).send(admin.rows[0]);
-  } catch (error) {
-    console.error("Error fetching admin:", error);
-    res.status(500).send("Internal Server Error");
-  }
-};
-
-export const authorizeAdmin = async (req, res) => {
-  try {
-    const token = req.cookies.adminToken;
-
-    if (!token) {
-      return res.status(401).send({ message: "Unauthorized" });
+    const decodedToken = decodeToken(adminToken);
+    if (!decodedToken) {
+      return res.status(401).send({ message: "Unauthorized" }); // It returns a 401 status if the token is not present or invalid, and a 200 status if the user is authorized
     }
-
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-    if (!decoded) {
-      return res.status(401).send({ message: "Unauthorized" });
+    const adminID = decodedToken.adminID;
+    const checkAdmin = await pool.query(
+      "SELECT * FROM users WHERE user_id = $1 AND user_type_id=$2",
+      [adminID, "1"]
+    );
+    if (checkAdmin.rows.length === 0) {
+      return res.status(400).send({ message: "Invalid User" }); // It also checks if the user exists in the database and returns a 400 status if not
     }
-
-    req.adminId = decoded.adminID;
+    res.status(200).send({ message: "Authorized" });
   } catch (error) {
     console.error("Authorization error:", error);
     res.status(401).send({ message: "Unauthorized" });
@@ -94,21 +84,21 @@ export const authorizeAdmin = async (req, res) => {
 export const loadOngoingServices = async (req, res) => {
   try {
     const ongoingServices = await pool.query(
-      "SELECT * FROM services WHERE status = $1",
-      ["ongoing"]
+      "SELECT * FROM reservations INNER JOIN service_type ON reservations.service_type_id=service_type.service_type_id WHERE reservation_status=(SELECT reservation_status_id FROM reservation_status WHERE status_name=$1) LIMIT 100",
+      ["Ongoing"]
     );
-
     res.status(200).send(ongoingServices.rows);
   } catch (error) {
     console.error("Error loading ongoing services:", error);
     res.status(500).send("Internal Server Error");
   }
 };
+
 export const loadCompletedServices = async (req, res) => {
   try {
-    const completedServices = await pool.query(
-      "SELECT * FROM services WHERE status = $1",
-      ["completed"]
+   const completedServices = await pool.query(
+      "SELECT * FROM reservations INNER JOIN reservation_status ON reservations.reservation_status=reservation_status.reservation_status_id WHERE status_name=$1 LIMIT 100",
+      ["Completed"]
     );
 
     res.status(200).send(completedServices.rows);
@@ -117,13 +107,13 @@ export const loadCompletedServices = async (req, res) => {
     res.status(500).send("Internal Server Error");
   }
 };
+
 export const loadPendingServices = async (req, res) => {
   try {
-    const pendingServices = await pool.query(
-      "SELECT * FROM services WHERE status = $1",
-      ["pending"]
+   const pendingServices = await pool.query(
+      "SELECT * FROM reservations INNER JOIN service_type ON reservations.service_type_id=service_type.service_type_id WHERE reservation_status=(SELECT reservation_status_id FROM reservation_status WHERE status_name=$1) LIMIT 100",
+      ["Pending"]
     );
-
     res.status(200).send(pendingServices.rows);
   } catch (error) {
     console.error("Error loading pending services:", error);

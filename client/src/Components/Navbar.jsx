@@ -92,8 +92,8 @@ const CustomNavbar = ({activeSection}) => {
             </li>
           </ul>
           <div className="d-flex flex-column mt-3">
-            <button className="btn btn-outline-primary mb-2" onClick={goToLogin} type="button">Login</button>
-            <button className="btn btn-primary" type="button">Register Now</button>
+            <button className="btn btn-outline-danger mb-2" onClick={goToLogin} type="button">Login</button>
+            <button className="btn btn-danger" type="button" onClick={goToSignUp}>Register Now</button>
           </div>
         </div>
 

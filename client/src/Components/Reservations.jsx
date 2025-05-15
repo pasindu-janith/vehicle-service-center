@@ -112,11 +112,7 @@ const Reservations = () => {
                       <td>{reservation.reservation_id}</td>
                       <td>{reservation.vehicle_id}</td>
                       <td>
-                        {
-                          new Date(reservation.reserve_date)
-                            .toISOString()
-                            .split("T")[0]
-                        }
+                        {new Date(reservation.reserve_date).toLocaleDateString('en-CA')}
                       </td>
                       <td>
                         {reservation.start_time} - {reservation.end_time}

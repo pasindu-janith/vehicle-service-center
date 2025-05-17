@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { adminLogin, adminLogout, authAdmin, loadOngoingServices, loadPendingServices } from "./controller.mjs";
+import { adminLogin, adminLogout, authAdmin, loadOngoingServices, loadPendingServices,loadReservationWithFilter } from "./controller.mjs";
 
 //User functions here
 
@@ -10,4 +10,5 @@ adminRouter.get("/logout", adminLogout);
 adminRouter.get("/authAdmin", authAdmin);
 adminRouter.get("/loadOngoingServices", loadOngoingServices);
 adminRouter.get("/loadPendingServices", loadPendingServices);
+adminRouter.get("/filterReservationData", loadReservationWithFilter);
 export default adminRouter;

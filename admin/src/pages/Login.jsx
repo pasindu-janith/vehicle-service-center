@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 const Login = () => {
@@ -7,11 +7,29 @@ const Login = () => {
     password: "",
     rememberMe: false,
   });
+  const navigate = useNavigate();
 
-  
+  useEffect(() => {
+    const verifyLoginStatus = async () => {
+      try {
+        const response = await fetch(
+          "http://localhost:4000/api/v1/admin/authAdmin",
+          {
+            method: "GET",
+            credentials: "include",
+          }
+        );
+        if (response.ok) {
+          navigate("/dashboard");
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    };
+    verifyLoginStatus();
+  }, []);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const navigate = useNavigate();
 
   const handleChange = (e) => {
     const { id, value } = e.target;
@@ -39,7 +57,7 @@ const Login = () => {
         body: JSON.stringify({
           email: formData.email,
           password: formData.password,
-          rememberMe: formData.rememberMe
+          rememberMe: formData.rememberMe,
         }),
         credentials: "include", // Include credentials for cross-origin requests
       });
@@ -68,9 +86,9 @@ const Login = () => {
         <div className="card card-outline card-primary">
           <div className="card-header text-center">
             <h1 className="h1">
-              <b>Shan  Automobile</b><br />
+              <b>Shan Automobile</b>
+              <br />
               <small>Admin Login</small>
-
             </h1>
           </div>
           <div className="card-body">

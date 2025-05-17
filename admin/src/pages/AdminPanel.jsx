@@ -47,7 +47,7 @@ const AdminPanel = () => {
           <Route path="/payment" element={<Payment />} />
           <Route path="/reservations" element={<Reservations />} />
           <Route path="/settings" element={<Payment />} />
-          <Route path="/calender" element={<Schedule />} />
+          <Route path="/calendar" element={<Schedule />} />
           <Route path="/ongoing" element={<ServicesOngoing />} />
           <Route path="/pending" element={<ServicesPending />} />
           <Route path="/completed" element={<ServicesCompleted />} />

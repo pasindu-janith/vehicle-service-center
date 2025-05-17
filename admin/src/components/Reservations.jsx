@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import $ from "jquery";
 import "datatables.net-dt";
 import "datatables.net-responsive-dt";
@@ -11,31 +11,102 @@ import "react-datetime-picker/dist/DateTimePicker.css";
 import "react-calendar/dist/Calendar.css";
 import "react-clock/dist/Clock.css"; // Required for the clock UI
 import "./styles/datetime.css";
+
 const Reservations = () => {
-  const [startDateTime, setStartDateTime] = useState();
-  const [endDateTime, setEndDateTime] = useState();
+  const [startDateTime, setStartDateTime] = useState(null);
+  const [endDateTime, setEndDateTime] = useState(null);
+  const [tableData, setTableData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [serviceTypes, setServiceTypes] = useState([]);
+  const [selectedReservation, setSelectedReservation] = useState(null);
+  const tableRef = useRef(null);
+  const dtInstance = useRef(null); // To store the DataTable instance
+
   useEffect(() => {
-    const $table = $("#example2");
-    // Initialize the DataTable only if it's not already initialized
-    if (!$.fn.DataTable.isDataTable($table)) {
-      const table = $table.DataTable({
+    const fetchData = async () => {
+      try {
+        const response = await fetch(
+          "http://localhost:4000/api/v1/admin/loadOngoingServices"
+        );
+        if (response.ok) {
+          const jsonData = await response.json();
+          setTableData(jsonData);
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  useEffect(() => {
+    // Only initialize or reinitialize DataTables if data is loaded
+    if (!loading && tableData.length > 0) {
+      const $table = $(tableRef.current);
+
+      // Destroy existing instance before reinitializing
+      if ($.fn.DataTable.isDataTable($table)) {
+        $table.DataTable().destroy();
+      }
+
+      dtInstance.current = $table.DataTable({
         paging: true,
         lengthChange: true,
         searching: true,
         ordering: true,
         info: true,
-        autoWidth: false,
+        autoWidth: true,
         responsive: true,
       });
     }
+  }, [tableData, loading]); // Re-run only when data is updated
 
-    // Cleanup: Destroy only the DataTable instance, not the table element
-    return () => {
-      if ($.fn.DataTable.isDataTable($table)) {
-        $table.DataTable().destroy();
+  useEffect(() => {
+    const loadServiceTypes = async () => {
+      try {
+        const response = await fetch(
+          "http://localhost:4000/api/v1/user/loadServiceTypes",
+          {
+            method: "GET",
+          }
+        );
+        if (response.ok) {
+          const data = await response.json();
+          setServiceTypes(data);
+        }
+      } catch (error) {
+        console.error("Error loading service types:", error);
       }
     };
+    loadServiceTypes();
   }, []);
+
+  const filterDataLoad = async () => {
+    const serviceType = document.getElementById("serviceType").value;
+    const vehicleNumber = document.getElementById("vehicleNumber").value;
+
+    try {
+      const response = await fetch(
+        `http://localhost:4000/api/v1/admin/filterReservationData?serviceType=${serviceType}&vehicleNumber=${vehicleNumber}&startDateTime=${startDateTime}&endDateTime=${endDateTime}`,
+        {
+          method: "GET",
+        }
+      );
+      if (response.ok) {
+        const data = await response.json();
+        setTableData(data);
+      }
+    } catch (error) {
+      console.error("Error loading filtered data:", error);
+    }
+  };
+
+  const handleRowClick = (row) => {
+    setSelectedReservation(row);
+  };
+
   return (
     <section className="content pt-2">
       <div className="container-fluid">
@@ -43,7 +114,7 @@ const Reservations = () => {
           <div className="col-12">
             <div className="card">
               <div className="card-header bg-secondary">
-                Service Reservations(Pending)
+                Service Reservations(All)
               </div>
               {/* /.card-header */}
               <div className="card-body">
@@ -54,208 +125,142 @@ const Reservations = () => {
                   <div className="card-body">
                     <div className="row">
                       <div className="col-md-6 col-12">
-                        <label htmlFor="">Vehicle Number</label>
-                        <input type="text" className="form-control" />
+                        <label htmlFor="vehicleNumber">Vehicle Number</label>
+                        <input type="text" id="vehicleNumber" className="form-control" />
                       </div>
                       <div className="col-md-6 col-12">
                         <div className="form-group">
-                          <label htmlFor="exampleFormControlSelect1">
-                            Vehicle type
+                          <label htmlFor="serviceType">
+                            Service type
                           </label>
                           <select
                             className="form-control"
-                            id="exampleFormControlSelect1"
+                            id="serviceType"
+                            name="serviceType"
+                            onChange={(e) => {
+                              const selectedValue = e.target.value;
+                              console.log(
+                                "Selected service type:",
+                                selectedValue
+                              );
+                            }}
                           >
-                            <option>All</option>
-                            <option>1-Car</option>
-                            <option>2-Van</option>
-                            <option>3-Lorry</option>
-                            <option>4-Bike</option>
-                            <option>5-Jeep</option>
+                            <option value="0">All Types</option>
+                            {serviceTypes.map((serviceType) => (
+                              <option
+                                key={serviceType.service_type_id}
+                                value={serviceType.service_type_id}
+                              >
+                                {serviceType.service_name}
+                              </option>
+                            ))}
                           </select>
                         </div>
                       </div>
                       <div className="col-md-4 pt-3">
                         <label>Start Date-Time:</label>
                         <DateTimePicker
-                          onChange={setStartDateTime}
+                          onChange={(date) => setStartDateTime(date)}
                           value={startDateTime}
+                          maxDate={endDateTime}
                           className="datetimepick col-md-8 col-12"
                         />
                       </div>
                       <div className="col-md-4 pt-3">
                         <label>End Date-Time:</label>
                         <DateTimePicker
-                          onChange={setEndDateTime}
+                          onChange={(date) => setEndDateTime(date)}
                           value={endDateTime}
                           minDate={startDateTime}
                           className="datetimepick col-md-8 col-12"
                         />
                       </div>
                       <div className="col-md-4 d-flex justify-content-end">
-                        <button className="btn btn-primary mt-3">Filter</button>
+                        <button
+                          className="btn btn-primary mt-3"
+                          onClick={filterDataLoad}
+                        >
+                          Filter
+                        </button>
                       </div>
                     </div>
                   </div>
                 </div>
                 <table
+                  ref={tableRef}
                   id="example2"
                   className="table table-bordered table-hover"
                 >
                   <thead>
                     <tr>
-                      <th>Service ID</th>
+                      <th>Reservation ID</th>
                       <th>Vehicle No</th>
+                      <th>Service Name</th>
                       <th>Time start</th>
                       <th>Time due</th>
                       <th>Description</th>
+                      <th>Status</th>
+                      <th>Controls</th>
                     </tr>
                   </thead>
                   <tbody>
-                    <tr>
-                      <td>Trident</td>
-                      <td>Internet Explorer 4.0</td>
-                      <td>Win 95+</td>
-                      <td> 4</td>
-                      <td>X</td>
-                    </tr>
-                    <tr>
-                      <td>Trident</td>
-                      <td>Internet Explorer 5.0</td>
-                      <td>Win 95+</td>
-                      <td>5</td>
-                      <td>C</td>
-                    </tr>
-                    <tr>
-                      <td>Trident</td>
-                      <td>Internet Explorer 5.5</td>
-                      <td>Win 95+</td>
-                      <td>5.5</td>
-                      <td>A</td>
-                    </tr>
-                    <tr>
-                      <td>Trident</td>
-                      <td>Internet Explorer 6</td>
-                      <td>Win 98+</td>
-                      <td>6</td>
-                      <td>A</td>
-                    </tr>
-                    <tr>
-                      <td>Trident</td>
-                      <td>Internet Explorer 7</td>
-                      <td>Win XP SP2+</td>
-                      <td>7</td>
-                      <td>A</td>
-                    </tr>
-                    <tr>
-                      <td>Trident</td>
-                      <td>AOL browser (AOL desktop)</td>
-                      <td>Win XP</td>
-                      <td>6</td>
-                      <td>A</td>
-                    </tr>
-                    <tr>
-                      <td>Gecko</td>
-                      <td>Firefox 1.0</td>
-                      <td>Win 98+ / OSX.2+</td>
-                      <td>1.7</td>
-                      <td>A</td>
-                    </tr>
-                    <tr>
-                      <td>Gecko</td>
-                      <td>Firefox 1.5</td>
-                      <td>Win 98+ / OSX.2+</td>
-                      <td>1.8</td>
-                      <td>A</td>
-                    </tr>
-                    <tr>
-                      <td>Gecko</td>
-                      <td>Firefox 2.0</td>
-                      <td>Win 98+ / OSX.2+</td>
-                      <td>1.8</td>
-                      <td>A</td>
-                    </tr>
-                    <tr>
-                      <td>Gecko</td>
-                      <td>Firefox 3.0</td>
-                      <td>Win 2k+ / OSX.3+</td>
-                      <td>1.9</td>
-                      <td>A</td>
-                    </tr>
-                    <tr>
-                      <td>Gecko</td>
-                      <td>Camino 1.0</td>
-                      <td>OSX.2+</td>
-                      <td>1.8</td>
-                      <td>A</td>
-                    </tr>
-                    <tr>
-                      <td>Gecko</td>
-                      <td>Camino 1.5</td>
-                      <td>OSX.3+</td>
-                      <td>1.8</td>
-                      <td>A</td>
-                    </tr>
-                    <tr>
-                      <td>Gecko</td>
-                      <td>Netscape 7.2</td>
-                      <td>Win 95+ / Mac OS 8.6-9.2</td>
-                      <td>1.7</td>
-                      <td>A</td>
-                    </tr>
-                    <tr>
-                      <td>Gecko</td>
-                      <td>Netscape Browser 8</td>
-                      <td>Win 98SE+</td>
-                      <td>1.7</td>
-                      <td>A</td>
-                    </tr>
-                    <tr>
-                      <td>Gecko</td>
-                      <td>Netscape Navigator 9</td>
-                      <td>Win 98+ / OSX.2+</td>
-                      <td>1.8</td>
-                      <td>A</td>
-                    </tr>
-                    <tr>
-                      <td>Gecko</td>
-                      <td>Mozilla 1.0</td>
-                      <td>Win 95+ / OSX.1+</td>
-                      <td>1</td>
-                      <td>A</td>
-                    </tr>
-                    <tr>
-                      <td>Gecko</td>
-                      <td>Mozilla 1.1</td>
-                      <td>Win 95+ / OSX.1+</td>
-                      <td>1.1</td>
-                      <td>A</td>
-                    </tr>
-                    <tr>
-                      <td>Gecko</td>
-                      <td>Mozilla 1.2</td>
-                      <td>Win 95+ / OSX.1+</td>
-                      <td>1.2</td>
-                      <td>A</td>
-                    </tr>
-                    <tr>
-                      <td>Gecko</td>
-                      <td>Mozilla 1.3</td>
-                      <td>Win 95+ / OSX.1+</td>
-                      <td>1.3</td>
-                      <td>A</td>
-                    </tr>
-                    <tr>
-                      <td>Gecko</td>
-                      <td>Mozilla 1.4</td>
-                      <td>Win 95+ / OSX.1+</td>
-                      <td>1.4</td>
-                      <td>A</td>
-                    </tr>
+                    {tableData.length > 0 ? (
+                      tableData.map((row) => (
+                        <tr key={row.reservation_id}>
+                          <td>{row.reservation_id}</td>
+                          <td>{row.vehicle_id}</td>
+                          <td>{row.service_name}</td>
+                          <td>{row.start_time}</td>
+                          <td>{row.end_time}</td>
+                          <td>
+                            {row.status === "Pending" ? (
+                              <span className="badge bg-warning">
+                                {row.status}
+                              </span>
+                            ) : row.reservation_status === "" ? (
+                              <span className="badge bg-success">
+                                {row.status}
+                              </span>
+                            ) : (
+                              <span className="badge bg-danger">
+                                {row.status}
+                              </span>
+                            )}
+                          </td>
+                          <td>{row.notes}</td>
+                          <td>
+                            {row.status === "Pending" ? (
+                              <>
+                                <button className="btn btn-warning btn-sm me-2">
+                                  Start
+                                </button>
+                                <button className="btn btn-primary btn-sm me-2">
+                                  Edit
+                                </button>
+                                {/* <button className="btn btn-warning btn-sm me-2">
+                                  Cancel
+                                </button> */}
+                              </>
+                            ) : row.reservation_status === "Ongoing" ? (
+                              <button className="btn btn-warning btn-sm me-2">
+                                Edit
+                              </button>
+                            ) : (
+                              ""
+                            )}
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="8" className="text-center">
+                          No reservations found.
+                        </td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>
-              {/* /.card-body */}
             </div>
             {/* /.card */}
           </div>

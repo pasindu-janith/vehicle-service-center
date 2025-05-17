@@ -71,7 +71,7 @@ const ServicesOngoing = () => {
                 >
                   <thead>
                     <tr>
-                      <th>Reservation ID</th>
+                      <th>Res. ID</th>
                       <th>Vehicle No</th>
                       <th>Service Name</th>
                       <th>Time start</th>

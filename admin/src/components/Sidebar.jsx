@@ -1,18 +1,26 @@
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import images from "./../assets/assets";
+import { useState } from "react";
 
 const Sidebar = () => {
+  const location = useLocation();
+  const serviceOrderPaths = ["/ongoing", "/pending", "/completed"];
+  // Check if the current path is one of the service order paths
+  const [isServiceOrderActive, setServiceOrderActive] = useState(false);
 
   const handleLogout = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch("http://localhost:4000/api/v1/admin/logout", {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include", // Include credentials for cross-origin requests
-      });
+      const response = await fetch(
+        "http://localhost:4000/api/v1/admin/logout",
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include", // Include credentials for cross-origin requests
+        }
+      );
 
       if (!response.ok) {
         throw new Error("Logout failed");
@@ -23,19 +31,16 @@ const Sidebar = () => {
     } catch (error) {
       console.error("Logout error:", error);
     }
-  }
+  };
 
   return (
     <aside className="main-sidebar sidebar-dark-primary elevation-4">
       {/* Brand Logo */}
       <a href="index3.html" className="brand-link">
-        <span className="brand-text font-weight-light">
-          Shan Automobile
-        </span>
+        <span className="brand-text font-weight-light">Shan Automobile</span>
       </a>
       {/* Sidebar */}
       <div className="sidebar">
-        {/* Sidebar user panel (optional) */}
         <div className="user-panel mt-3 pb-3 mb-3 d-flex">
           <div className="image">
             <img
@@ -45,7 +50,7 @@ const Sidebar = () => {
             />
           </div>
           <div className="info">
-            <Link to='profile' className="d-block">
+            <Link to="profile" className="d-block">
               Admin User
             </Link>
           </div>
@@ -58,17 +63,27 @@ const Sidebar = () => {
             role="menu"
             data-accordion="false"
           >
-            {/* Add icons to the links using the .nav-icon class
-         with font-awesome or any other icon font library */}
             <li className="nav-item">
-              <Link to="/dashboard" className="nav-link active">
+              <Link
+                to="/dashboard"
+                className={`nav-link ${
+                  location.pathname === "/dashboard" ? "active" : ""
+                }`}
+              >
                 <i className="nav-icon fas fa-tachometer-alt" />
                 <p>Dashboard</p>
               </Link>
             </li>
-
-            <li className="nav-item">
-              <a href="#" className="nav-link">
+            <li
+              className={`nav-item ${isServiceOrderActive ? "menu-open" : ""}`}
+            >
+              <a
+                className={`nav-link ${
+                  serviceOrderPaths.includes(location.pathname) ? "active" : ""
+                }`}
+                onClick={() => setServiceOrderActive(!isServiceOrderActive)}
+                style={{ cursor: "pointer" }}
+              >
                 <i className="nav-icon fas fa-toolbox" />
                 <p>
                   Service Orders
@@ -77,19 +92,34 @@ const Sidebar = () => {
               </a>
               <ul className="nav nav-treeview">
                 <li className="nav-item">
-                  <Link to="/ongoing" className="nav-link">
+                  <Link
+                    to="/ongoing"
+                    className={`nav-link ${
+                      location.pathname === "/ongoing" ? "active" : ""
+                    }`}
+                  >
                     <i className="far fa-circle nav-icon" />
                     <p>Ongoing</p>
                   </Link>
                 </li>
                 <li className="nav-item">
-                  <Link to="/pending" className="nav-link">
+                  <Link
+                    to="/pending"
+                    className={`nav-link ${
+                      location.pathname === "/pending" ? "active" : ""
+                    }`}
+                  >
                     <i className="far fa-circle nav-icon" />
                     <p>Pending</p>
                   </Link>
                 </li>
                 <li className="nav-item">
-                  <Link to="/completed" className="nav-link">
+                  <Link
+                    to="/completed"
+                    className={`nav-link ${
+                      location.pathname === "/completed" ? "active" : ""
+                    }`}
+                  >
                     <i className="far fa-circle nav-icon" />
                     <p>Completed</p>
                   </Link>
@@ -97,31 +127,56 @@ const Sidebar = () => {
               </ul>
             </li>
             <li className="nav-item">
-              <Link to="/reservations" className="nav-link">
+              <Link
+                to="/reservations"
+                className={`nav-link ${
+                  location.pathname === "/reservations" ? "active" : ""
+                }`}
+              >
                 <i className="nav-icon fas fa-book" />
                 <p>Reservations</p>
               </Link>
             </li>
             <li className="nav-item">
-              <Link to="/calender" className="nav-link">
+              <Link
+                to="/calendar"
+                className={`nav-link ${
+                  location.pathname === "/calendar" ? "active" : ""
+                }`}
+              >
                 <i className="nav-icon fas fa-calendar" />
                 <p>Calendar</p>
               </Link>
             </li>
             <li className="nav-item">
-              <Link to="/payment" className="nav-link">
+              <Link
+                to="/payment"
+                className={`nav-link ${
+                  location.pathname === "/payment" ? "active" : ""
+                }`}
+              >
                 <i className="nav-icon fas fa-credit-card" />
                 <p>Payments</p>
               </Link>
             </li>
             <li className="nav-item">
-              <Link to="/customers" className="nav-link">
+              <Link
+                to="/customers"
+                className={`nav-link ${
+                  location.pathname === "/customers" ? "active" : ""
+                }`}
+              >
                 <i className="nav-icon fas fa-users" />
                 <p>Customers</p>
               </Link>
             </li>
             <li className="nav-item">
-              <Link to="/vehicles" className="nav-link">
+              <Link
+                to="/vehicles"
+                className={`nav-link ${
+                  location.pathname === "/vehicles" ? "active" : ""
+                }`}
+              >
                 <i className="nav-icon fas fa-car" />
                 <p>Vehicles</p>
               </Link>
@@ -129,9 +184,7 @@ const Sidebar = () => {
             <li className="nav-item">
               <Link to="/message" className="nav-link">
                 <i className="nav-icon fas fa-regular fa-comment" />
-                <p>
-                  Messages
-                </p>
+                <p>Messages</p>
               </Link>
             </li>
             {/* <li className="nav-item">
@@ -141,7 +194,12 @@ const Sidebar = () => {
               </Link>
             </li> */}
             <li className="nav-item">
-              <Link to="/profile" className="nav-link">
+              <Link
+                to="/profile"
+                className={`nav-link ${
+                  location.pathname === "/profile" ? "active" : ""
+                }`}
+              >
                 <i className="nav-icon fas fa-user-cog" />
                 <p>Settings</p>
               </Link>

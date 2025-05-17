@@ -150,14 +150,20 @@ export const loadReservationWithFilter = async (req, res) => {
   console.log("Filter request received:", req.query);
   try {
     let query = `
-      SELECT * FROM reservations
+      SELECT * FROM reservations INNER JOIN service_type ON reservations.service_type_id=service_type.service_type_id
+      INNER JOIN vehicles ON reservations.vehicle_id=vehicles.license_plate
+      INNER JOIN reservation_status ON reservations.reservation_status=reservation_status.reservation_status_id
       WHERE 1=1 
       ${
         serviceType && serviceType != 0
-          ? ` AND service_type_id = '${serviceType}'`
+          ? ` AND reservations.service_type_id = '${serviceType}'`
           : ""
       }
-      ${vehicleNumber ? ` AND vehicle_id = '${vehicleNumber}'` : ""}
+      ${
+        vehicleNumber && vehicleNumber !== ""
+          ? ` AND vehicle_id = '${vehicleNumber}'`
+          : ""
+      }
       ${
         startDateTime && endDateTime
           ? ` AND (reserve_date + start_time) BETWEEN '${startDateTime}'::timestamp AND '${endDateTime}'::timestamp`
@@ -169,5 +175,19 @@ export const loadReservationWithFilter = async (req, res) => {
   } catch (error) {
     console.error("Error fetching ongoing services:", error);
     res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+export const loadAllReservations = async (req, res) => {
+  try {
+    const allReservations = await pool.query(
+      `SELECT * FROM reservations INNER JOIN service_type ON reservations.service_type_id=service_type.service_type_id
+       INNER JOIN vehicles ON reservations.vehicle_id=vehicles.license_plate 
+       INNER JOIN reservation_status ON reservations.reservation_status=reservation_status.reservation_status_id LIMIT 100`
+    );
+    res.status(200).send(allReservations.rows);
+  } catch (error) {
+    console.error("Error loading all reservations:", error);
+    res.status(500).send("Internal Server Error");
   }
 };

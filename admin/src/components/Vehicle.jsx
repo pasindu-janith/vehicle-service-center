@@ -95,81 +95,17 @@ const Vehicle = () => {
                 >
                   <thead>
                     <tr>
-                      <th>Customer ID</th>
-                      <th>Name</th>
-                      <th>NIC</th>
+                      <th>License Plate</th>
+                      <th>Model</th>
+                      <th>Owner</th>
                       <th></th>
                     </tr>
                   </thead>
                   <tbody>
                     <tr>
-                      <td>Trident</td>
-                      <td>Internet Explorer 4.0</td>
-                      <td>Win 95+</td>
-                      <td>
-                        <button className="btn btn-primary">View</button>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>Trident</td>
-                      <td>Internet Explorer 5.0</td>
-                      <td>Win 95+</td>
-                      <td>
-                        <button className="btn btn-primary">View</button>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>Trident</td>
-                      <td>Internet Explorer 5.5</td>
-                      <td>Win 95+</td>
-                      <td>
-                        <button className="btn btn-primary">View</button>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>Trident</td>
-                      <td>Internet Explorer 6</td>
-                      <td>Win 98+</td>
-                      <td>
-                        <button className="btn btn-primary">View</button>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>Trident</td>
-                      <td>Internet Explorer 7</td>
-                      <td>Win XP SP2+</td>
-                      <td>
-                        <button className="btn btn-primary">View</button>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>Trident</td>
-                      <td>AOL browser (AOL desktop)</td>
-                      <td>Win XP</td>
-                      <td>
-                        <button className="btn btn-primary">View</button>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>Gecko</td>
-                      <td>Firefox 1.0</td>
-                      <td>Win 98+ / OSX.2+</td>
-                      <td>
-                        <button className="btn btn-primary">View</button>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>Gecko</td>
-                      <td>Firefox 1.5</td>
-                      <td>Win 98+ / OSX.2+</td>
-                      <td>
-                        <button className="btn btn-primary">View</button>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>Gecko</td>
-                      <td>Firefox 2.0</td>
-                      <td>Win 98+ / OSX.2+</td>
+                      <td>ABC123</td>
+                      <td>Toyota Corolla</td>
+                      <td>John Doe</td>   
                       <td>
                         <button className="btn btn-primary">View</button>
                       </td>

@@ -26,7 +26,7 @@ const Reservations = () => {
     const fetchData = async () => {
       try {
         const response = await fetch(
-          "http://localhost:4000/api/v1/admin/loadOngoingServices"
+          "http://localhost:4000/api/v1/admin/loadAllReservations"
         );
         if (response.ok) {
           const jsonData = await response.json();
@@ -89,7 +89,7 @@ const Reservations = () => {
 
     try {
       const response = await fetch(
-        `http://localhost:4000/api/v1/admin/filterReservationData?serviceType=${serviceType}&vehicleNumber=${vehicleNumber}&startDateTime=${startDateTime}&endDateTime=${endDateTime}`,
+        `http://localhost:4000/api/v1/admin/filterReservationData?serviceType=${serviceType}&vehicleNumber=${vehicleNumber}&startDateTime=${startDateTime.toISOString()}&endDateTime=${endDateTime.toISOString()}`,
         {
           method: "GET",
         }
@@ -126,13 +126,15 @@ const Reservations = () => {
                     <div className="row">
                       <div className="col-md-6 col-12">
                         <label htmlFor="vehicleNumber">Vehicle Number</label>
-                        <input type="text" id="vehicleNumber" className="form-control" />
+                        <input
+                          type="text"
+                          id="vehicleNumber"
+                          className="form-control"
+                        />
                       </div>
                       <div className="col-md-6 col-12">
                         <div className="form-group">
-                          <label htmlFor="serviceType">
-                            Service type
-                          </label>
+                          <label htmlFor="serviceType">Service type</label>
                           <select
                             className="form-control"
                             id="serviceType"
@@ -193,7 +195,7 @@ const Reservations = () => {
                 >
                   <thead>
                     <tr>
-                      <th>Reservation ID</th>
+                      <th>Res. ID</th>
                       <th>Vehicle No</th>
                       <th>Service Name</th>
                       <th>Time start</th>
@@ -212,38 +214,51 @@ const Reservations = () => {
                           <td>{row.service_name}</td>
                           <td>{row.start_time}</td>
                           <td>{row.end_time}</td>
+                          <td>{row.notes}</td>
                           <td>
-                            {row.status === "Pending" ? (
+                            {row.status_name === "Pending" ? (
                               <span className="badge bg-warning">
-                                {row.status}
+                                {row.status_name}
                               </span>
-                            ) : row.reservation_status === "" ? (
+                            ) : row.status_name === "Completed" ? (
                               <span className="badge bg-success">
-                                {row.status}
+                                {row.status_name}
+                              </span>
+                            ) : row.status_name === "Ongoing" ? (
+                              <span className="badge bg-info">
+                                {row.status_name}
                               </span>
                             ) : (
                               <span className="badge bg-danger">
-                                {row.status}
+                                {row.status_name}
                               </span>
                             )}
                           </td>
-                          <td>{row.notes}</td>
                           <td>
-                            {row.status === "Pending" ? (
+                            {row.status_name === "Pending" ? (
                               <>
-                                <button className="btn btn-warning btn-sm me-2">
+                                <button className="btn btn-warning btn-sm mr-1">
                                   Start
                                 </button>
-                                <button className="btn btn-primary btn-sm me-2">
+                                <button className="btn btn-primary btn-sm">
                                   Edit
                                 </button>
                                 {/* <button className="btn btn-warning btn-sm me-2">
                                   Cancel
                                 </button> */}
                               </>
-                            ) : row.reservation_status === "Ongoing" ? (
-                              <button className="btn btn-warning btn-sm me-2">
-                                Edit
+                            ) : row.status_name === "Ongoing" ? (
+                              <>
+                                <button className="btn btn-success btn-sm mr-1">
+                                  End
+                                </button>
+                                <button className="btn btn-primary btn-sm">
+                                  Edit
+                                </button>
+                              </>
+                            ) : row.status_name === "Completed" ? (
+                              <button className="btn btn-primary btn-sm">
+                                Info
                               </button>
                             ) : (
                               ""

@@ -36,21 +36,21 @@ const Schedule = () => {
           allDay: true,
         },
         {
-          title: "Long Event",
+          title: "Lubricant service",
           start: new Date(y, m, d - 5),
           end: new Date(y, m, d - 2),
           backgroundColor: "#f39c12", //yellow
           borderColor: "#f39c12", //yellow
         },
         {
-          title: "Meeting",
+          title: "Vehicle scnning",
           start: new Date(y, m, d, 10, 30),
           allDay: false,
           backgroundColor: "#0073b7", //Blue
           borderColor: "#0073b7", //Blue
         },
         {
-          title: "Lunch",
+          title: "vehicle service",
           start: new Date(y, m, d, 13, 0),
           end: new Date(y, m, d, 14, 0),
           allDay: false,
@@ -58,7 +58,7 @@ const Schedule = () => {
           borderColor: "#00c0ef", //Info (aqua)
         },
         {
-          title: "Birthday Party",
+          title: "machine service",
           start: new Date(y, m, d + 1, 19, 0),
           end: new Date(y, m, d + 1, 22, 30),
           allDay: false,

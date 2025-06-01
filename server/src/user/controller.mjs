@@ -593,10 +593,34 @@ export const registerVehicle = async (req, res) => {
       "SELECT * FROM vehicles WHERE license_plate = $1",
       [licensePlate]
     );
-    if (checkVehicle.rows.length > 0) {
+    if (checkVehicle.rows.length > 0 && checkVehicle.rows[0].status === "1") {
       return res
         .status(400)
         .json({ message: "Vehicle already exists from this license" });
+    } else if (
+      checkVehicle.rows.length > 0 &&
+      checkVehicle.rows[0].status === "0"
+    ) {
+      // If the vehicle exists but is deleted, update it
+      const updateVehicle = await pool.query(
+        "UPDATE vehicles SET user_id = $1, vehicle_type_id = $2, vehicle_brand_id = $3, model = $4, color = $5, make_year = $6, status = $7, fuel_type = $8, transmission_type = $9, imgpath = $10 WHERE license_plate = $11",
+        [
+          userID,
+          vehicleType,
+          make,
+          model,
+          color,
+          year,
+          "1", // Set status to active
+          fuelType,
+          transmission,
+          imagePath,
+          licensePlate,
+        ]
+      );
+      if (updateVehicle.rowCount === 0) {
+        return res.status(400).json({ message: "Failed to update vehicle" });
+      }
     }
 
     const addVehicle = await pool.query(
@@ -627,7 +651,7 @@ export const registerVehicle = async (req, res) => {
 
 export const deleteVehicle = async (req, res) => {
   try {
-    const vehicleID  = req.query.licensePlate;
+    const vehicleID = req.query.licensePlate;
     const { token } = req.cookies;
     const userID = getUserIDFromToken(token, res);
     if (!vehicleID) {
@@ -955,12 +979,13 @@ export const createReservation = async (req, res) => {
     // Add reservation
     await pool.query(
       `INSERT INTO reservations 
-        (vehicle_id, service_type_id, reserve_date, start_time, end_time, notes, reservation_status)
+        (vehicle_id, service_type_id, reserve_date, end_date, start_time, end_time, notes, reservation_status)
        VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING reservation_id`,
       [
         vehicleID,
         serviceType,
         serviceDate,
+        serviceDate, // Assuming end_date is the same as reserve_date for v1
         serviceStartTime,
         serviceEndTime,
         note,
@@ -1027,6 +1052,8 @@ export const cancelReservation = async (req, res) => {
     res.status(500).send("Internal Server Error"); // If the token is invalid or the user does not exist, it returns an error message
   }
 };
+
+
 
 export const loadAllUserNotifications = async (req, res) => {
   try {

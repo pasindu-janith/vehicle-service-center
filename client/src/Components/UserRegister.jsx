@@ -54,6 +54,14 @@ const RegisterForm = () => {
       toastr.error("Passwords do not match.");
       return;
     }
+
+    // Validate mobile number
+    const mobilePattern = /^[0-9]{9}$/;
+    if (!mobilePattern.test(formData.mobile)) {
+      toastr.error("Invalid mobile number. Please enter 9 digits after +94.");
+      return;
+    }
+
     try {
       setIsSubmitting(true);
       setMessage({ text: "", type: "" });

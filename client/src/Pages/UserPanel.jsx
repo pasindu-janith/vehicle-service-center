@@ -34,7 +34,13 @@ const UserPanel = () => {
   }, []);
 
   return (
-    <div className="pt-2" style={{ backgroundColor: "#f4f4f4" }}>
+  <div
+    className="pt-2"
+    style={{
+      background:
+        "linear-gradient(135deg, rgba(255, 165, 165, 0.4) 0%, rgba(195, 195, 195, 0.5) 30%, rgba(244, 244, 244, 0.5) 100%)",
+    }}
+  >
       <UserProvider>
         <NavbarUserPanel />
         <Routes>

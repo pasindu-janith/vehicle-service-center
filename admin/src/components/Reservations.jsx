@@ -13,12 +13,15 @@ import "react-clock/dist/Clock.css"; // Required for the clock UI
 import "./styles/datetime.css";
 
 const Reservations = () => {
-  const [startDateTime, setStartDateTime] = useState(null);
+  const [startDateTime, setStartDateTime] = useState(new Date());
   const [endDateTime, setEndDateTime] = useState(null);
   const [tableData, setTableData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [serviceTypes, setServiceTypes] = useState([]);
   const [selectedReservation, setSelectedReservation] = useState(null);
+  const [startReservationModal, setStartReservationModal] = useState(false);
+  const [editReservationModal, setEditReservationModal] = useState(false);
+  const [endReservationModal, setEndReservationModal] = useState(false);
   const tableRef = useRef(null);
   const dtInstance = useRef(null); // To store the DataTable instance
 
@@ -38,7 +41,6 @@ const Reservations = () => {
         setLoading(false);
       }
     };
-    fetchData();
   }, []);
 
   useEffect(() => {
@@ -198,8 +200,8 @@ const Reservations = () => {
                       <th>Res. ID</th>
                       <th>Vehicle No</th>
                       <th>Service Name</th>
-                      <th>Time start</th>
-                      <th>Time due</th>
+                      <th>Start</th>
+                      <th>End</th>
                       <th>Description</th>
                       <th>Status</th>
                       <th>Controls</th>
@@ -212,8 +214,17 @@ const Reservations = () => {
                           <td>{row.reservation_id}</td>
                           <td>{row.vehicle_id}</td>
                           <td>{row.service_name}</td>
-                          <td>{row.start_time}</td>
-                          <td>{row.end_time}</td>
+                          <td>
+                            {new Date(row.reserve_date).toLocaleDateString(
+                              "en-CA"
+                            )}
+                            {"  "}
+                            {row.start_time.substring(0, 5)}
+                          </td>
+                          <td>
+                            {new Date(row.end_date).toLocaleDateString("en-CA")}{" "}
+                            {row.end_time.substring(0, 5)}
+                          </td>
                           <td>{row.notes}</td>
                           <td>
                             {row.status_name === "Pending" ? (
@@ -237,7 +248,13 @@ const Reservations = () => {
                           <td>
                             {row.status_name === "Pending" ? (
                               <>
-                                <button className="btn btn-warning btn-sm mr-1">
+                                <button
+                                  className="btn btn-warning btn-sm mr-1"
+                                  onClick={() => {
+                                    setSelectedReservation(row),
+                                      setStartReservationModal(true);
+                                  }}
+                                >
                                   Start
                                 </button>
                                 <button className="btn btn-primary btn-sm">
@@ -249,7 +266,13 @@ const Reservations = () => {
                               </>
                             ) : row.status_name === "Ongoing" ? (
                               <>
-                                <button className="btn btn-success btn-sm mr-1">
+                                <button
+                                  className="btn btn-success btn-sm mr-1"
+                                  onClick={() => {
+                                    setSelectedReservation(row),
+                                      setEndReservationModal(true);
+                                  }}
+                                >
                                   End
                                 </button>
                                 <button className="btn btn-primary btn-sm">
@@ -257,7 +280,12 @@ const Reservations = () => {
                                 </button>
                               </>
                             ) : row.status_name === "Completed" ? (
-                              <button className="btn btn-primary btn-sm">
+                              <button
+                                className="btn btn-primary btn-sm"
+                                onClick={() => {
+                                  setSelectedReservation(row);
+                                }}
+                              >
                                 Info
                               </button>
                             ) : (
@@ -281,6 +309,234 @@ const Reservations = () => {
           </div>
         </div>
       </div>
+      {(startReservationModal || editReservationModal) &&
+        selectedReservation && (
+          <div
+            className="modal fade show"
+            id="reservationDetailsModal"
+            tabIndex="-1"
+            role="dialog"
+            aria-labelledby="startReservationModalLabel"
+            aria-hidden="true"
+            style={{ display: "block" }} // Only needed if you want to show the modal immediately
+          >
+            <div className="modal-dialog modal-dialog-centered" role="document">
+              <div className="modal-content">
+                <div className="modal-header">
+                  <h5 className="modal-title" id="startReservationModalLabel">
+                    Reservation Start
+                  </h5>
+                  <button
+                    type="button"
+                    className="close"
+                    data-dismiss="modal"
+                    aria-label="Close"
+                    onClick={() => {
+                      setSelectedReservation(null),
+                        setStartReservationModal(false);
+                    }}
+                  >
+                    <span aria-hidden="true">&times;</span>
+                  </button>
+                </div>
+                <div className="modal-body d-flex align-items-center">
+                  <div className="col-md-8 col-12">
+                    <div className="form-group">
+                      <label htmlFor="">Reservation ID</label>
+                      <input
+                        type="text"
+                        className="form-control mb-3"
+                        id="reservationId"
+                        value={selectedReservation.reservation_id}
+                        readOnly
+                      />
+                      <label htmlFor="vehicleNumber">Vehicle Number</label>
+                      <input
+                        type="text"
+                        className="form-control mb-3"
+                        id="vehicleNumber"
+                        value={selectedReservation.vehicle_id}
+                        readOnly
+                      />
+                      <label htmlFor="serviceType">Service Type</label>
+                      <input
+                        type="text"
+                        className="form-control mb-3"
+                        value={selectedReservation.service_name}
+                        readOnly
+                      />
+
+                      <label htmlFor="startTimeModal">Start time</label>
+                      <DateTimePicker
+                        onChange={(date) => setStartDateTime(date)}
+                        value={startDateTime}
+                        minDate={startDateTime}
+                        className="datetimepick col-12 mb-3"
+                      />
+                      <label htmlFor="">End time</label>
+                      <DateTimePicker
+                        onChange={(date) => setStartDateTime(date)}
+                        minDate={startDateTime}
+                        className="datetimepick col-12 mb-3"
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div className="modal-footer">
+                  <button
+                    type="button"
+                    className="btn btn-primary"
+                    onClick={() => {
+                      // Handle start reservation logic here
+                      console.log(
+                        "Starting reservation for:",
+                        selectedReservation
+                      );
+                      setStartReservationModal(false);
+                    }}
+                  >
+                    Start Now
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    data-dismiss="modal"
+                    onClick={() => {
+                      setSelectedReservation(null),
+                        setStartReservationModal(false);
+                    }}
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+      {endReservationModal && selectedReservation && (
+        <div
+          className="modal fade show"
+          id="endReservationModal"
+          tabIndex="-1"
+          role="dialog"
+          aria-labelledby="endReservationModalLabel"
+          aria-hidden="true"
+          style={{ display: "block" }} // Only needed if you want to show the modal immediately
+        >
+          <div
+            className="modal-dialog modal-dialog-centered modal-lg"
+            role="document"
+          >
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title" id="endReservationModalLabel">
+                  End Reservation
+                </h5>
+                <button
+                  type="button"
+                  className="close"
+                  data-dismiss="modal"
+                  aria-label="Close"
+                  onClick={() => {
+                    setSelectedReservation(null), setEndReservationModal(false);
+                  }}
+                >
+                  <span aria-hidden="true">&times;</span>
+                </button>
+              </div>
+              <div className="modal-body d-flex align-items-center">
+                <div className="col-md-12 col-12">
+                  <div className="form-group">
+                    <div className="row">
+                      <div className="col-md-6">
+                        <label htmlFor="">Reservation ID</label>
+                        <input
+                          type="text"
+                          className="form-control mb-3"
+                          id="reservationIdEnd"
+                          value={selectedReservation.reservation_id}
+                          readOnly
+                        />
+                      </div>
+                      <div className="col-md-6">
+                        <label htmlFor="">Vehicle Number</label>
+                        <input
+                          type="text"
+                          className="form-control mb-3"
+                          id="vehicleNumberEnd"
+                          value={selectedReservation.vehicle_id}
+                          readOnly
+                        />
+                      </div>
+                      <div className="col-md-6">
+                        {" "}
+                        <label htmlFor="">Service Type</label>
+                        <input
+                          type="text"
+                          className="form-control mb-3"
+                          value={selectedReservation.service_name}
+                          readOnly
+                        />
+                      </div>
+                      <div className="col-md-6">
+                        <label htmlFor="">End time</label>
+                        <DateTimePicker
+                          onChange={(date) => setEndDateTime(date)}
+                          value={new Date()}
+                          minDate={startDateTime}
+                          className="datetimepick col-12 mb-3"
+                        />
+                      </div>
+                      <div className="col-md-12">
+                        <label htmlFor="">Service Details</label>
+                        <textarea
+                          className="form-control mb-3"
+                          rows="3"
+                          placeholder="Enter any notes or comments here..."
+                        ></textarea>
+                      </div>
+                      <div className="col-md-6">
+                        <label htmlFor="">Service Status</label>
+                        <select
+                          className="form-control mb-3"
+                          id="serviceStatus"
+                          name="serviceStatus"
+                        >
+                          <option value="0">Select one</option>
+                          <option value="Completed">Completed</option>
+                          <option value="Cancelled">Cancelled</option>
+                        </select>
+                      </div>
+                      <div className="col-md-6">
+                        <label htmlFor="">Service Cost</label>
+                        <input
+                          type="number"
+                          className="form-control mb-3"
+                          placeholder="Enter service cost"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button
+                  type="button"
+                  className="btn btn-success"
+                  onClick={() => {
+                    // Handle end reservation logic here
+                    console.log("Ending reservation for:", selectedReservation);
+                    setEndReservationModal(false);
+                  }}
+                >
+                  End now
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 };

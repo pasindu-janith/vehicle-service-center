@@ -102,7 +102,7 @@ const Reservations = () => {
                   </tr>
                 ) : reservations.length === 0 ? (
                   <tr>
-                    <td colSpan="6" className="text-center">
+                    <td colSpan="7" className="text-center">
                       No reservations found.
                     </td>
                   </tr>

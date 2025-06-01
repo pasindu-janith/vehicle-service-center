@@ -1,7 +1,11 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Chart from "chart.js/auto";
 
 const Dashboard = () => {
+  const [pendingReservationsToday, setPendingReservationsToday] = useState(0);
+  const [completedReservations, setCompletedReservations] = useState(0);
+  const [ongoingReservations, setOngoingReservations] = useState(0);
+
   const getPreviousDates = (numDays) => {
     const dates = [];
     const today = new Date();
@@ -121,6 +125,25 @@ const Dashboard = () => {
         donutChart.destroy();
       }
     };
+  }, []);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await fetch(
+          "http://localhost:4000/api/v1/admin/loadAllReservations"
+        );
+        if (response.ok) {
+          const jsonData = await response.json();
+          // setTableData(jsonData); // Uncomment and define setTableData if needed
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      } finally {
+        // setLoading(false); // Uncomment and define setLoading if needed
+      }
+    };
+    fetchData();
   }, []);
 
   return (

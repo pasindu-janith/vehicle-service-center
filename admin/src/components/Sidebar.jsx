@@ -181,12 +181,12 @@ const Sidebar = () => {
                 <p>Vehicles</p>
               </Link>
             </li>
-            <li className="nav-item">
+            {/* <li className="nav-item">
               <Link to="/message" className="nav-link">
                 <i className="nav-icon fas fa-regular fa-comment" />
                 <p>Messages</p>
               </Link>
-            </li>
+            </li> */}
             {/* <li className="nav-item">
               <Link to="/login" className="nav-link">
                 <i className="nav-icon fas fa-chart-pie" />

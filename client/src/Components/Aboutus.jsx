@@ -24,7 +24,7 @@ const AboutUs = () => {
                 className={`circle-image circle-one`}
                 initial={{ scale: 0.4, opacity: 0 }}
                 animate={isInView ? { scale: 1, opacity: 1 } : {}}
-                transition={{delay: 0.25, duration: 0.5, ease: "easeIn" }}
+                transition={{ delay: 0.25, duration: 0.5, ease: "easeIn" }}
                 style={{ display: "inline-block" }}
               ></motion.div>
               <motion.div
@@ -45,21 +45,25 @@ const AboutUs = () => {
             <div className="col-md-6 text-white">
               <MainHeaderText text="About us" color="white" />
               <p className="paragraph">
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla
-                tincidunt, est nec tincidunt ultricies, turpis mi ultrices nunc,
-                nec tincidunt nunc libero eget nisl. Nullam sit amet semper
-                justo. Sed vehicula, purus ut sagittis dictum, felis lacus
-                convallis nunc, nec ultricies erat nunc sit amet nunc. Integer
-                nec odio auctor, lacinia purus ac, lacinia nunc. Aliquam erat
-                volutpat. Donec at libero tincidunt, ultricies felis nec,
-                pharetra risus.
+                At Shan Automobile and Hybrid Workshop, we are committed to
+                providing top-notch automotive repair and maintenance services
+                with a focus on both conventional and hybrid vehicles. With
+                years of experience and a team of highly skilled technicians, we
+                pride ourselves on delivering reliable, efficient, and
+                affordable solutions to keep your vehicle running smoothly.
+                Whether it’s routine servicing, engine diagnostics, or advanced
+                hybrid system repairs, we use the latest tools and technology to
+                ensure quality and precision. At Shan, customer satisfaction is
+                our top priority — we aim to build lasting relationships through
+                honest service and expert care.
               </p>
               <p className="paragraph">
-                Nulla facilisi. Sed tincidunt, purus nec lacinia ultricies,
-                purus nisi fermentum mi, a ultricies nulla libero nec libero.
-                Donec at libero tincidunt, ultricies felis nec, pharetra risus.
-                Nulla facilisi. Sed tincidunt, purus nec lacinia ultricies,
-                purus nisi fermentum mi, a ultricies nulla libero nec libero.
+                Driven by a passion for innovation and sustainability, our
+                workshop invests continuously in cutting-edge diagnostics and
+                rigorous technician training. This ensures that every
+                repair—from a standard oil change to complex hybrid battery
+                servicing—is performed with uncompromising precision and respect
+                for the environment.
               </p>
               <div className="d-flex align-content-center">
                 <button className="btn btn-danger rounded-pill ps-4 pe-4 pt-2 pb-2">

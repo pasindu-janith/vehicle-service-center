@@ -84,7 +84,7 @@ const Footer = () => {
         <hr className="bg-light" />
         <div className="row">
           <div className="col text-center text-white">
-            &copy; 2024 originX Ltd. All Rights Reserved.
+            &copy; 2024 NexOra Ltd. All Rights Reserved.
           </div>
         </div>
       </div>

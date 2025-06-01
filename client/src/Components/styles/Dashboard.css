@@ -30,3 +30,11 @@
     text-decoration: none !important;
     border: none !important;
 }
+
+.hover-scale {
+  transition: transform 0.3s ease;
+}
+
+.card:hover .hover-scale {
+  transform: scale(1.2);
+}

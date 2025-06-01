@@ -10,6 +10,7 @@ import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import "./styles/Dashboard.css";
 import { useUser } from "../Context/UserContext";
+import { motion } from "framer-motion";
 
 const Dashboard = () => {
   const { user } = useUser();
@@ -114,11 +115,11 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="container pt-3 pb-4" style={{ backgroundColor: "#f4f4f4" }}>
+    <div className="container pt-3 pb-4 bg-transparent">
       <div className="row g-4 mb-3">
         {/* Account Info Card */}
         <div className="col-md-4">
-          <div className="card bg-secondary text-white h-100">
+          <div className="card text-white h-100" style={{ backgroundColor: "#1e3a8a" }}>
             <div className="card-body">
               <div className="d-flex align-items-center gap-2 mb-2">
                 <FaUserCircle size={32} />
@@ -152,10 +153,10 @@ const Dashboard = () => {
         {/* Pending Reservations Card */}
         <div className="col-md-4">
           <div className="card text-white bg-info h-100">
-            <div className="card-body d-flex flex-column justify-content-center align-items-center text-center">
-              <FaClipboardList size={32} className="mb-2" />
-              <h5 className="card-title">Pending Reservations</h5>
-              <h1 className="display-4">{pendingServices}</h1>
+            <div className="card-body d-flex flex-column justify-content-center">
+              <FaClipboardList size={80} className="mb-2 position-absolute end-0 m-3 hover-scale" style={{color:"#c0f2fc"}}/>
+              <h4 className="card-title ms-2">Pending Reservations</h4>
+              <h1 className="display-3" style={{fontWeight:"bold"}}>{pendingServices}</h1>
             </div>
           </div>
         </div>
@@ -163,8 +164,8 @@ const Dashboard = () => {
 
       <div className="row mb-3">
         <div className="col-md-12">
-          <div className="card">
-            <div className="card-header bg-secondary text-white">
+          <div className="card shadow">
+            <div className="card-header bg-white text-primary">
               <h5>Service Status Overview</h5>
             </div>
             <div className="card-body">
@@ -248,7 +249,7 @@ const Dashboard = () => {
       <div className="row mb-2">
         {/* Calendar Widget with Events */}
         <div className="col-md-6">
-          <div className="card">
+          <div className="card shadow">
             <div className="card-header bg-primary text-white d-flex align-items-center">
               <FaCalendar size={20} className="me-2" />
               <span>
@@ -266,15 +267,22 @@ const Dashboard = () => {
                 onClickDay={handleDateClick}
               />
               {selectedEvent && (
-                <div className="alert alert-info mt-3">
+                <motion.div
+                  // initial={{ opacity: 0 }}
+                  animate={{ scale: 1 }}
+                  exit={{ scale: 0 }}
+                  className="alert alert-info mt-3"
+                  initial={{ scale: 0.9 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                >
                   <strong>Event Details:</strong> {selectedEvent.title}
-                </div>
+                </motion.div>
               )}
             </div>
           </div>
         </div>
         <div className="col-md-6">
-          <div className="card h-100 overflow-hidden">
+          <div className="card h-100 overflow-hidden shadow">
             <div className="card-header bg-primary text-white d-flex align-items-center">
               <FaBell size={20} className="me-2" />
               <span>

@@ -191,3 +191,36 @@ export const loadAllReservations = async (req, res) => {
     res.status(500).send("Internal Server Error");
   }
 };
+
+export const countReservations = async (req, res) => {
+  try {
+    const pendingCount = await pool.query(
+      "SELECT COUNT(*) FROM reservations WHERE reservation_status = (SELECT reservation_status_id FROM reservation_status WHERE status_name = $1)",
+      ["Pending"]
+    ); 
+    const ongoingCount = await pool.query(
+      "SELECT COUNT(*) FROM reservations WHERE reservation_status = (SELECT reservation_status_id FROM reservation_status WHERE status_name = $1)",
+      ["Ongoing"]
+    );
+    const completedCount = await pool.query(
+      "SELECT COUNT(*) FROM reservations WHERE reservation_status = (SELECT reservation_status_id FROM reservation_status WHERE status_name = $1) AND reserve_date = CURRENT_DATE",
+      ["Completed"]
+    );
+    const pendingCountToday = await pool.query(
+      "SELECT COUNT(*) FROM reservations WHERE reservation_status = (SELECT reservation_status_id FROM reservation_status WHERE status_name = $1) AND reserve_date = CURRENT_DATE",
+      ["Pending"]
+    );
+
+    res.status(200).json({
+      pending: parseInt(pendingCount.rows[0].count),
+      ongoing: parseInt(ongoingCount.rows[0].count),
+      completed: parseInt(completedCount.rows[0].count),
+      cancelled: parseInt(cancelledCount.rows[0].count),
+      total: parseInt(totalCount.rows[0].count),
+    });
+  }
+  catch (error) {
+    console.error("Error counting reservations:", error);
+    res.status(500).send("Internal Server Error");
+  }
+}

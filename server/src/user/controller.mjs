@@ -1053,7 +1053,28 @@ export const cancelReservation = async (req, res) => {
   }
 };
 
+export const fetchVehicleData = async (req, res) => {
+  try {
+    const vehicleID = req.query.licensePlate;
+    const { token } = req.cookies;
+    const userID = getUserIDFromToken(token, res);
+    if (!vehicleID) {
+      return res.status(400).send({ message: "Vehicle ID is required" });
+    }
+    const vehicleData = await pool.query(
+      "SELECT * FROM vehicles WHERE license_plate = $1 AND user_id = $2",
+      [vehicleID, userID]
 
+    );
+    if (vehicleData.rows.length === 0) {
+      return res.status(400).send({ message: "Vehicle not found" });
+    }
+    return res.status(200).send(vehicleData.rows[0]);
+  } catch (error) {
+    console.log(error);
+    res.status(500).send("Internal Server Error");
+  }
+}
 
 export const loadAllUserNotifications = async (req, res) => {
   try {
@@ -1077,3 +1098,4 @@ export const loadAllUserNotifications = async (req, res) => {
     res.status(500).send("Internal Server Error"); // If the token is invalid or the user does not exist, it returns an error message
   }
 };
+

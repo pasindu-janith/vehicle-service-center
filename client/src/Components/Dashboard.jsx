@@ -119,10 +119,10 @@ const Dashboard = () => {
       <div className="row g-4 mb-3">
         {/* Account Info Card */}
         <div className="col-md-4">
-          <div className="card text-white h-100" style={{ backgroundColor: "#1e3a8a" }}>
-            <div className="card-body">
+          <div className="card text-white h-100 data-card bg-darkblue">
+            <div className="card-body p-4">
               <div className="d-flex align-items-center gap-2 mb-2">
-                <FaUserCircle size={32} />
+                <FaUserCircle size={50} className="position-absolute top-0 end-0 m-4 hover-scale" />
                 <h5 className="card-title">Account information</h5>
               </div>
               <p className="mb-2">
@@ -141,9 +141,9 @@ const Dashboard = () => {
 
         {/* Ongoing Services Card */}
         <div className="col-md-4">
-          <div className="card text-white bg-primary h-100">
+          <div className="card text-white bg-middleblue h-100 data-card">
             <div className="card-body d-flex flex-column justify-content-center align-items-center text-center">
-              <FaTools size={32} className="mb-2" />
+              <FaTools size={35} className="hover-scale mb-2" />
               <h5 className="card-title">Ongoing Services</h5>
               <h1 className="display-4">{ongoingServices}</h1>
             </div>
@@ -152,11 +152,11 @@ const Dashboard = () => {
 
         {/* Pending Reservations Card */}
         <div className="col-md-4">
-          <div className="card text-white bg-info h-100">
-            <div className="card-body d-flex flex-column justify-content-center">
-              <FaClipboardList size={80} className="mb-2 position-absolute end-0 m-3 hover-scale" style={{color:"#c0f2fc"}}/>
-              <h4 className="card-title ms-2">Pending Reservations</h4>
-              <h1 className="display-3" style={{fontWeight:"bold"}}>{pendingServices}</h1>
+          <div className="card text-white bg-lightblue h-100 data-card">
+            <div className="card-body d-flex flex-column justify-content-center align-items-center text-center">
+              <FaClipboardList size={35} className="hover-scale mb-2" />
+              <h5 className="card-title">Pending Services</h5>
+              <h1 className="display-4">{pendingServices}</h1>
             </div>
           </div>
         </div>
@@ -165,8 +165,8 @@ const Dashboard = () => {
       <div className="row mb-3">
         <div className="col-md-12">
           <div className="card shadow">
-            <div className="card-header bg-white text-primary">
-              <h5>Service Status Overview</h5>
+            <div className="card-header bg-white text-darkblue">
+              <h6>Service Status Overview</h6>
             </div>
             <div className="card-body">
               <div className="table-responsive">
@@ -250,7 +250,7 @@ const Dashboard = () => {
         {/* Calendar Widget with Events */}
         <div className="col-md-6">
           <div className="card shadow">
-            <div className="card-header bg-primary text-white d-flex align-items-center">
+            <div className="card-header text-darkblue d-flex align-items-center">
               <FaCalendar size={20} className="me-2" />
               <span>
                 <h6>Service Calendar</h6>
@@ -283,7 +283,7 @@ const Dashboard = () => {
         </div>
         <div className="col-md-6">
           <div className="card h-100 overflow-hidden shadow">
-            <div className="card-header bg-primary text-white d-flex align-items-center">
+            <div className="card-header text-darkblue d-flex align-items-center">
               <FaBell size={20} className="me-2" />
               <span>
                 <h6>Important Notifications</h6>

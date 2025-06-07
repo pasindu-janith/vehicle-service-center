@@ -10,6 +10,7 @@ import UserPanelFooter from "../Components/UserPanelFooter";
 import ProfileSettings from "../Components/ProfileSettings";
 import { UserProvider } from "../Context/UserContext";
 import { Payments } from "../Components/Payments";
+import VehicleInfo from "../Components/VehicleInfo";
 
 const UserPanel = () => {
   const navigate = useNavigate();
@@ -38,7 +39,7 @@ const UserPanel = () => {
     className="pt-2"
     style={{
       background:
-        "linear-gradient(135deg, rgba(255, 165, 165, 0.4) 0%, rgba(195, 195, 195, 0.5) 30%, rgba(244, 244, 244, 0.5) 100%)",
+        "linear-gradient(135deg, rgba(255, 165, 165, 0.4) 0%, rgba(198, 198, 198, 0.5) 50%, rgba(100, 100, 100, 0.5) 100%)",
     }}
   >
       <UserProvider>
@@ -51,6 +52,7 @@ const UserPanel = () => {
           <Route path="/add-reservation" element={<NewReservation />} />
           <Route path="/settings" element={<ProfileSettings />} />
           <Route path="/payments" element={<Payments />} />
+          <Route path="vehicle-info/:id" element={<VehicleInfo />} />
         </Routes>
         <UserPanelFooter />
       </UserProvider>

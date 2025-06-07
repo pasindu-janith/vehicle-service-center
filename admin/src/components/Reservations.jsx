@@ -257,7 +257,11 @@ const Reservations = () => {
                                 >
                                   Start
                                 </button>
-                                <button className="btn btn-primary btn-sm">
+                                <button className="btn btn-primary btn-sm" onClick={() => {
+                                  setSelectedReservation(row),
+                                    setEditReservationModal(true);
+                                }
+                                }>
                                   Edit
                                 </button>
                                 {/* <button className="btn btn-warning btn-sm me-2">
@@ -275,7 +279,11 @@ const Reservations = () => {
                                 >
                                   End
                                 </button>
-                                <button className="btn btn-primary btn-sm">
+                                <button className="btn btn-primary btn-sm" onClick={() => {
+                                  setSelectedReservation(row),
+                                    setEditReservationModal(true);
+                                }
+                                }>
                                   Edit
                                 </button>
                               </>
@@ -324,7 +332,8 @@ const Reservations = () => {
               <div className="modal-content">
                 <div className="modal-header">
                   <h5 className="modal-title" id="startReservationModalLabel">
-                    Reservation Start
+                    {startReservationModal
+                      ? "Start Reservation": "Edit Reservation"}
                   </h5>
                   <button
                     type="button"
@@ -383,7 +392,8 @@ const Reservations = () => {
                   </div>
                 </div>
                 <div className="modal-footer">
-                  <button
+                  {startReservationModal ? (
+                    <button
                     type="button"
                     className="btn btn-primary"
                     onClick={() => {
@@ -396,7 +406,22 @@ const Reservations = () => {
                     }}
                   >
                     Start Now
-                  </button>
+                  </button>) : (
+                  <button
+                    type="button"
+                    className="btn btn-primary"
+                    onClick={() => {
+                      // Handle start reservation logic here
+                      console.log(
+                        "Starting reservation for:",
+                        selectedReservation
+                      );
+                      setStartReservationModal(false);
+                    }}
+                  >
+                    Edit
+                  </button>)  
+                  }
                   <button
                     type="button"
                     className="btn btn-secondary"

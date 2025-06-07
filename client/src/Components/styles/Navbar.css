@@ -61,16 +61,22 @@
   border-bottom: 5px solid #f02d0a;
 }
 
+.panel-active-link {
+  color: #5f0000;
+}
+
 .navbar-color {
   /* background: linear-gradient(to bottom, rgba(255, 255, 255, 1), rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.5), rgba(0, 0, 0, 0)); */
   background-color: rgba(255, 255, 255, 0.9);
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
 
 }
+
 .roboto {
   font-family: "Roboto";
   font-size: 16px;
 }
+
 /* Hide desktop elements on mobile */
 @media (max-width: 991.98px) {
   .d-lg-flex {

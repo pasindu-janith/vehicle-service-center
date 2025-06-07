@@ -3,8 +3,8 @@ import React from "react";
 export const Payments = () => {
   return (
     <div
-      className="container pt-3"
-      style={{ backgroundColor: "#f4f4f4", minHeight: "100vh" }}
+      className="container pt-3 bg-transparent"
+      style={{ minHeight: "100vh" }}
     ></div>
   );
 };

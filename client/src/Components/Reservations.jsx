@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import "./styles/Dashboard.css";
+
 
 const Reservations = () => {
   const [reservations, setReservations] = useState([]);
@@ -65,10 +67,11 @@ const Reservations = () => {
 
   return (
     <div className="container mt-4" style={{ minHeight: "100vh" }}>
+      <h2 className="text-darkblue mb-3 fw-bold" style={{ fontSize: "40px" }}>
+        Reservations
+      </h2>
       <div className="card">
-        <div className="card-header">
-          <h3 className="mb-0">Your Reservations</h3>
-        </div>
+        
         <div className="card-body">
           <div className="d-flex justify-content-end mb-3">
             <Link to="/myaccount/add-reservation" className="btn btn-primary">

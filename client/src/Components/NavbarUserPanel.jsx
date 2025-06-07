@@ -1,16 +1,21 @@
 import { useState, useRef, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import images from "../Assets/assets";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./styles/Navbar.css";
 import { CgProfile } from "react-icons/cg";
 import { CiLogout, CiSettings } from "react-icons/ci";
-import { div } from "framer-motion/client";
+import { useUser } from "../Context/UserContext";
+
 
 const NavbarUserPanel = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const { user } = useUser();
+
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
   };
@@ -68,27 +73,62 @@ const NavbarUserPanel = () => {
         <div className="collapse navbar-collapse justify-content-center d-none d-lg-flex">
           <ul className="navbar-nav fw-bold text-black">
             <li className="nav-item me-4">
-              <Link className="nav-link roboto" to="/myaccount/dashboard">
+              <Link
+                className={`nav-link roboto ${
+                  location.pathname == "/myaccount/dashboard"
+                    ? "panel-active-link"
+                    : ""
+                }`}
+                to="/myaccount/dashboard"
+              >
                 Dashboard
               </Link>
             </li>
             <li className="nav-item me-4">
-              <Link className="nav-link roboto" to="/myaccount/reservations">
+              <Link
+                className={`nav-link roboto ${
+                  location.pathname == "/myaccount/reservations"
+                    ? "panel-active-link"
+                    : ""
+                }`}
+                to="/myaccount/reservations"
+              >
                 Reservations
               </Link>
             </li>
             <li className="nav-item me-4">
-              <Link to="/myaccount/myvehicle" className="nav-link roboto">
-                My Vehicles
+              <Link
+                to="/myaccount/myvehicle"
+                className={`nav-link roboto ${
+                  location.pathname == "/myaccount/myvehicle"
+                    ? "panel-active-link"
+                    : ""
+                }`}
+              >
+                My vehicles
               </Link>
             </li>
             <li className="nav-item me-4">
-              <Link className="nav-link roboto" to="/myaccount/payments">
+              <Link
+                className={`nav-link roboto ${
+                  location.pathname == "/myaccount/payments"
+                    ? "panel-active-link"
+                    : ""
+                }`}
+                to="/myaccount/payments"
+              >
                 Payments
               </Link>
             </li>
             <li className="nav-item">
-              <Link className="nav-link roboto" to="/myaccount/settings">
+              <Link
+                className={`nav-link roboto ${
+                  location.pathname == "/myaccount/settings"
+                    ? "panel-active-link"
+                    : ""
+                }`}
+                to="/myaccount/settings"
+              >
                 Settings
               </Link>
             </li>
@@ -102,7 +142,7 @@ const NavbarUserPanel = () => {
             onClick={() => setIsOpen(!isOpen)}
           >
             <CgProfile size={30} className="me-2" />
-            Pasindu Janith
+            {user ? user.fname + " " + user.lname : "N/A"}
           </button>
 
           {/* Dropdown Menu */}

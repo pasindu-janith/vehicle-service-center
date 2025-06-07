@@ -197,7 +197,7 @@ export const countReservations = async (req, res) => {
     const pendingCount = await pool.query(
       "SELECT COUNT(*) FROM reservations WHERE reservation_status = (SELECT reservation_status_id FROM reservation_status WHERE status_name = $1)",
       ["Pending"]
-    ); 
+    );
     const ongoingCount = await pool.query(
       "SELECT COUNT(*) FROM reservations WHERE reservation_status = (SELECT reservation_status_id FROM reservation_status WHERE status_name = $1)",
       ["Ongoing"]
@@ -218,9 +218,56 @@ export const countReservations = async (req, res) => {
       cancelled: parseInt(cancelledCount.rows[0].count),
       total: parseInt(totalCount.rows[0].count),
     });
-  }
-  catch (error) {
+  } catch (error) {
     console.error("Error counting reservations:", error);
     res.status(500).send("Internal Server Error");
   }
-}
+};
+
+export const startReservation = async (req, res) => {
+  try {
+    const { reservationId, startDateTime, endDateTime } = req.body;
+    console.log("Start reservation request received:", req.body);
+
+    const updateReservation = await pool.query(
+      "UPDATE reservations SET reserve_date=$1, start_time=$2, end_date=$3, end_time=$4,reservation_status = (SELECT reservation_status_id FROM reservation_status WHERE status_name = $5) WHERE reservation_id = $6",
+      [,"Ongoing", reservationId]
+    );
+
+    if (updateReservation.rowCount === 0) {
+      return res.status(404).send({ message: "Reservation not found" });
+    }
+
+    res.status(200).send({ message: "Reservation started successfully" });
+  } catch (error) {
+    console.error("Error starting reservation:", error);
+    res.status(500).send("Internal Server Error");
+  }
+};
+
+export const completeReservation = async (req, res) => {
+  try {
+    const { reservationId, endDateTime, serviceDetails, price} = req.body;
+    console.log("Complete reservation request received:", req.body);
+
+    const updateReservation = await pool.query(
+      "UPDATE reservations SET reservation_status = (SELECT reservation_status_id FROM reservation_status WHERE status_name = $1) WHERE reservation_id = $2",
+      ["Completed", reservationId]
+    );
+
+
+    if (updateReservation.rowCount === 0) {
+      return res.status(404).send({ message: "Reservation not found" });
+    }
+
+    const serviceRecord = await pool.query(
+      "INSERT INTO service_records (reservation_id, service_details, end_time,cost) VALUES ($1, $2, $3) RETURNING *",
+      [reservationId, serviceDetails, endDateTime]
+    );
+
+    res.status(200).send({ message: "Reservation completed successfully" });
+  } catch (error) {
+    console.error("Error completing reservation:", error);
+    res.status(500).send("Internal Server Error");
+  }
+};

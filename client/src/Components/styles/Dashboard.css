@@ -38,3 +38,37 @@
 .card:hover .hover-scale {
   transform: scale(1.2);
 }
+
+.data-card{
+  border-radius: 20px;
+}
+
+.text-darkblue {
+  color: #1e3a8a; /* Dark blue color */
+  font-family: "Roboto", sans-serif;
+}
+
+.bg-darkblue {
+  background-color: #1e3a8a; /* Dark blue color */
+  font-family: "Inter", sans-serif;
+}
+
+.bg-middleblue {
+  background-color: #2563eb; /* Middle blue color */
+  font-family: "Inter", sans-serif;
+}
+
+.bg-lightblue {
+  background-color: #4f92ff; /* Light blue color */
+  font-family: "Inter", sans-serif;
+}
+
+.vehicle-card{
+  border: 1.5px solid #fc514e; /* Red border */
+}
+
+.vehicle-card:hover {
+  transform: scale(1.025);
+  border: 1.5px solid #ab120c; /* Light blue border on hover */
+  transition: transform 0.5s ease;
+}

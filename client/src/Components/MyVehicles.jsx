@@ -4,6 +4,7 @@ import images from "../Assets/assets";
 import { MdDelete } from "react-icons/md";
 import { IoMdInformationCircleOutline } from "react-icons/io";
 import { useEffect } from "react";
+import "./styles/Dashboard.css";
 
 const MyVehicle = () => {
   // Example vehicle data (later you can fetch from database)
@@ -81,7 +82,9 @@ const MyVehicle = () => {
       className="container pt-3 bg-transparent"
       style={{ minHeight: "100vh" }}
     >
-      <h2 className="mb-3">My Vehicles</h2>
+      <h2 className="text-darkblue mb-3 fw-bold" style={{ fontSize: "40px" }}>
+        My vehicles
+      </h2>
 
       <div className="row">
         {isLoading ? (
@@ -94,43 +97,25 @@ const MyVehicle = () => {
           <>
             {vehicles.map((vehicle) => (
               <div className="col-md-3" key={vehicle.license_plate}>
-                <div className="card mb-3">
+                <div
+                  className="card mb-3 shadow-lg vehicle-card"
+                >
                   <img
                     src={`http://localhost:4000${vehicle.imgpath}`}
-                    style={{ height: "300px", objectFit: "cover" }}
+                    style={{ height: "300px", objectFit: "contain" }}
                     className="card-img-top"
                     alt="..."
                   />
                   <div className="card-body">
-                    <h5 className="card-title">{vehicle.license_plate}</h5>
-                    <table className="table table-borderless table-sm">
-                      <tbody>
-                        <tr>
-                          <td>Model</td>
-                          <td>
-                            {vehicle.vehicle_brand} {vehicle.model}
-                          </td>
-                        </tr>
-                        <tr>
-                          <td>Category</td>
-                          <td>{vehicle.vehicle_type}</td>
-                        </tr>
-                        <tr>
-                          <td>Color</td>
-                          <td>{vehicle.color}</td>
-                        </tr>
-                      </tbody>
-                    </table>
-
-                    
-
+                    <h3 className="card-title">{vehicle.license_plate}</h3>
+                    <p>{vehicle.vehicle_brand} {vehicle.model} {vehicle.make_year}{" | "}
+                    {vehicle.vehicle_type}</p>
                     <button
-                      onClick={() => handleOpenModal(vehicle)}
+                      onClick={() => window.location.href = `/myaccount/vehicle-info/${vehicle.license_plate}`}
                       className="btn btn-primary mt-1 me-1"
                     >
                       <IoMdInformationCircleOutline size={20} /> More info
                     </button>
-
                     <button
                       onClick={() => handleOpenDeleteModal(vehicle)}
                       className="btn btn-danger mt-1 me-1"
@@ -143,7 +128,7 @@ const MyVehicle = () => {
             ))}
 
             {/* Add vehicle card */}
-            <div className="col-md-3">
+            <div className="col-md-3 pb-3">
               <div className="card h-100" style={{ border: "1px dashed grey" }}>
                 {vehicles.length === 0 && (
                   <p className="text-center mt-4 mb-3">No vehicles added yet</p>
@@ -162,67 +147,6 @@ const MyVehicle = () => {
           </>
         )}
       </div>
-
-      {/* Service Records Modal */}
-      {/* { && selectedVehicle && (
-        <div
-          className="modal d-block"
-          tabIndex="-1"
-          style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
-        >
-          <div className="modal-dialog modal-lg">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">
-                  Service Records - {selectedVehicle.number}
-                </h5>
-                <button
-                  type="button"
-                  className="btn-close"
-                  onClick={handleCloseModal}
-                ></button>
-              </div>
-
-              <div className="modal-body">
-                {selectedVehicle.serviceRecords.length > 0 ? (
-                  <table className="table table-bordered">
-                    <thead>
-                      <tr>
-                        <th>Date</th>
-                        <th>Service Type</th>
-                        <th>Service Center</th>
-                        <th>Cost</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {selectedVehicle.serviceRecords.map((record, index) => (
-                        <tr key={index}>
-                          <td>{record.date}</td>
-                          <td>{record.type}</td>
-                          <td>{record.center}</td>
-                          <td>{record.cost}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                ) : (
-                  <p>No service records available for this vehicle.</p>
-                )}
-              </div>
-
-              <div className="modal-footer">
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  onClick={handleCloseDeleteModal}
-                >
-                  Close
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )} */}
 
       {/* Delete Confirmation Modal */}
       {selectedVehicle && showDeleteModal && (

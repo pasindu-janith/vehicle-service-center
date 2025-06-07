@@ -25,6 +25,7 @@ import {
   loadAllUserReservations,
   cancelReservation,
   deleteVehicle,
+  fetchVehicleData,
 } from "./controller.mjs";
 import upload from "../middleware/upload.mjs";
 
@@ -59,4 +60,5 @@ userRouter.post("/createReservation", createReservation);
 userRouter.get("/loadAllUserReservations", loadAllUserReservations);
 userRouter.put("/cancelReservation", cancelReservation);
 userRouter.put("/deleteVehicle", deleteVehicle);
+userRouter.get("/fetchVehicleData", fetchVehicleData);
 export default userRouter;

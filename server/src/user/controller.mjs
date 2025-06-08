@@ -69,7 +69,7 @@ export const registerUser = async (req, res) => {
     const addUser = await pool.query(
       "INSERT INTO users (user_id, first_name, last_name, email, password, mobile_id, registered_date, user_type_id, address_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)",
       [
-        "CUS" + (getMaxUser.rows[0].maxuser + 1),
+       "CUS" + (parseInt(getMaxUser.rows[0].maxuser) + 1),
         fname,
         lname,
         email,
@@ -945,9 +945,9 @@ export const createReservation = async (req, res) => {
     const vehicleOverlapCheck = await pool.query(
       `SELECT * FROM reservations
        WHERE vehicle_id = $1
-         AND reserve_date = $2
-         AND NOT (end_time <= $3 OR start_time >= $4)
-         AND reservation_status = $5`,
+       AND $2 BETWEEN reserve_date AND end_date
+       AND NOT (end_time <= $3 OR start_time >= $4)
+       AND reservation_status = $5`,
       [vehicleID, serviceDate, serviceStartTime, serviceEndTime, "1"]
     );
 
@@ -958,14 +958,21 @@ export const createReservation = async (req, res) => {
       });
     }
 
-    // Check how many reservations exist at this time slot for this service type
+    // Count overlapping reservations for the same service type in the requested date/time range
     const existingReservations = await pool.query(
-      `SELECT COUNT(*) AS count FROM reservations
-       WHERE reserve_date = $1
-         AND NOT (end_time <= $2 OR start_time >= $3)
-         AND service_type_id = $4
-         AND reservation_status = $5`,
-      [serviceDate, serviceStartTime, serviceEndTime, serviceType, "1"]
+      `SELECT COUNT(*) AS count FROM reservations WHERE service_type_id = $1
+      AND reservation_status = $2
+      AND (
+      (reserve_date + start_time::interval) < TIMESTAMP $3 
+      AND
+      (end_date + end_time::interval) > TIMESTAMP $4      
+      )`,
+      [
+        serviceType,
+        "1",
+        `${serviceDate} ${serviceEndTime}`, // '2025-05-24 11:00:00'
+        `${serviceDate} ${serviceStartTime}`, // '2025-05-22 10:00:00'
+      ]
     );
 
     const currentCount = parseInt(existingReservations.rows[0].count, 10);
@@ -1064,7 +1071,6 @@ export const fetchVehicleData = async (req, res) => {
     const vehicleData = await pool.query(
       "SELECT * FROM vehicles WHERE license_plate = $1 AND user_id = $2",
       [vehicleID, userID]
-
     );
     if (vehicleData.rows.length === 0) {
       return res.status(400).send({ message: "Vehicle not found" });
@@ -1074,7 +1080,7 @@ export const fetchVehicleData = async (req, res) => {
     console.log(error);
     res.status(500).send("Internal Server Error");
   }
-}
+};
 
 export const loadAllUserNotifications = async (req, res) => {
   try {
@@ -1098,4 +1104,3 @@ export const loadAllUserNotifications = async (req, res) => {
     res.status(500).send("Internal Server Error"); // If the token is invalid or the user does not exist, it returns an error message
   }
 };
-

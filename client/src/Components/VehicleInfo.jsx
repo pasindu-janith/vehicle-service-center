@@ -63,7 +63,6 @@ const VehicleInfo = () => {
                       alt="Vehicle"
                       className="img-fluid rounded"
                     />
-                    
                   </div>
                   <div className="col-md-8">
                     <form>
@@ -78,7 +77,16 @@ const VehicleInfo = () => {
                           />
                         </div>
                         <div className="col-md-6 mb-3">
-                          <label className="form-label">Make</label>
+                          <label className="form-label">Vehicle Type</label>
+                          <input
+                            type="text"
+                            className="form-control"
+                            value={vehicleData.license_plate}
+                            readOnly
+                          />
+                        </div>
+                        <div className="col-md-6 mb-3">
+                          <label className="form-label">Make(Brand)</label>
                           <input
                             type="text"
                             className="form-control"
@@ -92,11 +100,39 @@ const VehicleInfo = () => {
                             type="text"
                             className="form-control"
                             value={vehicleData.model}
-                            readOnly
                           />
                         </div>
                         <div className="col-md-6 mb-3">
                           <label className="form-label">Year</label>
+                          <input
+                            type="number"
+                            className="form-control"
+                            value={vehicleData.year}
+                            readOnly
+                          />
+                        </div>
+
+                        <div className="col-md-6 mb-3">
+                          <label className="form-label">Color</label>
+                          <input
+                            type="text"
+                            className="form-control"
+                            value={vehicleData.year}
+                          />
+                        </div>
+                        <div className="col-md-6 mb-3">
+                          <label className="form-label">
+                            Transmission Type
+                          </label>
+                          <input
+                            type="number"
+                            className="form-control"
+                            value={vehicleData.year}
+                            readOnly
+                          />
+                        </div>
+                        <div className="col-md-6 mb-3">
+                          <label className="form-label">Fuel Type</label>
                           <input
                             type="text"
                             className="form-control"

@@ -198,6 +198,7 @@ export const countReservations = async (req, res) => {
       "SELECT COUNT(*) FROM reservations WHERE reservation_status = (SELECT reservation_status_id FROM reservation_status WHERE status_name = $1)",
       ["Pending"]
     );
+
     const ongoingCount = await pool.query(
       "SELECT COUNT(*) FROM reservations WHERE reservation_status = (SELECT reservation_status_id FROM reservation_status WHERE status_name = $1)",
       ["Ongoing"]
@@ -211,12 +212,22 @@ export const countReservations = async (req, res) => {
       ["Pending"]
     );
 
+    const startedCountToday = await pool.query(
+      "SELECT COUNT(*) FROM reservations WHERE reservation_status IN (SELECT reservation_status_id FROM reservation_status WHERE status_name IN ('Ongoing','Completed')) AND reserve_date = CURRENT_DATE"
+    );
+
+    const registeredUsers = await pool.query(
+      "SELECT COUNT(*) FROM users WHERE user_type_id = $1 AND status = $2",
+      ["2", "1"]
+    );
+
     res.status(200).json({
       pending: parseInt(pendingCount.rows[0].count),
       ongoing: parseInt(ongoingCount.rows[0].count),
       completed: parseInt(completedCount.rows[0].count),
-      cancelled: parseInt(cancelledCount.rows[0].count),
-      total: parseInt(totalCount.rows[0].count),
+      pendingToday: parseInt(pendingCountToday.rows[0].count),
+      startedToday: parseInt(startedCountToday.rows[0].count),
+      registeredUsers: parseInt(registeredUsers.rows[0].count),
     });
   } catch (error) {
     console.error("Error counting reservations:", error);
@@ -226,19 +237,57 @@ export const countReservations = async (req, res) => {
 
 export const startReservation = async (req, res) => {
   try {
-    const { reservationId, startDateTime, endDateTime } = req.body;
-    console.log("Start reservation request received:", req.body);
+    const { reservationId, startDateTime, endDateTime } = req.query;
 
+    if (!reservationId || !startDateTime || !endDateTime) {
+      return res.status(400).send({ message: "Missing required fields" });
+    }
+    const startDate = new Date(startDateTime);
+    const endDate = new Date(endDateTime);
+    if (startDate >= endDate) {
+      return res
+        .status(400)
+        .send({ message: "Start time must be before end time" });
+    }
+    // Update the reservation to "Ongoing" status
+    const startDateString = startDate.toISOString().split("T")[0];
+    const endDateString = endDate.toISOString().split("T")[0];
+    const startTime = startDate.toISOString().split("T")[1].slice(0, 8);
+    const endTime = endDate.toISOString().split("T")[1].slice(0, 8);
+    console.log(
+      "Starting reservation with ID:",
+      reservationId,
+      "Start DateTime:",
+      startDateTime,
+      "End DateTime:",
+      endDateTime,
+      "Start Date String:",
+      startDateString,
+      "End Date String:",
+      endDateString,
+      "Start Time:",
+      startTime,
+      "End Time:",
+      endTime
+
+    );
     const updateReservation = await pool.query(
-      "UPDATE reservations SET reserve_date=$1, start_time=$2, end_date=$3, end_time=$4,reservation_status = (SELECT reservation_status_id FROM reservation_status WHERE status_name = $5) WHERE reservation_id = $6",
-      [,"Ongoing", reservationId]
+      "UPDATE reservations SET reserve_date=$1, start_time=$2, end_date=$3, end_time=$4,reservation_status = (SELECT reservation_status_id FROM reservation_status WHERE status_name = $5) WHERE reservation_id = $6 RETURNING *",
+      [
+        startDateString,
+        startTime,
+        endDateString,
+        endTime,
+        "Ongoing",
+        reservationId,
+      ]
     );
 
     if (updateReservation.rowCount === 0) {
       return res.status(404).send({ message: "Reservation not found" });
     }
 
-    res.status(200).send({ message: "Reservation started successfully" });
+    res.status(200).send(updateReservation.rows[0]);
   } catch (error) {
     console.error("Error starting reservation:", error);
     res.status(500).send("Internal Server Error");
@@ -247,7 +296,7 @@ export const startReservation = async (req, res) => {
 
 export const completeReservation = async (req, res) => {
   try {
-    const { reservationId, endDateTime, serviceDetails, price} = req.body;
+    const { reservationId, endDateTime, serviceDetails, price } = req.body;
     console.log("Complete reservation request received:", req.body);
 
     const updateReservation = await pool.query(
@@ -255,14 +304,13 @@ export const completeReservation = async (req, res) => {
       ["Completed", reservationId]
     );
 
-
     if (updateReservation.rowCount === 0) {
       return res.status(404).send({ message: "Reservation not found" });
     }
 
     const serviceRecord = await pool.query(
-      "INSERT INTO service_records (reservation_id, service_details, end_time,cost) VALUES ($1, $2, $3) RETURNING *",
-      [reservationId, serviceDetails, endDateTime]
+      "INSERT INTO service_records (reservation_id, service_details, created_datetime,price,is_paid) VALUES ($1, $2, $3) RETURNING *",
+      [reservationId, serviceDetails, new Date(), price, false]
     );
 
     res.status(200).send({ message: "Reservation completed successfully" });

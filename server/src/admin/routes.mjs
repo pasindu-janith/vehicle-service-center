@@ -7,6 +7,8 @@ import {
   loadPendingServices,
   loadReservationWithFilter,
   loadAllReservations,
+  countReservations,
+  startReservation,
 } from "./controller.mjs";
 
 //User functions here
@@ -20,4 +22,6 @@ adminRouter.get("/loadOngoingServices", loadOngoingServices);
 adminRouter.get("/loadPendingServices", loadPendingServices);
 adminRouter.get("/filterReservationData", loadReservationWithFilter);
 adminRouter.get("/loadAllReservations", loadAllReservations);
+adminRouter.get("/loadDashboardCounts", countReservations);
+adminRouter.post("/startReservation", startReservation);
 export default adminRouter;

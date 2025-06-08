@@ -3,8 +3,14 @@ import Chart from "chart.js/auto";
 
 const Dashboard = () => {
   const [pendingReservationsToday, setPendingReservationsToday] = useState(0);
+  const [pendingReservationsAll, setPendingReservationsAll] = useState(0);
+  const [startedServicesToday, setStartedServicesToday] = useState(0);
   const [completedReservations, setCompletedReservations] = useState(0);
   const [ongoingReservations, setOngoingReservations] = useState(0);
+
+  const [paymentsDoneToday, setPaymentsDoneToday] = useState(0);
+  const [registeredUsers, setRegisteredUsers] = useState(0);
+  const [workingRate, setWorkingRate] = useState(0);
 
   const getPreviousDates = (numDays) => {
     const dates = [];
@@ -131,11 +137,20 @@ const Dashboard = () => {
     const fetchData = async () => {
       try {
         const response = await fetch(
-          "http://localhost:4000/api/v1/admin/loadAllReservations"
+          "http://localhost:4000/api/v1/admin/loadDashboardCounts"
         );
         if (response.ok) {
           const jsonData = await response.json();
-          // setTableData(jsonData); // Uncomment and define setTableData if needed
+          if (jsonData) {
+            setPendingReservationsToday(jsonData.pendingToday);
+            setPendingReservationsAll(jsonData.pending);
+            setStartedServicesToday(jsonData.startedToday);
+            setCompletedReservations(jsonData.completed);
+            setOngoingReservations(jsonData.ongoing);
+            setRegisteredUsers(jsonData.registeredUsers);
+          } else {
+            console.error("No data received");
+          }
         }
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -169,7 +184,7 @@ const Dashboard = () => {
               {/* small box */}
               <div className="small-box bg-info">
                 <div className="inner">
-                  <h3>150</h3>
+                  <h3>{pendingReservationsToday}</h3>
                   <p>Pending Reservations (Today)</p>
                 </div>
               </div>
@@ -178,7 +193,7 @@ const Dashboard = () => {
               {/* small box */}
               <div className="small-box bg-warning">
                 <div className="inner">
-                  <h3>150</h3>
+                  <h3>{pendingReservationsAll}</h3>
                   <p>Pending Reservations(All)</p>
                 </div>
               </div>
@@ -188,7 +203,7 @@ const Dashboard = () => {
               {/* small box */}
               <div className="small-box bg-info">
                 <div className="inner">
-                  <h3>12</h3>
+                  <h3>{completedReservations}</h3>
                   <p>Completed Reservations (Today)</p>
                 </div>
               </div>
@@ -198,7 +213,7 @@ const Dashboard = () => {
               {/* small box */}
               <div className="small-box bg-warning">
                 <div className="inner">
-                  <h3>44</h3>
+                  <h3>{ongoingReservations}</h3>
                   <p>Ongoing Reservations(All)</p>
                 </div>
               </div>
@@ -208,7 +223,7 @@ const Dashboard = () => {
               {/* small box */}
               <div className="small-box bg-warning">
                 <div className="inner">
-                  <h3>150</h3>
+                  <h3>{startedServicesToday}</h3>
                   <p>Stared Services(Today)</p>
                 </div>
               </div>
@@ -241,7 +256,7 @@ const Dashboard = () => {
               {/* small box */}
               <div className="small-box bg-info">
                 <div className="inner">
-                  <h3>150</h3>
+                  <h3>{registeredUsers}</h3>
                   <p>Registered Users</p>
                 </div>
               </div>

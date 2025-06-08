@@ -12,7 +12,10 @@ import "react-calendar/dist/Calendar.css";
 import "react-clock/dist/Clock.css"; // Required for the clock UI
 import "./styles/datetime.css";
 
+
 const Reservations = () => {
+  const [startDateTimeFilter, setStartDateTimeFilter] = useState(new Date());
+  const [endDateTimeFilter, setEndDateTimeFilter] = useState(null);
   const [startDateTime, setStartDateTime] = useState(new Date());
   const [endDateTime, setEndDateTime] = useState(null);
   const [tableData, setTableData] = useState([]);
@@ -24,6 +27,22 @@ const Reservations = () => {
   const [endReservationModal, setEndReservationModal] = useState(false);
   const tableRef = useRef(null);
   const dtInstance = useRef(null); // To store the DataTable instance
+
+
+  const handleDateTimeChange = (date) => {
+  if (date) {
+    // Create ISO string without timezone conversion
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const seconds = String(date.getSeconds()).padStart(2, '0');
+    
+    const localDateTime = `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
+    setStartDateTime(localDateTime);
+  }
+};
 
   useEffect(() => {
     const fetchData = async () => {
@@ -91,7 +110,7 @@ const Reservations = () => {
 
     try {
       const response = await fetch(
-        `http://localhost:4000/api/v1/admin/filterReservationData?serviceType=${serviceType}&vehicleNumber=${vehicleNumber}&startDateTime=${startDateTime.toISOString()}&endDateTime=${endDateTime.toISOString()}`,
+        `http://localhost:4000/api/v1/admin/filterReservationData?serviceType=${serviceType}&vehicleNumber=${vehicleNumber}&startDateTime=${startDateTimeFilter.toISOString()}&endDateTime=${endDateTimeFilter.toISOString()}`,
         {
           method: "GET",
         }
@@ -102,6 +121,77 @@ const Reservations = () => {
       }
     } catch (error) {
       console.error("Error loading filtered data:", error);
+    }
+  };
+
+  const startReservation = async () => {
+    if (!selectedReservation) return;
+    const startTime = startDateTime.toISOString();
+    const endTime = endDateTime ? endDateTime.toISOString() : null;
+    try {
+      const response = await fetch(
+        `http://localhost:4000/api/v1/admin/startReservation?reservationId=${selectedReservation.reservation_id}&startDateTime=${startTime}&endDateTime=${endTime}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      if (response.ok) {
+        const updatedData = await response.json();
+        setTableData((prevData) =>
+          prevData.map((row) =>
+            row.reservation_id === selectedReservation.reservation_id
+              ? { ...row, ...updatedData }
+              : row
+          )
+        );
+        setStartReservationModal(false);
+        setSelectedReservation(null);
+      } else {
+        const errorData = await response.json();
+        console.error("Error starting reservation:", errorData);
+      }
+    } catch (error) {
+      console.error("Error starting reservation:", error);
+    }
+  };
+
+  const endReservation = async () => {
+    if (!selectedReservation) return;
+    const endTime = endDateTime ? endDateTime.toISOString() : null;
+    try {
+      const response = await fetch(
+        `http://localhost:4000/api/v1/admin/endReservation?reservationId=${selectedReservation.reservation_id}&endTime=${endTime}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            reservationId: selectedReservation.reservation_id,
+            endTime: endTime,
+          }),
+        }
+      );
+      if (response.ok) {
+        const updatedData = await response.json();
+        setTableData((prevData) =>
+          prevData.map((row) =>
+            row.reservation_id === selectedReservation.reservation_id
+              ? { ...row, ...updatedData }
+              : row
+          )
+        );
+        setEndReservationModal(false);
+        setSelectedReservation(null);
+      } else {
+        const errorData = await response.json();
+        console.error("Error ending reservation:", errorData);
+      }
+    } catch (error) {
+      console.error("Error ending reservation:", error);
     }
   };
 
@@ -164,18 +254,28 @@ const Reservations = () => {
                       <div className="col-md-4 pt-3">
                         <label>Start Date-Time:</label>
                         <DateTimePicker
-                          onChange={(date) => setStartDateTime(date)}
-                          value={startDateTime}
-                          maxDate={endDateTime}
+                          onChange={(date) =>
+                          {
+                            const d = new Date(date);
+                            d.setSeconds(0, 0); // strip seconds and milliseconds
+                            setStartDateTimeFilter(d);
+                          }
+                          }
+                          value={startDateTimeFilter}
+                          maxDate={endDateTimeFilter}
                           className="datetimepick col-md-8 col-12"
                         />
                       </div>
                       <div className="col-md-4 pt-3">
                         <label>End Date-Time:</label>
                         <DateTimePicker
-                          onChange={(date) => setEndDateTime(date)}
-                          value={endDateTime}
-                          minDate={startDateTime}
+                          onChange={(date) => {
+                            const d = new Date(date);
+                            d.setSeconds(0, 0); // strip seconds and milliseconds
+                            setEndDateTimeFilter(d);
+                          }}
+                          value={endDateTimeFilter}
+                          minDate={startDateTimeFilter}
                           className="datetimepick col-md-8 col-12"
                         />
                       </div>
@@ -257,11 +357,13 @@ const Reservations = () => {
                                 >
                                   Start
                                 </button>
-                                <button className="btn btn-primary btn-sm" onClick={() => {
-                                  setSelectedReservation(row),
-                                    setEditReservationModal(true);
-                                }
-                                }>
+                                <button
+                                  className="btn btn-primary btn-sm"
+                                  onClick={() => {
+                                    setSelectedReservation(row),
+                                      setEditReservationModal(true);
+                                  }}
+                                >
                                   Edit
                                 </button>
                                 {/* <button className="btn btn-warning btn-sm me-2">
@@ -279,11 +381,13 @@ const Reservations = () => {
                                 >
                                   End
                                 </button>
-                                <button className="btn btn-primary btn-sm" onClick={() => {
-                                  setSelectedReservation(row),
-                                    setEditReservationModal(true);
-                                }
-                                }>
+                                <button
+                                  className="btn btn-primary btn-sm"
+                                  onClick={() => {
+                                    setSelectedReservation(row),
+                                      setEditReservationModal(true);
+                                  }}
+                                >
                                   Edit
                                 </button>
                               </>
@@ -333,7 +437,8 @@ const Reservations = () => {
                 <div className="modal-header">
                   <h5 className="modal-title" id="startReservationModalLabel">
                     {startReservationModal
-                      ? "Start Reservation": "Edit Reservation"}
+                      ? "Start Reservation"
+                      : "Edit Reservation"}
                   </h5>
                   <button
                     type="button"
@@ -379,12 +484,12 @@ const Reservations = () => {
                       <DateTimePicker
                         onChange={(date) => setStartDateTime(date)}
                         value={startDateTime}
-                        minDate={startDateTime}
                         className="datetimepick col-12 mb-3"
                       />
                       <label htmlFor="">End time</label>
                       <DateTimePicker
-                        onChange={(date) => setStartDateTime(date)}
+                        onChange={(date) => setEndDateTime(date)}
+                        value={endDateTime}
                         minDate={startDateTime}
                         className="datetimepick col-12 mb-3"
                       />
@@ -394,34 +499,33 @@ const Reservations = () => {
                 <div className="modal-footer">
                   {startReservationModal ? (
                     <button
-                    type="button"
-                    className="btn btn-primary"
-                    onClick={() => {
-                      // Handle start reservation logic here
-                      console.log(
-                        "Starting reservation for:",
-                        selectedReservation
-                      );
-                      setStartReservationModal(false);
-                    }}
-                  >
-                    Start Now
-                  </button>) : (
-                  <button
-                    type="button"
-                    className="btn btn-primary"
-                    onClick={() => {
-                      // Handle start reservation logic here
-                      console.log(
-                        "Starting reservation for:",
-                        selectedReservation
-                      );
-                      setStartReservationModal(false);
-                    }}
-                  >
-                    Edit
-                  </button>)  
-                  }
+                      type="button"
+                      className="btn btn-primary"
+                      onClick={() => {
+                        startReservation();
+                      }}
+                    >
+                      Start Now
+                    </button>
+                  ) : (
+                    <>
+                    <button
+                      type="button"
+                      className="btn btn-primary me-2"
+                      onClick={() => {
+                        // Handle start reservation logic here
+                        console.log(
+                          "Starting reservation for:",
+                          selectedReservation
+                        );
+                        setStartReservationModal(false);
+                      }}
+                    >
+                      Edit
+                    </button>
+                    <button className="btn btn-danger">Cancel Reservation</button>
+                    </>
+                  )}
                   <button
                     type="button"
                     className="btn btn-secondary"
@@ -521,18 +625,7 @@ const Reservations = () => {
                           placeholder="Enter any notes or comments here..."
                         ></textarea>
                       </div>
-                      <div className="col-md-6">
-                        <label htmlFor="">Service Status</label>
-                        <select
-                          className="form-control mb-3"
-                          id="serviceStatus"
-                          name="serviceStatus"
-                        >
-                          <option value="0">Select one</option>
-                          <option value="Completed">Completed</option>
-                          <option value="Cancelled">Cancelled</option>
-                        </select>
-                      </div>
+                     
                       <div className="col-md-6">
                         <label htmlFor="">Service Cost</label>
                         <input
@@ -550,9 +643,7 @@ const Reservations = () => {
                   type="button"
                   className="btn btn-success"
                   onClick={() => {
-                    // Handle end reservation logic here
-                    console.log("Ending reservation for:", selectedReservation);
-                    setEndReservationModal(false);
+                    endReservation();
                   }}
                 >
                   End now

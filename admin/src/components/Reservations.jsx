@@ -12,7 +12,6 @@ import "react-calendar/dist/Calendar.css";
 import "react-clock/dist/Clock.css"; // Required for the clock UI
 import "./styles/datetime.css";
 
-
 const Reservations = () => {
   const [startDateTimeFilter, setStartDateTimeFilter] = useState(new Date());
   const [endDateTimeFilter, setEndDateTimeFilter] = useState(null);
@@ -28,21 +27,20 @@ const Reservations = () => {
   const tableRef = useRef(null);
   const dtInstance = useRef(null); // To store the DataTable instance
 
-
   const handleDateTimeChange = (date) => {
-  if (date) {
-    // Create ISO string without timezone conversion
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-    const seconds = String(date.getSeconds()).padStart(2, '0');
-    
-    const localDateTime = `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
-    setStartDateTime(localDateTime);
-  }
-};
+    if (date) {
+      // Create ISO string without timezone conversion
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
+      const hours = String(date.getHours()).padStart(2, "0");
+      const minutes = String(date.getMinutes()).padStart(2, "0");
+      const seconds = String(date.getSeconds()).padStart(2, "0");
+
+      const localDateTime = `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
+      return localDateTime;
+    }
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -110,7 +108,7 @@ const Reservations = () => {
 
     try {
       const response = await fetch(
-        `http://localhost:4000/api/v1/admin/filterReservationData?serviceType=${serviceType}&vehicleNumber=${vehicleNumber}&startDateTime=${startDateTimeFilter.toISOString()}&endDateTime=${endDateTimeFilter.toISOString()}`,
+        `http://localhost:4000/api/v1/admin/filterReservationData?serviceType=${serviceType}&vehicleNumber=${vehicleNumber}&startDateTime=${startDateTimeFilter.toLocaleString()}&endDateTime=${endDateTimeFilter.toLocaleString()}`,
         {
           method: "GET",
         }
@@ -130,7 +128,7 @@ const Reservations = () => {
     const endTime = endDateTime ? endDateTime.toISOString() : null;
     try {
       const response = await fetch(
-        `http://localhost:4000/api/v1/admin/startReservation?reservationId=${selectedReservation.reservation_id}&startDateTime=${startTime}&endDateTime=${endTime}`,
+        `http://localhost:4000/api/v1/admin/startReservation?reservationId=${selectedReservation.reservation_id}&startDateTime=${startTime.toLocaleString()}&endDateTime=${endTime.toLocaleString()}`,
         {
           method: "POST",
           headers: {
@@ -163,7 +161,7 @@ const Reservations = () => {
     const endTime = endDateTime ? endDateTime.toISOString() : null;
     try {
       const response = await fetch(
-        `http://localhost:4000/api/v1/admin/endReservation?reservationId=${selectedReservation.reservation_id}&endTime=${endTime}`,
+        `http://localhost:4000/api/v1/admin/endReservation?reservationId=${selectedReservation.reservation_id}&endTime=${endTime.toLocaleString()}`,
         {
           method: "POST",
           headers: {
@@ -254,13 +252,10 @@ const Reservations = () => {
                       <div className="col-md-4 pt-3">
                         <label>Start Date-Time:</label>
                         <DateTimePicker
-                          onChange={(date) =>
-                          {
-                            const d = new Date(date);
-                            d.setSeconds(0, 0); // strip seconds and milliseconds
-                            setStartDateTimeFilter(d);
-                          }
-                          }
+                          onChange={(date) => {
+                            setStartDateTimeFilter(date);
+                            alert(startDateTimeFilter);
+                          }}
                           value={startDateTimeFilter}
                           maxDate={endDateTimeFilter}
                           className="datetimepick col-md-8 col-12"
@@ -270,9 +265,8 @@ const Reservations = () => {
                         <label>End Date-Time:</label>
                         <DateTimePicker
                           onChange={(date) => {
-                            const d = new Date(date);
-                            d.setSeconds(0, 0); // strip seconds and milliseconds
-                            setEndDateTimeFilter(d);
+                            setEndDateTimeFilter(date);
+                            alert(endDateTimeFilter);
                           }}
                           value={endDateTimeFilter}
                           minDate={startDateTimeFilter}
@@ -290,131 +284,135 @@ const Reservations = () => {
                     </div>
                   </div>
                 </div>
-                <table
-                  ref={tableRef}
-                  id="example2"
-                  className="table table-bordered table-hover"
-                >
-                  <thead>
-                    <tr>
-                      <th>Res. ID</th>
-                      <th>Vehicle No</th>
-                      <th>Service Name</th>
-                      <th>Start</th>
-                      <th>End</th>
-                      <th>Description</th>
-                      <th>Status</th>
-                      <th>Controls</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {tableData.length > 0 ? (
-                      tableData.map((row) => (
-                        <tr key={row.reservation_id}>
-                          <td>{row.reservation_id}</td>
-                          <td>{row.vehicle_id}</td>
-                          <td>{row.service_name}</td>
-                          <td>
-                            {new Date(row.reserve_date).toLocaleDateString(
-                              "en-CA"
-                            )}
-                            {"  "}
-                            {row.start_time.substring(0, 5)}
-                          </td>
-                          <td>
-                            {new Date(row.end_date).toLocaleDateString("en-CA")}{" "}
-                            {row.end_time.substring(0, 5)}
-                          </td>
-                          <td>{row.notes}</td>
-                          <td>
-                            {row.status_name === "Pending" ? (
-                              <span className="badge bg-warning">
-                                {row.status_name}
-                              </span>
-                            ) : row.status_name === "Completed" ? (
-                              <span className="badge bg-success">
-                                {row.status_name}
-                              </span>
-                            ) : row.status_name === "Ongoing" ? (
-                              <span className="badge bg-info">
-                                {row.status_name}
-                              </span>
-                            ) : (
-                              <span className="badge bg-danger">
-                                {row.status_name}
-                              </span>
-                            )}
-                          </td>
-                          <td>
-                            {row.status_name === "Pending" ? (
-                              <>
-                                <button
-                                  className="btn btn-warning btn-sm mr-1"
-                                  onClick={() => {
-                                    setSelectedReservation(row),
-                                      setStartReservationModal(true);
-                                  }}
-                                >
-                                  Start
-                                </button>
-                                <button
-                                  className="btn btn-primary btn-sm"
-                                  onClick={() => {
-                                    setSelectedReservation(row),
-                                      setEditReservationModal(true);
-                                  }}
-                                >
-                                  Edit
-                                </button>
-                                {/* <button className="btn btn-warning btn-sm me-2">
+                <div className="table-responsive">
+                  <table
+                    ref={tableRef}
+                    id="example2"
+                    className="table table-bordered table-hover"
+                  >
+                    <thead>
+                      <tr>
+                        <th>Res. ID</th>
+                        <th>Vehicle No</th>
+                        <th>Service Name</th>
+                        <th>Start</th>
+                        <th>End</th>
+                        <th>Description</th>
+                        <th>Status</th>
+                        <th>Controls</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {tableData.length > 0 ? (
+                        tableData.map((row) => (
+                          <tr key={row.reservation_id}>
+                            <td>{row.reservation_id}</td>
+                            <td>{row.vehicle_id}</td>
+                            <td>{row.service_name}</td>
+                            <td>
+                              {new Date(row.reserve_date).toLocaleDateString(
+                                "en-CA"
+                              )}
+                              {"  "}
+                              {row.start_time.substring(0, 5)}
+                            </td>
+                            <td>
+                              {new Date(row.end_date).toLocaleDateString(
+                                "en-CA"
+                              )}{" "}
+                              {row.end_time.substring(0, 5)}
+                            </td>
+                            <td>{row.notes}</td>
+                            <td>
+                              {row.status_name === "Pending" ? (
+                                <span className="badge bg-warning">
+                                  {row.status_name}
+                                </span>
+                              ) : row.status_name === "Completed" ? (
+                                <span className="badge bg-success">
+                                  {row.status_name}
+                                </span>
+                              ) : row.status_name === "Ongoing" ? (
+                                <span className="badge bg-info">
+                                  {row.status_name}
+                                </span>
+                              ) : (
+                                <span className="badge bg-danger">
+                                  {row.status_name}
+                                </span>
+                              )}
+                            </td>
+                            <td>
+                              {row.status_name === "Pending" ? (
+                                <>
+                                  <button
+                                    className="btn btn-warning btn-sm mr-1"
+                                    onClick={() => {
+                                      setSelectedReservation(row),
+                                        setStartReservationModal(true);
+                                    }}
+                                  >
+                                    Start
+                                  </button>
+                                  <button
+                                    className="btn btn-primary btn-sm"
+                                    onClick={() => {
+                                      setSelectedReservation(row),
+                                        setEditReservationModal(true);
+                                    }}
+                                  >
+                                    Edit
+                                  </button>
+                                  {/* <button className="btn btn-warning btn-sm me-2">
                                   Cancel
                                 </button> */}
-                              </>
-                            ) : row.status_name === "Ongoing" ? (
-                              <>
-                                <button
-                                  className="btn btn-success btn-sm mr-1"
-                                  onClick={() => {
-                                    setSelectedReservation(row),
-                                      setEndReservationModal(true);
-                                  }}
-                                >
-                                  End
-                                </button>
+                                </>
+                              ) : row.status_name === "Ongoing" ? (
+                                <>
+                                  <button
+                                    className="btn btn-success btn-sm mr-1"
+                                    onClick={() => {
+                                      setSelectedReservation(row),
+                                        setEndReservationModal(true);
+                                    }}
+                                  >
+                                    End
+                                  </button>
+                                  <button
+                                    className="btn btn-primary btn-sm"
+                                    onClick={() => {
+                                      setSelectedReservation(row),
+                                        setEditReservationModal(true);
+                                    }}
+                                  >
+                                    Edit
+                                  </button>
+                                </>
+                              ) : row.status_name === "Completed" ? (
                                 <button
                                   className="btn btn-primary btn-sm"
                                   onClick={() => {
-                                    setSelectedReservation(row),
-                                      setEditReservationModal(true);
+                                    setSelectedReservation(row);
                                   }}
                                 >
-                                  Edit
+                                  Info
                                 </button>
-                              </>
-                            ) : row.status_name === "Completed" ? (
-                              <button
-                                className="btn btn-primary btn-sm"
-                                onClick={() => {
-                                  setSelectedReservation(row);
-                                }}
-                              >
-                                Info
-                              </button>
-                            ) : (
-                              ""
-                            )}
+                              ) : (
+                                ""
+                              )}
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan="8" className="text-center">
+                            No reservations found.
                           </td>
                         </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td colSpan="8" className="text-center">
-                          No reservations found.
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
             {/* /.card */}
@@ -509,21 +507,23 @@ const Reservations = () => {
                     </button>
                   ) : (
                     <>
-                    <button
-                      type="button"
-                      className="btn btn-primary me-2"
-                      onClick={() => {
-                        // Handle start reservation logic here
-                        console.log(
-                          "Starting reservation for:",
-                          selectedReservation
-                        );
-                        setStartReservationModal(false);
-                      }}
-                    >
-                      Edit
-                    </button>
-                    <button className="btn btn-danger">Cancel Reservation</button>
+                      <button
+                        type="button"
+                        className="btn btn-primary me-2"
+                        onClick={() => {
+                          // Handle start reservation logic here
+                          console.log(
+                            "Starting reservation for:",
+                            selectedReservation
+                          );
+                          setStartReservationModal(false);
+                        }}
+                      >
+                        Edit
+                      </button>
+                      <button className="btn btn-danger">
+                        Cancel Reservation
+                      </button>
                     </>
                   )}
                   <button
@@ -625,7 +625,7 @@ const Reservations = () => {
                           placeholder="Enter any notes or comments here..."
                         ></textarea>
                       </div>
-                     
+
                       <div className="col-md-6">
                         <label htmlFor="">Service Cost</label>
                         <input

@@ -1082,6 +1082,8 @@ export const fetchVehicleData = async (req, res) => {
   }
 };
 
+
+
 export const loadAllUserNotifications = async (req, res) => {
   try {
     const { token } = req.cookies;

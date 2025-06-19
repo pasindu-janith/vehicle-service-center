@@ -26,22 +26,9 @@ const Reservations = () => {
   const [endReservationModal, setEndReservationModal] = useState(false);
   const tableRef = useRef(null);
   const dtInstance = useRef(null); // To store the DataTable instance
-
-  const handleDateTimeChange = (date) => {
-    if (date) {
-      // Create ISO string without timezone conversion
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, "0");
-      const day = String(date.getDate()).padStart(2, "0");
-      const hours = String(date.getHours()).padStart(2, "0");
-      const minutes = String(date.getMinutes()).padStart(2, "0");
-      const seconds = String(date.getSeconds()).padStart(2, "0");
-
-      const localDateTime = `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
-      return localDateTime;
-    }
-  };
-
+  const [serviceCost, setServiceCost] = useState("");
+  const [serviceDiscount, setServiceDiscount] = useState("0.00");
+  const [finalAmount, setFinalAmount] = useState("");
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -105,7 +92,7 @@ const Reservations = () => {
   const filterDataLoad = async () => {
     const serviceType = document.getElementById("serviceType").value;
     const vehicleNumber = document.getElementById("vehicleNumber").value;
-
+    // setLoading(true);
     try {
       const response = await fetch(
         `http://localhost:4000/api/v1/admin/filterReservationData?serviceType=${serviceType}&vehicleNumber=${vehicleNumber}&startDateTime=${startDateTimeFilter.toLocaleString()}&endDateTime=${endDateTimeFilter.toLocaleString()}`,
@@ -116,6 +103,7 @@ const Reservations = () => {
       if (response.ok) {
         const data = await response.json();
         setTableData(data);
+        // setLoading(false);
       }
     } catch (error) {
       console.error("Error loading filtered data:", error);
@@ -128,7 +116,9 @@ const Reservations = () => {
     const endTime = endDateTime ? endDateTime.toISOString() : null;
     try {
       const response = await fetch(
-        `http://localhost:4000/api/v1/admin/startReservation?reservationId=${selectedReservation.reservation_id}&startDateTime=${startTime.toLocaleString()}&endDateTime=${endTime.toLocaleString()}`,
+        `http://localhost:4000/api/v1/admin/startReservation?reservationId=${
+          selectedReservation.reservation_id
+        }&startDateTime=${startTime.toLocaleString()}&endDateTime=${endTime.toLocaleString()}`,
         {
           method: "POST",
           headers: {
@@ -141,12 +131,13 @@ const Reservations = () => {
         setTableData((prevData) =>
           prevData.map((row) =>
             row.reservation_id === selectedReservation.reservation_id
-              ? { ...row, ...updatedData }
+              ? { ...row, ...updatedData, reservation_id: row.reservation_id }
               : row
           )
         );
         setStartReservationModal(false);
         setSelectedReservation(null);
+        setEndDateTime(null);
       } else {
         const errorData = await response.json();
         console.error("Error starting reservation:", errorData);
@@ -158,10 +149,9 @@ const Reservations = () => {
 
   const endReservation = async () => {
     if (!selectedReservation) return;
-    const endTime = endDateTime ? endDateTime.toISOString() : null;
     try {
       const response = await fetch(
-        `http://localhost:4000/api/v1/admin/endReservation?reservationId=${selectedReservation.reservation_id}&endTime=${endTime.toLocaleString()}`,
+        `http://localhost:4000/api/v1/admin/endReservation`,
         {
           method: "POST",
           headers: {
@@ -169,7 +159,12 @@ const Reservations = () => {
           },
           body: JSON.stringify({
             reservationId: selectedReservation.reservation_id,
-            endTime: endTime,
+            vehicleNumber: selectedReservation.vehicle_id,
+            completedDateTime: endDateTime.toLocaleString(),
+            serviceCost: parseFloat(serviceCost) || 0,
+            serviceDiscount: parseFloat(serviceDiscount) || 0,
+            finalAmount: parseFloat(finalAmount) || 0,
+            notes: document.getElementById("serviceDetails").value || "",
           }),
         }
       );
@@ -193,8 +188,66 @@ const Reservations = () => {
     }
   };
 
-  const handleRowClick = (row) => {
-    setSelectedReservation(row);
+  const editReservation = async () => {
+    if (!selectedReservation) return;
+    const startTime = startDateTime.toISOString();
+    const endTime = endDateTime ? endDateTime.toISOString() : null;
+    try {
+      const response = await fetch(
+        `http://localhost:4000/api/v1/admin/editReservation?reservationId=${
+          selectedReservation.reservation_id
+        }&startDateTime=${startTime.toLocaleString()}&endDateTime=${endTime.toLocaleString()}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      if (response.ok) {
+        const updatedData = await response.json();
+        setTableData((prevData) =>
+          prevData.map((row) =>
+            row.reservation_id === selectedReservation.reservation_id
+              ? { ...row, ...updatedData, reservation_id: row.reservation_id }
+              : row
+          )
+        );
+        setEditReservationModal(false);
+        setSelectedReservation(null);
+        setEndDateTime(null);
+      } else {
+        const errorData = await response.json();
+        console.error("Error editing reservation:", errorData);
+      }
+    } catch (error) {
+      console.error("Error editing reservation:", error);
+    }
+  };
+
+  const cancelReservation = async () => {
+    if (!selectedReservation) return;
+    try {
+      const response = await fetch(
+        `http://localhost:4000/api/v1/admin/cancelReservation?reservationId=${selectedReservation.reservation_id}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      if (response.ok) {
+        selectedReservation.status_name = "Cancelled";
+        setSelectedReservation(null);
+        setEditReservationModal(false);
+      } else {
+        const errorData = await response.json();
+        console.error("Error canceling reservation:", errorData);
+      }
+    } catch (error) {
+      console.error("Error canceling reservation:", error);
+    }
   };
 
   return (
@@ -254,7 +307,6 @@ const Reservations = () => {
                         <DateTimePicker
                           onChange={(date) => {
                             setStartDateTimeFilter(date);
-                            alert(startDateTimeFilter);
                           }}
                           value={startDateTimeFilter}
                           maxDate={endDateTimeFilter}
@@ -266,7 +318,6 @@ const Reservations = () => {
                         <DateTimePicker
                           onChange={(date) => {
                             setEndDateTimeFilter(date);
-                            alert(endDateTimeFilter);
                           }}
                           value={endDateTimeFilter}
                           minDate={startDateTimeFilter}
@@ -350,6 +401,7 @@ const Reservations = () => {
                                     onClick={() => {
                                       setSelectedReservation(row),
                                         setStartReservationModal(true);
+                                      setStartDateTime(new Date());
                                     }}
                                   >
                                     Start
@@ -359,6 +411,7 @@ const Reservations = () => {
                                     onClick={() => {
                                       setSelectedReservation(row),
                                         setEditReservationModal(true);
+                                      setStartDateTime(new Date());
                                     }}
                                   >
                                     Edit
@@ -374,6 +427,7 @@ const Reservations = () => {
                                     onClick={() => {
                                       setSelectedReservation(row),
                                         setEndReservationModal(true);
+                                      setEndDateTime(new Date());
                                     }}
                                   >
                                     End
@@ -383,6 +437,11 @@ const Reservations = () => {
                                     onClick={() => {
                                       setSelectedReservation(row),
                                         setEditReservationModal(true);
+                                      const temp =
+                                        row.reserve_date.split("T")[0] +
+                                        " " +
+                                        row.start_time;
+                                      setStartDateTime(new Date(temp));
                                     }}
                                   >
                                     Edit
@@ -446,6 +505,7 @@ const Reservations = () => {
                     onClick={() => {
                       setSelectedReservation(null),
                         setStartReservationModal(false);
+                      setEditReservationModal(false);
                     }}
                   >
                     <span aria-hidden="true">&times;</span>
@@ -533,6 +593,7 @@ const Reservations = () => {
                     onClick={() => {
                       setSelectedReservation(null),
                         setStartReservationModal(false);
+                      setEditReservationModal(false);
                     }}
                   >
                     Close
@@ -599,7 +660,6 @@ const Reservations = () => {
                         />
                       </div>
                       <div className="col-md-6">
-                        {" "}
                         <label htmlFor="">Service Type</label>
                         <input
                           type="text"
@@ -612,7 +672,7 @@ const Reservations = () => {
                         <label htmlFor="">End time</label>
                         <DateTimePicker
                           onChange={(date) => setEndDateTime(date)}
-                          value={new Date()}
+                          value={endDateTime}
                           minDate={startDateTime}
                           className="datetimepick col-12 mb-3"
                         />
@@ -622,16 +682,56 @@ const Reservations = () => {
                         <textarea
                           className="form-control mb-3"
                           rows="3"
+                          id="serviceDetails"
                           placeholder="Enter any notes or comments here..."
                         ></textarea>
                       </div>
 
-                      <div className="col-md-6">
+                      <div className="col-md-4">
                         <label htmlFor="">Service Cost</label>
                         <input
-                          type="number"
+                          type="text"
                           className="form-control mb-3"
                           placeholder="Enter service cost"
+                          value={serviceCost}
+                          onChange={(e) => {
+                            const val = e.target.value.replace(/[^0-9.]/g, "");
+                            setServiceCost(val);
+                            const cost = parseFloat(val) || 0;
+                            const discount = parseFloat(serviceDiscount) || 0;
+                            setFinalAmount((cost - discount).toFixed(2));
+                          }}
+                          inputMode="decimal"
+                          pattern="^\d+(\.\d{0,2})?$"
+                        />
+                      </div>
+
+                      <div className="col-md-4">
+                        <label htmlFor="">Service Discount</label>
+                        <input
+                          type="text"
+                          className="form-control mb-3"
+                          placeholder="Enter service discount"
+                          value={serviceDiscount}
+                          onChange={(e) => {
+                            const val = e.target.value.replace(/[^0-9.]/g, "");
+                            setServiceDiscount(val);
+                            const cost = parseFloat(serviceCost) || 0;
+                            const discount = parseFloat(val) || 0;
+                            setFinalAmount((cost - discount).toFixed(2));
+                          }}
+                          inputMode="decimal"
+                          pattern="^\d+(\.\d{0,2})?$"
+                        />
+                      </div>
+                      <div className="col-md-4">
+                        <label htmlFor="">Final Amount</label>
+                        <input
+                          type="text"
+                          className="form-control mb-3"
+                          placeholder="Final amount"
+                          value={finalAmount}
+                          readOnly
                         />
                       </div>
                     </div>

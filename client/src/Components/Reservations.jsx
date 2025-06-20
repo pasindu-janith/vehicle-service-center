@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import "./styles/Dashboard.css";
 
-
 const Reservations = () => {
   const [reservations, setReservations] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -71,7 +70,6 @@ const Reservations = () => {
         Reservations
       </h2>
       <div className="card">
-        
         <div className="card-body">
           <div className="d-flex justify-content-end mb-3">
             <Link to="/myaccount/add-reservation" className="btn btn-primary">
@@ -115,10 +113,18 @@ const Reservations = () => {
                       <td>{reservation.reservation_id}</td>
                       <td>{reservation.vehicle_id}</td>
                       <td>
-                        {new Date(reservation.reserve_date).toLocaleDateString('en-CA')}
+                        {new Date(reservation.reserve_date).toLocaleDateString(
+                          "en-CA"
+                        )}
                       </td>
                       <td>
-                        {reservation.start_time} - {reservation.end_time}
+                        {new Date(
+                          `1970-01-01T${reservation.start_time}`
+                        ).toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                          hour12: true,
+                        })}
                       </td>
                       <td>{reservation.service_name}</td>
                       <td>

@@ -60,7 +60,14 @@ const Dashboard = () => {
                   " " +
                   item.service_name +
                   " at " +
-                  item.start_time || "Reserved";
+                  new Date(
+                          `1970-01-01T${item.start_time}`
+                        ).toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                          hour12: true,
+                        })
+                   || "Reserved";
               if (item.status_name === "Pending") {
                 countPending++;
               }

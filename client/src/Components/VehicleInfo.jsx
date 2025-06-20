@@ -9,6 +9,7 @@ const VehicleInfo = () => {
 
   useEffect(() => {
     const fetchVehicleData = async () => {
+      
       try {
         const response = await fetch(
           `http://localhost:4000/api/v1/user/fetchVehicleData?licensePlate=${id}`,
@@ -81,7 +82,7 @@ const VehicleInfo = () => {
                           <input
                             type="text"
                             className="form-control"
-                            value={vehicleData.license_plate}
+                            value={vehicleData.vehicle_type}
                             readOnly
                           />
                         </div>
@@ -90,7 +91,7 @@ const VehicleInfo = () => {
                           <input
                             type="text"
                             className="form-control"
-                            value={vehicleData.make}
+                            value={vehicleData.vehicle_brand}
                             readOnly
                           />
                         </div>
@@ -107,7 +108,7 @@ const VehicleInfo = () => {
                           <input
                             type="number"
                             className="form-control"
-                            value={vehicleData.year}
+                            value={vehicleData.make_year}
                             readOnly
                           />
                         </div>
@@ -117,7 +118,7 @@ const VehicleInfo = () => {
                           <input
                             type="text"
                             className="form-control"
-                            value={vehicleData.year}
+                            value={vehicleData.color}
                           />
                         </div>
                         <div className="col-md-6 mb-3">
@@ -125,9 +126,9 @@ const VehicleInfo = () => {
                             Transmission Type
                           </label>
                           <input
-                            type="number"
+                            type="text"
                             className="form-control"
-                            value={vehicleData.year}
+                            value={vehicleData.transmission_type}
                             readOnly
                           />
                         </div>
@@ -136,7 +137,7 @@ const VehicleInfo = () => {
                           <input
                             type="text"
                             className="form-control"
-                            value={vehicleData.year}
+                            value={vehicleData.fuel_type}
                             readOnly
                           />
                         </div>

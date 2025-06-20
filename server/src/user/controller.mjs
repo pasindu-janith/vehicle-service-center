@@ -4,9 +4,7 @@ import { decodeToken, tokenGen, tokenGenLogin } from "../utils/jwt.mjs";
 import { verifyToken } from "../utils/jwt.mjs";
 import { sendEmail } from "../utils/email.mjs";
 import dotenv from "dotenv";
-import fs from "fs";
-import path, { parse } from "path";
-import { get } from "http";
+import crypto from "crypto";
 
 dotenv.config();
 
@@ -69,7 +67,7 @@ export const registerUser = async (req, res) => {
     const addUser = await pool.query(
       "INSERT INTO users (user_id, first_name, last_name, email, password, mobile_id, registered_date, user_type_id, address_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)",
       [
-       "CUS" + (parseInt(getMaxUser.rows[0].maxuser) + 1),
+        "CUS" + (parseInt(getMaxUser.rows[0].maxuser) + 1),
         fname,
         lname,
         email,
@@ -1060,6 +1058,7 @@ export const cancelReservation = async (req, res) => {
   }
 };
 
+// Fetch vehicle data for the user for vehicle info page
 export const fetchVehicleData = async (req, res) => {
   try {
     const vehicleID = req.query.licensePlate;
@@ -1068,10 +1067,22 @@ export const fetchVehicleData = async (req, res) => {
     if (!vehicleID) {
       return res.status(400).send({ message: "Vehicle ID is required" });
     }
+    if (!userID) {
+      return res.status(401).send({ message: "Unauthorized" });
+    }
+
     const vehicleData = await pool.query(
-      "SELECT * FROM vehicles WHERE license_plate = $1 AND user_id = $2",
+      `SELECT * 
+      FROM vehicles AS v
+      INNER JOIN vehicle_brand AS vb ON v.vehicle_brand_id = vb.vehicle_brand_id
+      INNER JOIN vehicle_type AS vt ON v.vehicle_type_id = vt.vehicle_type_id
+      INNER JOIN transmission_type AS t ON v.transmission_type = t.transmission_type_id
+      INNER JOIN fuel_type AS f ON v.fuel_type = f.fuel_type_id
+      WHERE v.license_plate = $1 AND v.user_id = $2
+      `,
       [vehicleID, userID]
     );
+
     if (vehicleData.rows.length === 0) {
       return res.status(400).send({ message: "Vehicle not found" });
     }
@@ -1082,27 +1093,133 @@ export const fetchVehicleData = async (req, res) => {
   }
 };
 
-
-
-export const loadAllUserNotifications = async (req, res) => {
+// Load service record payment data for the user for payment page
+export const loadServiceRecordPayment = async (req, res) => {
   try {
     const { token } = req.cookies;
     const userID = getUserIDFromToken(token, res);
-    const checkUser = await pool.query(
+    if (!userID) {
+      return res.status(401).send({ message: "Unauthorized" });
+    }
+    const paymentData = await pool.query(
+      `SELECT r.reservation_id, r.vehicle_id, r.reserve_date, r.start_time,r.end_date, r.end_time, st,service_name,sr.final_amount
+      FROM reservations AS r
+      INNER JOIN service_records AS sr ON sr.reservation_id = r.reservation_id
+      INNER JOIN service_type AS st ON r.service_type_id = st.service_type_id
+      INNER JOIN vehicles AS v ON r.vehicle_id = v.license_plate
+      WHERE v.user_id = $1 AND r.reservation_status = $2`,
+      [userID, "3"]
+    );
+    if (paymentData.rows.length === 0) {
+      return res.status(404).send({ message: "No service records found" });
+    }
+    return res.status(200).send(paymentData.rows);
+  } catch (error) {
+    console.log(error);
+    res.status(500).send("Internal Server Error");
+  }
+};
+
+//once user go to proceed payment page, this function will be called
+// It retrieves the payment data for a specific reservation and user
+export const loadPaymentPageData = async (req, res) => {
+  try {
+    const { token } = req.cookies;
+    const { reservationID } = req.query;
+    const userID = getUserIDFromToken(token, res);
+    if (!userID) {
+      return res.status(401).send({ message: "Unauthorized" });
+    }
+
+    if (!reservationID) {
+      return res.status(400).send({ message: "Reservation ID is required" });
+    }
+
+    const paymentData = await pool.query(
+      `SELECT *
+      FROM reservations AS r
+      INNER JOIN service_records AS sr ON sr.reservation_id = r.reservation_id
+      INNER JOIN service_type AS st ON r.service_type_id = st.service_type_id
+      INNER JOIN vehicles AS v ON r.vehicle_id = v.license_plate
+      WHERE r.reservation_id = $1 AND reservation_status = $2`,
+      [reservationID, "3"]
+    );
+    if (paymentData.rows.length === 0) {
+      return res.status(404).send({ message: "No service records found" });
+    }
+    const userData = await pool.query(
       "SELECT * FROM users WHERE user_id = $1",
       [userID]
     );
-    if (checkUser.rows.length === 0) {
+    if (userData.rows.length === 0) {
       return res.status(400).send({ message: "Invalid User" });
     }
-    const user = checkUser.rows[0];
-    const notifications = await pool.query(
-      `SELECT * FROM notifications WHERE user_id = $1`,
-      [userID]
-    );
-    return res.status(200).send(notifications.rows);
+    return res.status(200).send({
+      paymentData: paymentData.rows[0],
+      userData: userData.rows[0],
+    });
   } catch (error) {
     console.log(error);
-    res.status(500).send("Internal Server Error"); // If the token is invalid or the user does not exist, it returns an error message
+    res.status(500).send("Internal Server Error");
   }
+};
+
+// Fetch reservation data for the user for reservation info page for a specific reservation
+export const fetchReservationData = async (req, res) => {
+  try {
+    const { resid } = req.query;
+    const { token } = req.cookies;
+    const userID = getUserIDFromToken(token, res);
+    if (!userID) {
+      return res.status(401).send({ message: "Unauthorized" });
+    }
+    if (!resid) {
+      return res.status(400).send({ message: "Reservation ID is required" });
+    }
+    const reservationData = await pool.query(
+      `SELECT * FROM reservations r 
+      INNER JOIN service_type st ON r.service_type_id = st.service_type_id
+      INNER JOIN vehicles v ON r.vehicle_id = v.license_plate
+      INNER JOIN resrevation_status rs ON r.reservation_status = rs.reservation_status_id
+      WHERE r.reservation_id = $1 AND v.user_id = $2`,
+      [resid, userID]
+    );
+    if (reservationData.rows.length === 0) {
+      return res
+        .status(404)
+        .send({ message: "Reservation not found for this user" });
+    }
+    return res.status(200).send(reservationData.rows[0]);
+  } catch (error) {
+    console.log(error);
+    res.status(500).send("Internal Server Error");
+  }
+};
+
+export const generatePayHash = async (req, res) => {
+  const { merchant_id, order_id, amount, currency } = req.body;
+  const merchant_secret = process.env.MERCHANT_SECRET;
+
+  if (!merchant_id || !order_id || !amount || !currency || !merchant_secret) {
+    return res.status(400).json({ error: "Missing required fields" });
+  }
+
+  const formattedAmount = parseFloat(amount).toFixed(2);
+
+  const innerHash = crypto
+    .createHash("md5")
+    .update(merchant_secret)
+    .digest("hex")
+    .toUpperCase();
+
+  const rawString =
+    merchant_id + order_id + formattedAmount + currency + innerHash;
+
+  const finalHash = crypto
+    .createHash("md5")
+    .update(rawString)
+    .digest("hex")
+    .toUpperCase();
+
+  res.json({ hash: finalHash });
 };

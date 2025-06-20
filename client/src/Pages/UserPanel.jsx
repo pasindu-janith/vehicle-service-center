@@ -11,6 +11,8 @@ import ProfileSettings from "../Components/ProfileSettings";
 import { UserProvider } from "../Context/UserContext";
 import { Payments } from "../Components/Payments";
 import VehicleInfo from "../Components/VehicleInfo";
+import ReservationInfo from "../Components/ReservationInfo";
+import PaymentProceed from "../Components/PaymentProceed";
 
 const UserPanel = () => {
   const navigate = useNavigate();
@@ -53,6 +55,9 @@ const UserPanel = () => {
           <Route path="/settings" element={<ProfileSettings />} />
           <Route path="/payments" element={<Payments />} />
           <Route path="vehicle-info/:id" element={<VehicleInfo />} />
+          <Route path="reservation-info/:resid" element={<ReservationInfo />} />
+          <Route path="proceed-payment" element={<PaymentProceed />} />
+
         </Routes>
         <UserPanelFooter />
       </UserProvider>

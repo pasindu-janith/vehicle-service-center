@@ -1180,7 +1180,7 @@ export const fetchReservationData = async (req, res) => {
       `SELECT * FROM reservations r 
       INNER JOIN service_type st ON r.service_type_id = st.service_type_id
       INNER JOIN vehicles v ON r.vehicle_id = v.license_plate
-      INNER JOIN resrevation_status rs ON r.reservation_status = rs.reservation_status_id
+      INNER JOIN reservation_status rs ON r.reservation_status = rs.reservation_status_id
       WHERE r.reservation_id = $1 AND v.user_id = $2`,
       [resid, userID]
     );

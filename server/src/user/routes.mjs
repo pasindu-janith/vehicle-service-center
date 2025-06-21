@@ -29,6 +29,7 @@ import {
   loadServiceRecordPayment,
   loadPaymentPageData,
   generatePayHash,
+  fetchReservationData,
 } from "./controller.mjs";
 import upload from "../middleware/upload.mjs";
 
@@ -67,5 +68,6 @@ userRouter.get("/fetchVehicleData", fetchVehicleData);
 userRouter.get("/loadServiceRecordPayment", loadServiceRecordPayment);
 userRouter.get("/loadPaymentPageData", loadPaymentPageData);
 userRouter.post("/pay-hash", generatePayHash);
+userRouter.get("/fetchReservationData", fetchReservationData);
 export default userRouter;
 

@@ -80,7 +80,7 @@ const Reservations = () => {
             <table className="table table-striped">
               <thead>
                 <tr>
-                  <th>Reservation ID</th>
+                  <th>Res ID</th>
                   <th>Vehicle</th>
                   <th>Date</th>
                   <th>Time</th>

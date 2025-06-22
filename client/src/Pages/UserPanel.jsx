@@ -13,6 +13,7 @@ import { Payments } from "../Components/Payments";
 import VehicleInfo from "../Components/VehicleInfo";
 import ReservationInfo from "../Components/ReservationInfo";
 import PaymentProceed from "../Components/PaymentProceed";
+import PaymentInvoice from "../Components/PaymentInvoice";
 
 const UserPanel = () => {
   const navigate = useNavigate();
@@ -57,7 +58,7 @@ const UserPanel = () => {
           <Route path="vehicle-info/:id" element={<VehicleInfo />} />
           <Route path="reservation-info/:resid" element={<ReservationInfo />} />
           <Route path="proceed-payment" element={<PaymentProceed />} />
-
+          <Route path="payment-success" element={<PaymentInvoice />} />
         </Routes>
         <UserPanelFooter />
       </UserProvider>

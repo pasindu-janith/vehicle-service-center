@@ -308,6 +308,7 @@ export const completeReservation = async (req, res) => {
       serviceDiscount,
       vehicleNumber,
       notes,
+      extraItems = [],
     } = req.body;
     console.log("Complete reservation request received:", req.body);
     const completeDate = toSQLDateTime(completedDateTime).split(" ")[0];
@@ -335,9 +336,19 @@ export const completeReservation = async (req, res) => {
       ]
     );
 
+    for (const item of extraItems) {
+      if (item.description && item.price) {
+        await pool.query(
+          `INSERT INTO payment_item (reservation_id, description, price)
+           VALUES ($1, $2, $3)`,
+          [reservationId, item.description, parseFloat(item.price)]
+        );
+      }
+    }
+
     res.status(200).send({
       ...updateReservation.rows[0],
-      status_name: "Completed"
+      status_name: "Completed",
     });
   } catch (error) {
     console.error("Error completing reservation:", error);
@@ -347,7 +358,7 @@ export const completeReservation = async (req, res) => {
 
 export const editReservation = async (req, res) => {
   try {
-    const { reservationId, startDateTime, endDateTime } = req.body;
+    const { reservationId, startDateTime, endDateTime } = req.query;
 
     if (!reservationId || !startDateTime || !endDateTime) {
       return res.status(400).send({ message: "Missing required fields" });
@@ -356,7 +367,9 @@ export const editReservation = async (req, res) => {
     const startDate = new Date(startDateTime);
     const endDate = new Date(endDateTime);
     if (startDate >= endDate) {
-      return res.status(400).send({ message: "Start time must be before end time" });
+      return res
+        .status(400)
+        .send({ message: "Start time must be before end time" });
     }
 
     const startDateString = toSQLDateTime(startDateTime).split(" ")[0];
@@ -384,4 +397,4 @@ export const editReservation = async (req, res) => {
     console.error("Error editing reservation:", error);
     res.status(500).send("Internal Server Error");
   }
-}
+};

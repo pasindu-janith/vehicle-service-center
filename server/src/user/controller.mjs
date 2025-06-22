@@ -1125,7 +1125,8 @@ export const loadServiceRecordPayment = async (req, res) => {
 export const loadPaymentPageData = async (req, res) => {
   try {
     const { token } = req.cookies;
-    const { reservationID } = req.query;
+    const { resid } = req.query;
+    const reservationID = resid;
     const userID = getUserIDFromToken(token, res);
     if (!userID) {
       return res.status(401).send({ message: "Unauthorized" });
@@ -1141,22 +1142,31 @@ export const loadPaymentPageData = async (req, res) => {
       INNER JOIN service_records AS sr ON sr.reservation_id = r.reservation_id
       INNER JOIN service_type AS st ON r.service_type_id = st.service_type_id
       INNER JOIN vehicles AS v ON r.vehicle_id = v.license_plate
-      WHERE r.reservation_id = $1 AND reservation_status = $2`,
-      [reservationID, "3"]
+      WHERE r.reservation_id = $1 AND reservation_status = $2 AND v.user_id= $3`,
+      [reservationID, "3", userID]
     );
     if (paymentData.rows.length === 0) {
       return res.status(404).send({ message: "No service records found" });
     }
     const userData = await pool.query(
-      "SELECT * FROM users WHERE user_id = $1",
+      `SELECT * FROM users AS u 
+      INNER JOIN mobile_number AS m ON u.mobile_id=m.mobile_id
+      INNER JOIN addresses AS a ON u.address_id=a.address_id WHERE u.user_id = $1`,
       [userID]
     );
     if (userData.rows.length === 0) {
       return res.status(400).send({ message: "Invalid User" });
     }
+
+    const paymentItem = await pool.query(
+      `SELECT description, price FROM payment_item WHERE reservation_id = $1`,
+      [reservationID]
+    );
+
     return res.status(200).send({
-      paymentData: paymentData.rows[0],
+      reservationData: paymentData.rows[0],
       userData: userData.rows[0],
+      paymentItems: paymentItem ? paymentItem.rows : null,
     });
   } catch (error) {
     console.log(error);

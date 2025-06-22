@@ -24,6 +24,10 @@ const Reservations = () => {
   const [startReservationModal, setStartReservationModal] = useState(false);
   const [editReservationModal, setEditReservationModal] = useState(false);
   const [endReservationModal, setEndReservationModal] = useState(false);
+  const [cancelReservationConfirmation, setCancelReservationConfirmation] =
+    useState(false);
+  const [extraItems, setExtraItems] = useState([]);
+  const [extraItem, setExtraItem] = useState({ description: "", price: "" });
   const tableRef = useRef(null);
   const dtInstance = useRef(null); // To store the DataTable instance
   const [serviceCost, setServiceCost] = useState("");
@@ -165,6 +169,7 @@ const Reservations = () => {
             serviceDiscount: parseFloat(serviceDiscount) || 0,
             finalAmount: parseFloat(finalAmount) || 0,
             notes: document.getElementById("serviceDetails").value || "",
+            extraItems: extraItems,
           }),
         }
       );
@@ -572,16 +577,19 @@ const Reservations = () => {
                         className="btn btn-primary me-2"
                         onClick={() => {
                           // Handle start reservation logic here
-                          console.log(
-                            "Starting reservation for:",
-                            selectedReservation
-                          );
+                          editReservation();
+                          setSelectedReservation(null);
                           setStartReservationModal(false);
                         }}
                       >
                         Edit
                       </button>
-                      <button className="btn btn-danger">
+                      <button
+                        className="btn btn-danger"
+                        onClick={() => {
+                          setCancelReservationConfirmation(true);
+                        }}
+                      >
                         Cancel Reservation
                       </button>
                     </>
@@ -615,7 +623,7 @@ const Reservations = () => {
           style={{ display: "block" }} // Only needed if you want to show the modal immediately
         >
           <div
-            className="modal-dialog modal-dialog-centered modal-lg"
+            className="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable"
             role="document"
           >
             <div className="modal-content">
@@ -685,6 +693,96 @@ const Reservations = () => {
                           id="serviceDetails"
                           placeholder="Enter any notes or comments here..."
                         ></textarea>
+                      </div>
+
+                      <div className="col-md-12">
+                        <label>Add Extra Services</label>
+                        <div className="row mb-2">
+                          <div className="col-md-6">
+                            <input
+                              type="text"
+                              className="form-control"
+                              placeholder="Description"
+                              value={extraItem.description}
+                              onChange={(e) =>
+                                setExtraItem({
+                                  ...extraItem,
+                                  description: e.target.value,
+                                })
+                              }
+                            />
+                          </div>
+                          <div className="col-md-4">
+                            <input
+                              type="text"
+                              className="form-control"
+                              placeholder="Price"
+                              inputMode="decimal"
+                              value={extraItem.price}
+                              onChange={(e) =>
+                                setExtraItem({
+                                  ...extraItem,
+                                  price: e.target.value.replace(/[^0-9.]/g, ""),
+                                })
+                              }
+                            />
+                          </div>
+                          <div className="col-md-2">
+                            <button
+                              className="btn btn-outline-primary w-100"
+                              onClick={() => {
+                                const price = parseFloat(extraItem.price);
+                                if (
+                                  extraItem.description.trim() !== "" &&
+                                  !isNaN(price) &&
+                                  price >= 0
+                                ) {
+                                  const updatedItems = [
+                                    ...extraItems,
+                                    extraItem,
+                                  ];
+                                  setExtraItems(updatedItems);
+                                  setExtraItem({ description: "", price: "" });
+
+                                  // Recalculate service cost
+                                  const itemTotal = updatedItems.reduce(
+                                    (sum, item) =>
+                                      sum + parseFloat(item.price || 0),
+                                    0
+                                  );
+                                  const discount =
+                                    parseFloat(serviceDiscount) || 0;
+                                  setServiceCost(itemTotal.toFixed(2));
+                                  setFinalAmount(
+                                    (itemTotal - discount).toFixed(2)
+                                  );
+                                }
+                              }}
+                            >
+                              Add
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Display Added Items */}
+                        {extraItems.length > 0 && (
+                          <table className="table table-bordered">
+                            <thead className="table-light">
+                              <tr>
+                                <th>Description</th>
+                                <th>Price (Rs.)</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {extraItems.map((item, index) => (
+                                <tr key={index}>
+                                  <td>{item.description}</td>
+                                  <td>{parseFloat(item.price).toFixed(2)}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        )}
                       </div>
 
                       <div className="col-md-4">

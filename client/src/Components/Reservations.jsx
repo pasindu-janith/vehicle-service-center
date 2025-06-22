@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { CiCircleInfo } from "react-icons/ci";
 import "./styles/Dashboard.css";
 
 const Reservations = () => {
@@ -8,7 +9,7 @@ const Reservations = () => {
   const [selectedReservation, setSelectedReservation] = useState(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
-
+  const navigate = useNavigate();
   useEffect(() => {
     const loadReservations = async () => {
       try {
@@ -169,8 +170,7 @@ const Reservations = () => {
                             <button
                               className="btn btn-sm btn-success"
                               onClick={() => {
-                                setSelectedReservation(reservation);
-                                window.location.href = `/payment/${reservation.reservation_id}`;
+                                window.location.href = `/proceed-payment/${reservation.reservation_id}`;
                               }}
                             >
                               Payment
@@ -179,6 +179,16 @@ const Reservations = () => {
                         ) : (
                           ""
                         )}
+                        <button
+                          className="btn p-0 btn-outline-primary border-0 no-hover-bg bg-transparent ms-2 text-primary"
+                          onClick={() =>
+                            navigate(
+                              `/myaccount/reservation-info/${reservation.reservation_id}`
+                            )
+                          }
+                        >
+                          <CiCircleInfo size={25}></CiCircleInfo>
+                        </button>
                       </td>
                     </tr>
                   ))

@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "./styles/Dashboard.css";
 
 export const Payments = () => {
   const [paymentData, setPaymentData] = useState([]);
-
+  const navigate = useNavigate();
   useEffect(() => {
     const loadSerivceRecords = async () => {
       try {
@@ -59,7 +60,14 @@ export const Payments = () => {
                     <td>{new Date(record.end_date).toLocaleDateString()}</td>
                     <td>Rs. {record.final_amount}</td>
                     <td>
-                      <button className="btn btn-primary btn-sm">
+                      <button
+                        className="btn btn-primary btn-sm"
+                        onClick={() =>
+                          navigate(
+                            `/myaccount/proceed-payment?resid=${record.reservation_id}`
+                          )
+                        }
+                      >
                         Pay Now
                       </button>
                     </td>

@@ -10,6 +10,7 @@ import {
   countReservations,
   startReservation,
   completeReservation,
+  editReservation,
 } from "./controller.mjs";
 
 //User functions here
@@ -26,4 +27,5 @@ adminRouter.get("/loadAllReservations", loadAllReservations);
 adminRouter.get("/loadDashboardCounts", countReservations);
 adminRouter.post("/startReservation", startReservation);
 adminRouter.post("/endReservation", completeReservation);
+adminRouter.post("/editReservation", editReservation);
 export default adminRouter;

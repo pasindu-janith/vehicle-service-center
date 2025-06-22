@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { CiCircleInfo } from "react-icons/ci";
-import { a } from "framer-motion/client";
 
 const ReservationInfo = () => {
   const { resid: reservationID } = useParams();
@@ -90,7 +89,6 @@ const ReservationInfo = () => {
           activeReservation.end_time
         }`
       );
-
       const now = new Date();
       const diffMs = end - start;
       const remainingMs = end - now;
@@ -299,15 +297,14 @@ const ReservationInfo = () => {
                       className="progress-bar bg-primary progress-bar-striped progress-bar-animated"
                       role="progressbar"
                       style={{
-                        width: `${Math.floor(
-                          (remainingTime / duration) * 100
+                        width: `${100-(Math.floor(
+                          (remainingTime / duration) * 100)
                         )}%`,
                       }}
-                      aria-valuenow={activeReservation.progress}
                       aria-valuemin="0"
                       aria-valuemax="100"
                     >
-                      {Math.floor((remainingTime / duration) * 100)}%
+                      {100-(Math.floor((remainingTime / duration) * 100))}%
                     </div>
                   </div>
                 ) : activeReservation.status_name === "Completed" ? (

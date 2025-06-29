@@ -96,7 +96,7 @@ export const loadOngoingServices = async (req, res) => {
 export const loadCompletedServices = async (req, res) => {
   try {
     const completedServices = await pool.query(
-      "SELECT * FROM reservations INNER JOIN reservation_status ON reservations.reservation_status=reservation_status.reservation_status_id WHERE status_name=$1 LIMIT 100",
+      "SELECT * FROM reservations INNER JOIN service_type ON reservations.service_type_id=service_type.service_type_id WHERE reservation_status=(SELECT reservation_status_id FROM reservation_status WHERE status_name=$1) LIMIT 100",
       ["Completed"]
     );
 
@@ -395,6 +395,109 @@ export const editReservation = async (req, res) => {
     res.status(200).send(updateReservation.rows[0]);
   } catch (error) {
     console.error("Error editing reservation:", error);
+    res.status(500).send("Internal Server Error");
+  }
+};
+
+export const loadAllCustomers = async (req, res) => {
+  try {
+    const allCustomers = await pool.query(
+      `SELECT * FROM users AS u 
+      INNER JOIN mobile_number m ON u.mobile_id=m.mobile_id 
+      INNER JOIN addresses a ON a.address_id=u.address_id WHERE user_type_id = $1 AND status = $2`,
+      ["2", "1"]
+    );
+    res.status(200).send(allCustomers.rows);
+  } catch (error) {
+    console.error("Error loading all customers:", error);
+    res.status(500).send("Internal Server Error");
+  }
+};
+
+export const loadCustomerVehicles = async (req, res) => {
+  try {
+    const { customerId } = req.query;
+    if (!customerId) {
+      return res.status(400).send({ message: "Customer ID is required" });
+    }
+
+    const vehicles = await pool.query(
+      `SELECT * FROM vehicles v
+      INNER JOIN vehicle_brand AS vb ON v.vehicle_brand_id = vb.vehicle_brand_id
+      INNER JOIN vehicle_type AS vt ON v.vehicle_type_id = vt.vehicle_type_id
+      WHERE user_id = $1 AND status = $2`,
+      [customerId, "1"]
+    );
+
+    if (vehicles.rows.length === 0) {
+      return res
+        .status(404)
+        .send({ message: "No vehicles found for this customer" });
+    }
+
+    res.status(200).send(vehicles.rows);
+  } catch (error) {
+    console.error("Error loading customer vehicles:", error);
+    res.status(500).send("Internal Server Error");
+  }
+};
+
+export const loadAllVehicles = async (req, res) => {
+  try {
+    const allVehicles = await pool.query(
+      `SELECT * 
+      FROM vehicles AS v
+      INNER JOIN vehicle_brand AS vb ON v.vehicle_brand_id = vb.vehicle_brand_id
+      INNER JOIN vehicle_type AS vt ON v.vehicle_type_id = vt.vehicle_type_id
+      INNER JOIN transmission_type AS t ON v.transmission_type = t.transmission_type_id
+      INNER JOIN fuel_type AS f ON v.fuel_type = f.fuel_type_id
+      WHERE v.status = $1`,
+      ["1"]
+    );
+    res.status(200).send(allVehicles.rows);
+  } catch (error) {
+    console.error("Error loading all vehicles:", error);
+    res.status(500).send("Internal Server Error");
+  }
+};
+
+//This is for loading vehicle info of owner and service records by vehicle number 
+export const loadVehicleInfo = async (req, res) => {
+  try {
+    const { vehicleNumber } = req.query;
+    if (!vehicleNumber) {
+      return res.status(400).send({ message: "Vehicle number is required" });
+    }
+
+    const vehicleOwner = await pool.query(
+      `SELECT * FROM users AS u
+      INNER JOIN mobile_number AS m ON u.mobile_id = m.mobile_id
+      INNER JOIN addresses AS a ON u.address_id = a.address_id
+      WHERE u.user_id = (
+        SELECT user_id FROM vehicles WHERE license_plate = $1 AND status = $2
+      )`,
+      [vehicleNumber, "1"]
+
+    );
+
+    const serviceRecords = await pool.query(
+      `SELECT * FROM service_records sr 
+      INNER JOIN reservations r ON sr.reservation_id = r.reservation_id
+      INNER JOIN service_type st ON r.service_type_id = st.service_type_id
+      WHERE sr.vehicle_id = $1 ORDER BY created_datetime DESC`,
+      [vehicleNumber]
+    );
+
+    if (vehicleOwner.rows.length === 0) {
+      return res.status(404).send({ message: "Vehicle not found" });
+    }
+
+    res.status(200).send({
+      vehicleOwner: vehicleOwner.rows[0],
+      serviceRecords: serviceRecords.rows,
+    });
+  } catch (error) {
+    console.error("Error loading vehicle info:", error);
     res.status(500).send("Internal Server Error");
   }
 };

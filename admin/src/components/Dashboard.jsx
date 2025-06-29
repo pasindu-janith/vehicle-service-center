@@ -7,7 +7,6 @@ const Dashboard = () => {
   const [startedServicesToday, setStartedServicesToday] = useState(0);
   const [completedReservations, setCompletedReservations] = useState(0);
   const [ongoingReservations, setOngoingReservations] = useState(0);
-
   const [paymentsDoneToday, setPaymentsDoneToday] = useState(0);
   const [registeredUsers, setRegisteredUsers] = useState(0);
   const [workingRate, setWorkingRate] = useState(0);
@@ -233,7 +232,7 @@ const Dashboard = () => {
               <div className="small-box bg-info">
                 <div className="inner">
                   <h3>
-                    53<sup style={{ fontSize: 20 }}>%</sup>
+                    10<sup style={{ fontSize: 20 }}>%</sup>
                   </h3>
                   <p>Working rate (Current)</p>
                 </div>
@@ -246,7 +245,7 @@ const Dashboard = () => {
               {/* small box */}
               <div className="small-box bg-warning">
                 <div className="inner">
-                  <h3>150</h3>
+                  <h3>0</h3>
                   <p>Payments Done(Today)</p>
                 </div>
               </div>

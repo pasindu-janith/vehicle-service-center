@@ -18,6 +18,12 @@ const ServicesCompleted = () => {
       try {
         const response = await fetch(
           "http://localhost:4000/api/v1/admin/loadCompletedServices"
+          , {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json"
+            }
+          }
         );
         if (response.ok) {
           const jsonData = await response.json();
@@ -74,10 +80,8 @@ const ServicesCompleted = () => {
                       <th>Res. ID</th>
                       <th>Vehicle No</th>
                       <th>Service Name</th>
-                      <th>Service Date</th>
-                      <th>Time start</th>
-                      <th>Time due</th>
-                      <th>Description</th>
+                      <th>Time started</th>
+                      <th>Time Ended</th>
                       <th>Controls</th>
                     </tr>
                   </thead>
@@ -88,29 +92,10 @@ const ServicesCompleted = () => {
                           <td>{row.reservation_id}</td>
                           <td>{row.vehicle_id}</td>
                           <td>{row.service_name}</td>
-                          <td>{new Date(row.reserve_date).toLocaleDateString('en-CA')}</td>
                           <td>{row.start_time}</td>
                           <td>{row.end_time}</td>
-                          <td>{row.notes}</td>
                           <td>
-                            <button
-                              className="btn btn-success btn-sm me-2"
-                              onClick={() => {
-                                // Handle button click
-                                console.log("Button clicked for ID:", row.reservation_id);
-                              }}
-                            >
-                              Start
-                            </button>
-                            <button
-                              className="btn btn-primary btn-sm"
-                              onClick={() => {
-                                // Handle button click
-                                console.log("Button clicked for ID:", row.reservation_id);
-                              }}
-                            >
-                              Customer
-                            </button>
+                            <button className="btn btn-sm btn-primary">Show record</button>
                           </td>
                         </tr>
                       ))

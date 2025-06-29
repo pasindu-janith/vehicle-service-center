@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import { useEffect, useState, useRef } from "react";
 import $ from "jquery";
 import "datatables.net-dt";
 import "datatables.net-responsive-dt";
@@ -8,43 +8,79 @@ import "datatables.net-responsive-dt/css/responsive.dataTables.css";
 import "datatables.net-buttons-dt/css/buttons.dataTables.css";
 import images from "../assets/assets";
 const Vehicle = () => {
-  useEffect(() => {
-    const $table = $("#example2");
-    const $table1 = $("#example1");
+  const [tableData, setTableData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedVehicle, setSelectedVehicle] = useState(null);
+  const [vehicleOwner, setVehicleOwner] = useState(null);
+  const [serviceRecords, setServiceRecords] = useState([]);
+  const tableRef = useRef(null);
+  const dtInstance = useRef(null); // To store the DataTable instance
 
-    // Initialize the DataTable only if it's not already initialized
-    if (!$.fn.DataTable.isDataTable($table)) {
-      const table = $table.DataTable({
-        paging: true,
-        lengthChange: false,
-        searching: true,
-        ordering: false,
-        info: true,
-        autoWidth: false,
-        responsive: true,
-      });
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await fetch(
+          "http://localhost:4000/api/v1/admin/loadAllVehicles",
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        if (response.ok) {
+          const jsonData = await response.json();
+          setTableData(jsonData);
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  const loadVehicleData = async (vehicleID) => {
+    try {
+      const response = await fetch(
+        "http://localhost:4000/api/v1/admin/loadVehicleInfo?vehicleNumber=" +
+          vehicleID
+      );
+      if (response.ok) {
+        const jsonData = await response.json();
+        setVehicleOwner(jsonData.vehicleOwner);
+        setServiceRecords(jsonData.serviceRecords);
+      }
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    } finally {
+      setLoading(false);
     }
-    if (!$.fn.DataTable.isDataTable($table1)) {
-      const table1 = $table1.DataTable({
-        paging: true,
-        lengthChange: false,
-        searching: true,
-        ordering: false,
-        info: true,
-        autoWidth: false,
-        responsive: true,
-      });
-    }
-    // Cleanup: Destroy only the DataTable instance, not the table element
-    return () => {
+  };
+
+  useEffect(() => {
+    // Only initialize or reinitialize DataTables if data is loaded
+    if (!loading && tableData.length > 0) {
+      const $table = $(tableRef.current);
+
+      // Destroy existing instance before reinitializing
       if ($.fn.DataTable.isDataTable($table)) {
         $table.DataTable().destroy();
       }
-      if ($.fn.DataTable.isDataTable($table1)) {
-        $table1.DataTable().destroy();
-      }
-    };
-  }, []);
+
+      dtInstance.current = $table.DataTable({
+        paging: true,
+        lengthChange: true,
+        searching: true,
+        ordering: true,
+        info: true,
+        autoWidth: true,
+        responsive: true,
+      });
+    }
+  }, [tableData, loading]); // Re-run only when data is updated
+
   return (
     <div className="content">
       <div className="container-fluid pt-3">
@@ -74,42 +110,48 @@ const Vehicle = () => {
 
               {/* /.card-header */}
               <div className="card-body">
-                <form action="">
-                  <div className="input-group">
-                    <input
-                      type="search"
-                      className="form-control form-control-md"
-                      placeholder="Type your keywords here"
-                    />
-                    <div className="input-group-append">
-                      <button type="submit" className="btn btn-md btn-default">
-                        <i className="fa fa-search" />
-                      </button>
-                    </div>
-                  </div>
-                </form>
-
                 <table
                   id="example2"
+                  ref={tableRef}
                   className="table table-bordered table-hover"
                 >
                   <thead>
                     <tr>
-                      <th>License Plate</th>
+                      <th>License</th>
+                      <th>Brand</th>
                       <th>Model</th>
-                      <th>Owner</th>
+                      <th>Type</th>
                       <th></th>
                     </tr>
                   </thead>
                   <tbody>
-                    <tr>
-                      <td>ABC123</td>
-                      <td>Toyota Corolla</td>
-                      <td>John Doe</td>   
-                      <td>
-                        <button className="btn btn-primary">View</button>
-                      </td>
-                    </tr>
+                    {tableData.length > 0 ? (
+                      tableData.map((row) => (
+                        <tr key={row.license_plate}>
+                          <td>{row.license_plate}</td>
+                          <td>{row.vehicle_brand}</td>
+                          <td>{row.model}</td>
+                          <td>{row.vehicle_type}</td>
+                          <td>
+                            <button
+                              className="btn btn-primary btn-sm"
+                              onClick={() => {
+                                setSelectedVehicle(row);
+                                loadVehicleData(row.license_plate);
+                              }}
+                            >
+                              View
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="5" className="text-center">
+                          No ongoing services found.
+                        </td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -128,7 +170,18 @@ const Vehicle = () => {
                 <div className="card-body">
                   <div className="row">
                     <div className="col-md-7 col-12">
-                      <img src={images.car} className="col-12" />
+                      <img
+                        src={`http://localhost:4000${
+                          selectedVehicle ? selectedVehicle.imgpath : images.car
+                        }`}
+                        style={{
+                          height: "200px",
+                          width: "auto",
+                          objectFit: "cover",
+                        }}
+                        alt="Select Vehicle"
+                        className="img-fluid rounded"
+                      />
                     </div>
                     <div className="col-md-5">
                       <div className="form-group">
@@ -137,16 +190,18 @@ const Vehicle = () => {
                           type="text"
                           className="form-control"
                           id="vehicleno"
+                          value={selectedVehicle?.license_plate || ""}
                           name="vehicleno"
                         />
                       </div>
 
                       <div className="form-group">
-                        <label htmlFor="exampleInputEmail1">Type</label>
+                        <label htmlFor="type">Type</label>
                         <input
                           type="text"
+                          value={selectedVehicle?.vehicle_type || ""}
                           className="form-control"
-                          id="exampleInputEmail1"
+                          id="type"
                         />
                       </div>
                       <div className="form-group">
@@ -154,23 +209,26 @@ const Vehicle = () => {
                         <input
                           type="text"
                           className="form-control"
-                          id="exampleInputEmail1"
+                          value={selectedVehicle?.vehicle_brand || ""}
+                          id="brand"
                         />
                       </div>
                     </div>
                   </div>
                   <div className="form-group">
-                    <label htmlFor="exampleInputPassword1">Model</label>
+                    <label htmlFor="modal">Model</label>
                     <input
                       type="text"
+                      value={selectedVehicle?.model || ""}
                       className="form-control"
-                      id="exampleInputPassword1"
+                      id="modal"
                     />
                   </div>
                   <div className="form-group">
                     <label htmlFor="exampleInputPassword1">Color</label>
                     <input
                       type="text"
+                      value={selectedVehicle?.color || ""}
                       className="form-control"
                       id="exampleInputPassword1"
                     />
@@ -181,6 +239,7 @@ const Vehicle = () => {
                     </label>
                     <input
                       type="text"
+                      value={selectedVehicle?.make_year || ""}
                       className="form-control"
                       id="exampleInputPassword1"
                     />
@@ -191,6 +250,7 @@ const Vehicle = () => {
                         <label htmlFor="brand">Transmission</label>
                         <input
                           type="text"
+                          value={selectedVehicle?.transmission_type || ""}
                           className="form-control"
                           id="exampleInputEmail1"
                         />
@@ -202,6 +262,7 @@ const Vehicle = () => {
                         <input
                           type="text"
                           className="form-control"
+                          value={selectedVehicle?.fuel_type || ""}
                           id="exampleInputEmail1"
                         />
                       </div>
@@ -230,20 +291,38 @@ const Vehicle = () => {
                     <table className="table">
                       <tr>
                         <td>Full Name</td>
-                        <td>John Doe</td>
+                        <td>
+                          {vehicleOwner
+                            ? vehicleOwner.first_name +
+                              " " +
+                              vehicleOwner.last_name
+                            : "N/A"}
+                        </td>
                       </tr>
 
                       <tr>
                         <td>NIC</td>
-                        <td>2002200022002</td>
+                        <td>{vehicleOwner?.nicno || "N/A"}</td>
                       </tr>
                       <tr>
                         <td>Mobile Number</td>
-                        <td>0775654433</td>
+                        <td>{vehicleOwner?.mobile_no || "N/A"}</td>
+                      </tr>
+                      <tr>
+                        <td>Email</td>
+                        <td>{vehicleOwner?.email || "N/A"}</td>
                       </tr>
                       <tr>
                         <td>Address</td>
-                        <td>315/A/1, School Lane, Mahara</td>
+                        <td>
+                          {vehicleOwner
+                            ? vehicleOwner.address_line1 +
+                              ", " +
+                              vehicleOwner.address_line2 +
+                              ", " +
+                              vehicleOwner.address_line3
+                            : "N/A"}
+                        </td>
                       </tr>
                     </table>
                   </div>
@@ -263,85 +342,55 @@ const Vehicle = () => {
                 >
                   <thead>
                     <tr>
-                      <th>Customer ID</th>
-                      <th>Name</th>
-                      <th>NIC</th>
-                      <th></th>
+                      <th>Res ID</th>
+                      <th>Service</th>
+                      <th>From</th>
+                      <th>To</th>
+                      <th>Description</th>
+                      <th>Amount</th>
+                      <th>Payment</th>
                     </tr>
                   </thead>
                   <tbody>
-                    <tr>
-                      <td>Trident</td>
-                      <td>Internet Explorer 4.0</td>
-                      <td>Win 95+</td>
-                      <td>
-                        <button className="btn btn-primary">View</button>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>Trident</td>
-                      <td>Internet Explorer 5.0</td>
-                      <td>Win 95+</td>
-                      <td>
-                        <button className="btn btn-primary">View</button>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>Trident</td>
-                      <td>Internet Explorer 5.5</td>
-                      <td>Win 95+</td>
-                      <td>
-                        <button className="btn btn-primary">View</button>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>Trident</td>
-                      <td>Internet Explorer 6</td>
-                      <td>Win 98+</td>
-                      <td>
-                        <button className="btn btn-primary">View</button>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>Trident</td>
-                      <td>Internet Explorer 7</td>
-                      <td>Win XP SP2+</td>
-                      <td>
-                        <button className="btn btn-primary">View</button>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>Trident</td>
-                      <td>AOL browser (AOL desktop)</td>
-                      <td>Win XP</td>
-                      <td>
-                        <button className="btn btn-primary">View</button>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>Gecko</td>
-                      <td>Firefox 1.0</td>
-                      <td>Win 98+ / OSX.2+</td>
-                      <td>
-                        <button className="btn btn-primary">View</button>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>Gecko</td>
-                      <td>Firefox 1.5</td>
-                      <td>Win 98+ / OSX.2+</td>
-                      <td>
-                        <button className="btn btn-primary">View</button>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>Gecko</td>
-                      <td>Firefox 2.0</td>
-                      <td>Win 98+ / OSX.2+</td>
-                      <td>
-                        <button className="btn btn-primary">View</button>
-                      </td>
-                    </tr>
+                    {serviceRecords.length > 0 ? (
+                      serviceRecords.map((record) => (
+                        <tr key={record.reservation_id}>
+                          <td>{record.reservation_id}</td>
+                          <td>{record.service_name}</td>
+                          <td>
+                            {new Date(record.reserve_date).toLocaleDateString(
+                              "en-CA"
+                            )}
+                            {"  "}
+                            {record.start_time.substring(0, 5)}
+                          </td>
+                          <td>
+                            {new Date(record.end_date).toLocaleDateString(
+                              "en-CA"
+                            )}
+                            {"  "}
+                            {record.end_time.substring(0, 5)}
+                          </td>
+                          <td>{record.description}</td>
+                          <td>{record.final_amount}</td>
+                          <td>
+                            {record.is_paid ? (
+                              <span className="badge bg-success">
+                                Paid
+                              </span>
+                            ) : (
+                              <span className="badge bg-danger">Pending</span>
+                            )}
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="7" className="text-center">
+                          No service records found.
+                        </td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>

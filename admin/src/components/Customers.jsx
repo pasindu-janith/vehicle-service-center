@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import $ from "jquery";
 import "datatables.net-dt";
 import "datatables.net-responsive-dt";
@@ -7,29 +7,77 @@ import "datatables.net-dt/css/dataTables.dataTables.css";
 import "datatables.net-responsive-dt/css/responsive.dataTables.css";
 import "datatables.net-buttons-dt/css/buttons.dataTables.css";
 const Customers = () => {
+  const [tableData, setTableData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [customerVehicles, setCustomerVehicles] = useState([]);
+  const tableRef = useRef(null);
+  const dtInstance = useRef(null); // To store the DataTable instance
+
   useEffect(() => {
-    const $table = $("#example2");
+    const fetchData = async () => {
+      try {
+        const response = await fetch(
+          "http://localhost:4000/api/v1/admin/loadAllCustomers",
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        if (response.ok) {
+          const jsonData = await response.json();
+          setTableData(jsonData);
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
 
-    // Initialize the DataTable only if it's not already initialized
-    if (!$.fn.DataTable.isDataTable($table)) {
-      const table = $table.DataTable({
-        paging: true,
-        lengthChange: false,
-        searching: true,
-        ordering: false,
-        info: true,
-        autoWidth: false,
-        responsive: true,
-      });
+  const loadCustomerVehicles = async (userID) => {
+    try {
+      const response = await fetch(
+        "http://localhost:4000/api/v1/admin/loadCustomerVehicles?customerId=" +
+          userID
+      );
+      if (response.ok) {
+        const jsonData = await response.json();
+        setCustomerVehicles(jsonData);
+      }
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    } finally {
+      setLoading(false);
     }
+  };
 
-    // Cleanup: Destroy only the DataTable instance, not the table element
-    return () => {
+  useEffect(() => {
+    // Only initialize or reinitialize DataTables if data is loaded
+    if (!loading && tableData.length > 0) {
+      const $table = $(tableRef.current);
+
+      // Destroy existing instance before reinitializing
       if ($.fn.DataTable.isDataTable($table)) {
         $table.DataTable().destroy();
       }
-    };
-  }, []);
+
+      dtInstance.current = $table.DataTable({
+        paging: true,
+        lengthChange: true,
+        searching: true,
+        ordering: true,
+        info: true,
+        autoWidth: true,
+        responsive: true,
+      });
+    }
+  }, [tableData, loading]); // Re-run only when data is updated
+
   return (
     <div className="content">
       <div className="container-fluid pt-3">
@@ -59,23 +107,9 @@ const Customers = () => {
 
               {/* /.card-header */}
               <div className="card-body">
-                <form action="">
-                  <div className="input-group">
-                    <input
-                      type="search"
-                      className="form-control form-control-md"
-                      placeholder="Type your keywords here"
-                    />
-                    <div className="input-group-append">
-                      <button type="submit" className="btn btn-md btn-default">
-                        <i className="fa fa-search" />
-                      </button>
-                    </div>
-                  </div>
-                </form>
-
                 <table
                   id="example2"
+                  ref={tableRef}
                   className="table table-bordered table-hover"
                 >
                   <thead>
@@ -83,82 +117,36 @@ const Customers = () => {
                       <th>Customer ID</th>
                       <th>Name</th>
                       <th>NIC</th>
-                      <th></th>
+                      <th>More</th>
                     </tr>
                   </thead>
                   <tbody>
-                    <tr>
-                      <td>Trident</td>
-                      <td>Internet Explorer 4.0</td>
-                      <td>Win 95+</td>
-                      <td>
-                        <button className="btn btn-primary">View</button>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>Trident</td>
-                      <td>Internet Explorer 5.0</td>
-                      <td>Win 95+</td>
-                      <td>
-                        <button className="btn btn-primary">View</button>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>Trident</td>
-                      <td>Internet Explorer 5.5</td>
-                      <td>Win 95+</td>
-                      <td>
-                        <button className="btn btn-primary">View</button>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>Trident</td>
-                      <td>Internet Explorer 6</td>
-                      <td>Win 98+</td>
-                      <td>
-                        <button className="btn btn-primary">View</button>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>Trident</td>
-                      <td>Internet Explorer 7</td>
-                      <td>Win XP SP2+</td>
-                      <td>
-                        <button className="btn btn-primary">View</button>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>Trident</td>
-                      <td>AOL browser (AOL desktop)</td>
-                      <td>Win XP</td>
-                      <td>
-                        <button className="btn btn-primary">View</button>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>Gecko</td>
-                      <td>Firefox 1.0</td>
-                      <td>Win 98+ / OSX.2+</td>
-                      <td>
-                        <button className="btn btn-primary">View</button>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>Gecko</td>
-                      <td>Firefox 1.5</td>
-                      <td>Win 98+ / OSX.2+</td>
-                      <td>
-                        <button className="btn btn-primary">View</button>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>Gecko</td>
-                      <td>Firefox 2.0</td>
-                      <td>Win 98+ / OSX.2+</td>
-                      <td>
-                        <button className="btn btn-primary">View</button>
-                      </td>
-                    </tr>
+                    {tableData.length > 0 ? (
+                      tableData.map((row) => (
+                        <tr key={row.user_id}>
+                          <td>{row.user_id}</td>
+                          <td>{row.first_name + " " + row.last_name}</td>
+                          <td>{row.nicno}</td>
+                          <td>
+                            <button
+                              className="btn btn-primary btn-sm"
+                              onClick={() => {
+                                setSelectedCustomer(row);
+                                loadCustomerVehicles(row.user_id);
+                              }}
+                            >
+                              View
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="7" className="text-center">
+                          No ongoing services found.
+                        </td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -178,84 +166,93 @@ const Customers = () => {
                   <div className="row">
                     <div className="col-md-6 col-12">
                       <div className="form-group">
-                        <label htmlFor="exampleInputEmail1">First Name</label>
+                        <label htmlFor="fname">First Name</label>
                         <input
                           type="text"
                           className="form-control"
-                          id="exampleInputEmail1"
+                          id="fname"
+                          value={selectedCustomer?.first_name || ""}
                           placeholder="Saman"
                         />
                       </div>
                     </div>
                     <div className="col-md-6 col-12">
                       <div className="form-group">
-                        <label htmlFor="exampleInputEmail1">Last Name</label>
+                        <label htmlFor="lname">Last Name</label>
                         <input
                           type="text"
                           className="form-control"
-                          id="exampleInputEmail1"
+                          id="lname"
+                          value={selectedCustomer?.last_name || ""}
                           placeholder="Perera"
                         />
                       </div>
                     </div>
                   </div>
                   <div className="form-group">
-                    <label htmlFor="exampleInputPassword1">NIC</label>
+                    <label htmlFor="nicno">NIC</label>
                     <input
                       type="text"
                       className="form-control"
-                      id="exampleInputPassword1"
+                      id="nicno"
+                      value={selectedCustomer?.nicno || ""}
                       placeholder="2002200022002"
                     />
                   </div>
                   <div className="form-group">
-                    <label htmlFor="exampleInputPassword1">
-                      Address Number
-                    </label>
+                    <label htmlFor="addressNumber">Address Number</label>
                     <input
                       type="text"
                       className="form-control"
-                      id="exampleInputPassword1"
+                      id="addressNumber"
+                      value={selectedCustomer?.address_line1 || ""}
                       placeholder="315/A/1"
                     />
                   </div>
                   <div className="form-group">
-                    <label htmlFor="exampleInputPassword1">Street</label>
+                    <label htmlFor="street">Street</label>
                     <input
                       type="text"
                       className="form-control"
-                      id="exampleInputPassword1"
+                      id="street"
+                      value={selectedCustomer?.address_line2 || ""}
                       placeholder="School Lane"
                     />
                   </div>
                   <div className="form-group">
-                    <label htmlFor="exampleInputPassword1">City</label>
+                    <label htmlFor="city">City</label>
                     <input
                       type="text"
                       className="form-control"
-                      id="exampleInputPassword1"
+                      id="city"
+                      value={selectedCustomer?.address_line3 || ""}
                       placeholder="Mahara"
                     />
                   </div>
                   <div className="form-group">
-                    <label htmlFor="exampleInputEmail1">Email address</label>
+                    <label htmlFor="email">Email address</label>
                     <input
                       type="email"
                       className="form-control"
-                      id="exampleInputEmail1"
+                      id="email"
+                      value={selectedCustomer?.email || ""}
                       placeholder="Enter email"
                     />
                   </div>
                   <div className="form-group">
-                    <label htmlFor="exampleInputPassword1">Mobile No</label>
+                    <label htmlFor="mobNumber">Mobile No</label>
                     <input
                       type="text"
                       className="form-control"
-                      id="exampleInputPassword1"
+                      value={selectedCustomer?.mobile_no || ""}
+                      id="mobNumber"
                       placeholder="+94702686207"
                     />
                   </div>
-                  <label>Registered Since: 2023/04/13</label>
+                  <label>
+                    Registered Since:{" "}
+                    {selectedCustomer?.registered_date.split("T")[0] || "N/A"}
+                  </label>
                 </div>
                 {/* /.card-body */}
                 <div className="card-footer">
@@ -276,42 +273,31 @@ const Customers = () => {
                 <table className="table table-bordered table-hover">
                   <thead>
                     <tr>
-                      <th scope="col">Vehicle Number</th>
+                      <th scope="col">Vehicle No.</th>
+                      <th scope="col">Brand</th>
+                      <th scope="col">Model</th>
                       <th scope="col">Type</th>
                       <th scope="col">Color</th>
-                      <th scope="col">Model</th>
-                      <th>View</th>
                     </tr>
                   </thead>
                   <tbody>
-                    <tr>
-                      <td>1</td>
-                      <td>Mark</td>
-                      <td>Otto</td>
-                      <td>@mdo</td>
-                      <td><button className="btn btn-primary">View</button></td>
-                    </tr>
-                    <tr>
-                      <td>1</td>
-                      <td>Mark</td>
-                      <td>Otto</td>
-                      <td>@mdo</td>
-                      <td><button className="btn btn-primary">View</button></td>
-                    </tr>
-                    <tr>
-                      <td>1</td>
-                      <td>Mark</td>
-                      <td>Otto</td>
-                      <td>@mdo</td>
-                      <td><button className="btn btn-primary">View</button></td>
-                    </tr>
-                    <tr>
-                      <td>1</td>
-                      <td>Mark</td>
-                      <td>Otto</td>
-                      <td>@mdo</td>
-                      <td><button className="btn btn-primary">View</button></td>
-                    </tr>
+                    {customerVehicles.length > 0 ? (
+                      customerVehicles.map((vehicle) => (
+                        <tr key={vehicle.license_plate}>
+                          <td>{vehicle.license_plate}</td>
+                          <td>{vehicle.vehicle_brand}</td>
+                          <td>{vehicle.model}</td>
+                          <td>{vehicle.vehicle_type}</td>
+                          <td>{vehicle.color}</td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="5" className="text-center">
+                          No vehicles found for this customer.
+                        </td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>

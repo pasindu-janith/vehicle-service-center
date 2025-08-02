@@ -39,10 +39,14 @@ const ReservationInfo = () => {
           console.log("Reservation data:", data);
 
           const start = new Date(
-            `${data.reserve_date.split("T")[0]}T${data.start_time}`
+            `${new Date(data.reserve_date).toLocaleDateString("en-CA")}T${
+              data.start_time
+            }`
           );
           const end = new Date(
-            `${data.end_date.split("T")[0]}T${data.end_time}`
+            `${new Date(data.end_date).toLocaleDateString("en-CA")}T${
+              data.end_time
+            }`
           );
           const now = new Date();
           setRemainingTime(end - now);
@@ -80,12 +84,12 @@ const ReservationInfo = () => {
       activeReservation.end_time
     ) {
       const start = new Date(
-        `${activeReservation.reserve_date.split("T")[0]}T${
-          activeReservation.start_time
-        }`
+        `${new Date(activeReservation.reserve_date).toLocaleDateString(
+          "en-CA"
+        )}T${activeReservation.start_time}`
       );
       const end = new Date(
-        `${activeReservation.end_date.split("T")[0]}T${
+        `${new Date(activeReservation.end_date).toLocaleDateString("en-CA")}T${
           activeReservation.end_time
         }`
       );
@@ -121,12 +125,12 @@ const ReservationInfo = () => {
       activeReservation.end_time
     ) {
       const start = new Date(
-        `${activeReservation.reserve_date.split("T")[0]}T${
-          activeReservation.start_time
-        }`
+        `${new Date(activeReservation.reserve_date).toLocaleDateString(
+          "en-CA"
+        )}T${activeReservation.start_time}`
       );
       const end = new Date(
-        `${activeReservation.end_date.split("T")[0]}T${
+        `${new Date(activeReservation.end_date).toLocaleDateString("en-CA")}T${
           activeReservation.end_time
         }`
       );
@@ -180,7 +184,9 @@ const ReservationInfo = () => {
               <div className="text-muted small">Start Time</div>
               <div className="fs-3 mt-2">
                 {activeReservation
-                  ? activeReservation.reserve_date.split("T")[0] +
+                  ? new Date(activeReservation.reserve_date).toLocaleDateString(
+                      "en-CA"
+                    ) +
                     " " +
                     formatTime12Hour(activeReservation.start_time)
                   : ""}
@@ -195,7 +201,9 @@ const ReservationInfo = () => {
               <div className="text-muted small">End Time</div>
               <div className="fs-3 mt-2">
                 {activeReservation
-                  ? activeReservation.end_date.split("T")[0] +
+                  ? new Date(activeReservation.end_date).toLocaleDateString(
+                      "en-CA"
+                    ) +
                     " " +
                     formatTime12Hour(activeReservation.end_time)
                   : ""}
@@ -297,14 +305,14 @@ const ReservationInfo = () => {
                       className="progress-bar bg-primary progress-bar-striped progress-bar-animated"
                       role="progressbar"
                       style={{
-                        width: `${100-(Math.floor(
-                          (remainingTime / duration) * 100)
-                        )}%`,
+                        width: `${
+                          100 - Math.floor((remainingTime / duration) * 100)
+                        }%`,
                       }}
                       aria-valuemin="0"
                       aria-valuemax="100"
                     >
-                      {100-(Math.floor((remainingTime / duration) * 100))}%
+                      {100 - Math.floor((remainingTime / duration) * 100)}%
                     </div>
                   </div>
                 ) : activeReservation.status_name === "Completed" ? (
@@ -323,7 +331,9 @@ const ReservationInfo = () => {
                       </div>
                     </div>
                   </>
-                ) : ""
+                ) : (
+                  ""
+                )
               ) : (
                 <div className="text-muted">Loading progress...</div>
               )}

@@ -16,6 +16,8 @@ const PaymentProceed = () => {
     // Register your callbacks
     window.payhere.onCompleted = function (orderId) {
       console.log("Payment completed. OrderID:", orderId);
+      window.location.href =
+        "http://localhost:5173/myaccount/payment-success?resid=" + orderId;
     };
 
     window.payhere.onDismissed = function () {

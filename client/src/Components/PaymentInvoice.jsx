@@ -1,7 +1,7 @@
-import React, { useRef } from "react";
-import { useReactToPrint } from "react-to-print";
+import React, { useEffect, useRef } from "react";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
+import images from "../assets/assets";
 
 const PaymentInvoice = () => {
   const invoiceRef = useRef();
@@ -17,42 +17,40 @@ const PaymentInvoice = () => {
     total: 5000,
   };
 
-
   const handleDownload = async () => {
-  const input = invoiceRef.current;
-  const canvas = await html2canvas(input, { scale: 2 });
-  const imgData = canvas.toDataURL("image/png");
+    const input = invoiceRef.current;
+    const canvas = await html2canvas(input, { scale: 2 });
+    const imgData = canvas.toDataURL("image/png");
 
-  const pdf = new jsPDF("p", "mm", "a4");
-  const pdfWidth = pdf.internal.pageSize.getWidth();
-  const pdfHeight = pdf.internal.pageSize.getHeight();
+    const pdf = new jsPDF("p", "mm", "a4");
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = pdf.internal.pageSize.getHeight();
 
-  const imgProps = pdf.getImageProperties(imgData);
-  const imgWidth = pdfWidth;
-  const imgHeight = (imgProps.height * imgWidth) / imgProps.width;
+    const imgProps = pdf.getImageProperties(imgData);
+    const imgWidth = pdfWidth;
+    const imgHeight = (imgProps.height * imgWidth) / imgProps.width;
 
-  let position = 0;
+    let position = 0;
 
-  if (imgHeight < pdfHeight) {
-    pdf.addImage(imgData, "PNG", 0, 0, imgWidth, imgHeight);
-  } else {
-    // Multi-page logic
-    let heightLeft = imgHeight;
+    if (imgHeight < pdfHeight) {
+      pdf.addImage(imgData, "PNG", 0, 0, imgWidth, imgHeight);
+    } else {
+      // Multi-page logic
+      let heightLeft = imgHeight;
 
-    while (heightLeft > 0) {
-      pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
-      heightLeft -= pdfHeight;
-      position -= pdfHeight;
+      while (heightLeft > 0) {
+        pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+        heightLeft -= pdfHeight;
+        position -= pdfHeight;
 
-      if (heightLeft > 0) {
-        pdf.addPage();
+        if (heightLeft > 0) {
+          pdf.addPage();
+        }
       }
     }
-  }
 
-  pdf.save("invoice-"+invoiceData.id+".pdf");
-};
-
+    pdf.save("invoice-" + invoiceData.id + ".pdf");
+  };
 
   return (
     <div className="container py-5">
@@ -76,6 +74,16 @@ const PaymentInvoice = () => {
         className="p-4 border rounded bg-white"
         style={{ fontSize: "14px" }}
       >
+        <div className="d-flex justify-content-between align-items-center mb-4">
+          <img src={images.logo} style={{width:'200px'}} />
+          <div className="text-end">
+            <h4 className="mb-0">Shan Auto Service Center</h4>
+            <p className="mb-0">123 Main Street, Colombo</p>
+            <p className="mb-0">Phone: +94 123 456 789</p>
+            <p className="mb-0">Email:shanauto@gmail.com</p>
+          </div>
+        </div>
+
         <h4 className="mb-4">Thank you for your payment!</h4>
 
         <div>

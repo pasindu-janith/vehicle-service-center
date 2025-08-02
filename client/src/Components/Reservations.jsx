@@ -137,7 +137,7 @@ const Reservations = () => {
                               ? "bg-warning"
                               : reservation.status_name === "Cancelled"
                               ? "bg-danger"
-                              : "bg-secondary"
+                              : "bg-primary"
                           }`}
                         >
                           {reservation.status_name}
@@ -187,7 +187,7 @@ const Reservations = () => {
                             )
                           }
                         >
-                          <CiCircleInfo size={25}></CiCircleInfo>
+                          <CiCircleInfo size={25}></CiCircleInfo>info
                         </button>
                       </td>
                     </tr>

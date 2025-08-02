@@ -5,7 +5,7 @@ import { verifyToken } from "../utils/jwt.mjs";
 import { sendEmail } from "../utils/email.mjs";
 import dotenv from "dotenv";
 
-// Admin login controller
+// Existing controllers (unchanged)
 export const adminLogin = async (req, res) => {
   try {
     console.log("Login request received:", req.body);
@@ -59,11 +59,11 @@ export const authAdmin = async (req, res) => {
   try {
     const { adminToken } = req.cookies;
     if (!adminToken) {
-      return res.status(401).send({ message: "No cookies available" }); // This function checks if the user is authorized by verifying the token in the cookies
+      return res.status(401).send({ message: "No cookies available" });
     }
     const decodedToken = decodeToken(adminToken);
     if (!decodedToken) {
-      return res.status(401).send({ message: "Unauthorized" }); // It returns a 401 status if the token is not present or invalid, and a 200 status if the user is authorized
+      return res.status(401).send({ message: "Unauthorized" });
     }
     const adminID = decodedToken.adminID;
     const checkAdmin = await pool.query(
@@ -71,7 +71,7 @@ export const authAdmin = async (req, res) => {
       [adminID, "1"]
     );
     if (checkAdmin.rows.length === 0) {
-      return res.status(400).send({ message: "Invalid User" }); // It also checks if the user exists in the database and returns a 400 status if not
+      return res.status(400).send({ message: "Invalid User" });
     }
     res.status(200).send({ message: "Authorized" });
   } catch (error) {
@@ -80,6 +80,73 @@ export const authAdmin = async (req, res) => {
   }
 };
 
+// New reset password controller
+export const resetAdminPassword = async (req, res) => {
+  try {
+    const { oldPassword, newPassword } = req.body;
+    const { adminToken } = req.cookies;
+
+    if (!adminToken) {
+      return res.status(401).send({ message: "No authentication token provided" });
+    }
+
+    if (!oldPassword || !newPassword) {
+      return res.status(400).send({ message: "Old and new passwords are required" });
+    }
+
+    // Verify token and get admin ID
+    const decodedToken = decodeToken(adminToken);
+    if (!decodedToken) {
+      return res.status(401).send({ message: "Invalid or expired token" });
+    }
+
+    const adminID = decodedToken.adminID;
+
+    // Fetch admin from database
+    const checkAdmin = await pool.query(
+      "SELECT * FROM users WHERE user_id = $1 AND user_type_id = $2 AND status = $3",
+      [adminID, "1", "1"]
+    );
+
+    if (checkAdmin.rows.length === 0) {
+      return res.status(400).send({ message: "Admin not found" });
+    }
+
+    const admin = checkAdmin.rows[0];
+
+    // Verify old password
+    const passwordMatch = await bcrypt.compare(oldPassword, admin.password);
+    if (!passwordMatch) {
+      return res.status(400).send({ message: "Incorrect old password" });
+    }
+
+    // Validate new password (add your own password requirements here)
+    if (newPassword.length < 8) {
+      return res.status(400).send({ message: "New password must be at least 8 characters long" });
+    }
+
+    // Hash new password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+    // Update password in database
+    const updateResult = await pool.query(
+      "UPDATE users SET password = $1 WHERE user_id = $2 RETURNING user_id",
+      [hashedPassword, adminID]
+    );
+
+    if (updateResult.rowCount === 0) {
+      return res.status(500).send({ message: "Failed to update password" });
+    }
+
+    res.status(200).send({ message: "Password updated successfully" });
+  } catch (error) {
+    console.error("Error resetting password:", error);
+    res.status(500).send({ message: "Internal Server Error" });
+  }
+};
+
+// Rest of the existing controllers (unchanged)
 export const loadOngoingServices = async (req, res) => {
   try {
     const ongoingServices = await pool.query(
@@ -99,7 +166,6 @@ export const loadCompletedServices = async (req, res) => {
       "SELECT * FROM reservations INNER JOIN service_type ON reservations.service_type_id=service_type.service_type_id WHERE reservation_status=(SELECT reservation_status_id FROM reservation_status WHERE status_name=$1) LIMIT 100",
       ["Completed"]
     );
-
     res.status(200).send(completedServices.rows);
   } catch (error) {
     console.error("Error loading completed services:", error);
@@ -267,7 +333,6 @@ export const startReservation = async (req, res) => {
         .status(400)
         .send({ message: "Start time must be before end time" });
     }
-    // Update the reservation to "Ongoing" status
     const startDateString = toSQLDateTime(startDateTime).split(" ")[0];
     const endDateString = toSQLDateTime(endDateTime).split(" ")[0];
     const startTimeString = toSQLDateTime(startDateTime).split(" ")[1];
@@ -331,7 +396,7 @@ export const completeReservation = async (req, res) => {
         parseFloat(serviceCost) || 0,
         parseFloat(serviceDiscount) || 0,
         parseFloat(serviceCost) - parseFloat(serviceDiscount) || 0,
-        false, // Assuming the service is not paid at this point
+        false,
         completedDateTime,
       ]
     );
@@ -461,7 +526,6 @@ export const loadAllVehicles = async (req, res) => {
   }
 };
 
-//This is for loading vehicle info of owner and service records by vehicle number 
 export const loadVehicleInfo = async (req, res) => {
   try {
     const { vehicleNumber } = req.query;
@@ -477,7 +541,6 @@ export const loadVehicleInfo = async (req, res) => {
         SELECT user_id FROM vehicles WHERE license_plate = $1 AND status = $2
       )`,
       [vehicleNumber, "1"]
-
     );
 
     const serviceRecords = await pool.query(

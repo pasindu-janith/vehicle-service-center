@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import toastr from "toastr";
 import "toastr/build/toastr.min.css";
+import "./styles/Dashboard.css";
+
 
 const VehicleRegister = () => {
   const [preview, setPreview] = useState(null);
@@ -220,7 +222,7 @@ const VehicleRegister = () => {
   return (
     <div className="container pt-3">
       <div>
-        <h2 className="mb-4">Vehicle Information Form</h2>
+        <h2 className="mb-4 text-darkblue">Vehicle Information Form</h2>
 
         {!profileUpdated && (
           <div className="alert alert-danger" role="alert">

@@ -38,13 +38,17 @@ const UserPanel = () => {
   }, []);
 
   return (
-  <div
-    className="pt-2"
-    style={{
-      background:
-        "linear-gradient(135deg, rgba(255, 165, 165, 0.4) 0%, rgba(198, 198, 198, 0.5) 50%, rgba(100, 100, 100, 0.5) 100%)",
-    }}
-  >
+    <div
+      className="pt-2"
+      style={{
+        background: `radial-gradient(circle at 20% 30%, rgba(255, 0, 0, 0.3) 0%, transparent 40%),
+                 radial-gradient(circle at 90% 60%, rgba(211, 211, 211, 0.6) 0%, transparent 50%),
+                 radial-gradient(circle at 50% 80%, rgba(0, 98, 245, 0.3) 0%, transparent 50%)`,
+        backgroundColor: "rgba(255, 255, 255, 0.8)",
+        backgroundRepeat: "repeat-y",
+        backgroundSize: "cover",
+      }}
+    >
       <UserProvider>
         <NavbarUserPanel />
         <Routes>

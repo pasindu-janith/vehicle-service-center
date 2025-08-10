@@ -184,7 +184,7 @@ const NavbarUserPanel = () => {
               </Link>
             </li>
             <li>
-              <Link to="#expertise" className="nav-link">
+              <Link to="/myaccount/payments" className="nav-link">
                 Payments
               </Link>
             </li>

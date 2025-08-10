@@ -116,14 +116,13 @@ const ProfileSettings = () => {
     } catch (error) {
       console.error("Error:", error);
     }
-  }
+  };
 
   return (
     <div className="container">
-      <div className="card mt-5 shadow-sm">
-        <div className="card-header">
-          <h4>User Profile Data</h4>
-        </div>
+      <h2 className="text-darkblue mb-2 mt-5 fw-bold">User Profile Data</h2>
+
+      <div className="card shadow-sm">
         <div className="card-body">
           <form onSubmit={handleProfileSubmit}>
             <div className="row g-3">
@@ -242,17 +241,18 @@ const ProfileSettings = () => {
                 />
               </div>
             </div>
-            <button type="submit" className="btn btn-danger mt-3">Update Profile</button>
+            <button type="submit" className="btn btn-danger mt-3">
+              Update Profile
+            </button>
           </form>
         </div>
       </div>
 
-      <div className="card mt-5 shadow-sm">
-        <div className="card-header">
-          <h4>Acccount Settings</h4>
-        </div>
+      <h2 className="text-darkblue mt-4 mb-2 fw-bold">Account Settings</h2>
+
+      <div className="card shadow-sm">
         <div className="card-body">
-          <p>Reset your account password</p>
+          <p className="fw-bold">Reset your account password</p>
           <form onSubmit={handleAccountSubmit}>
             <div className="mb-3">
               <label htmlFor="currentPassword" className="form-label">

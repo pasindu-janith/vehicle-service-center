@@ -55,7 +55,8 @@ const PaymentInvoice = () => {
   return (
     <div className="container py-5">
       <div className="d-flex justify-content-between align-items-center mb-3">
-        <h2>Invoice</h2>
+        <h2 className="text-darkblue mb-1 fw-bold">Payment Invoice</h2>
+
         <div>
           {/* <button
             onClick={handlePrint}
@@ -75,7 +76,7 @@ const PaymentInvoice = () => {
         style={{ fontSize: "14px" }}
       >
         <div className="d-flex justify-content-between align-items-center mb-4">
-          <img src={images.logo} style={{width:'200px'}} />
+          <img src={images.logo} style={{ width: "200px" }} />
           <div className="text-end">
             <h4 className="mb-0">Shan Auto Service Center</h4>
             <p className="mb-0">123 Main Street, Colombo</p>
@@ -88,6 +89,9 @@ const PaymentInvoice = () => {
 
         <div>
           <strong>Invoice ID:</strong> {invoiceData.id}
+        </div>
+        <div>
+          <strong>Reservation ID:</strong> 20
         </div>
         <div>
           <strong>Date:</strong> {new Date(invoiceData.date).toLocaleString()}

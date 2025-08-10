@@ -72,3 +72,13 @@
   border: 1.5px solid #ab120c; /* Light blue border on hover */
   transition: transform 0.5s ease;
 }
+
+.table-striped > tbody > tr:nth-of-type(odd) > td,
+.table-striped > tbody > tr:nth-of-type(odd) > th {
+    background-color: rgba(184, 231, 255, 0.4); /* Light blue with 0.5 opacity */
+}
+
+.table-striped > tbody > tr:nth-of-type(even) > td,
+.table-striped > tbody > tr:nth-of-type(even) > th {
+    background-color: white;
+}

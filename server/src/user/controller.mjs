@@ -958,13 +958,14 @@ export const createReservation = async (req, res) => {
 
     // Count overlapping reservations for the same service type in the requested date/time range
     const existingReservations = await pool.query(
-      `SELECT COUNT(*) AS count FROM reservations WHERE service_type_id = $1
-      AND reservation_status = $2
-      AND (
-      (reserve_date + start_time::interval) < TIMESTAMP $3 
-      AND
-      (end_date + end_time::interval) > TIMESTAMP $4      
-      )`,
+      `SELECT COUNT(*) AS count FROM reservations 
+        WHERE service_type_id = $1
+        AND reservation_status = $2
+        AND (
+        (reserve_date + start_time::interval) < $3::timestamp
+        AND
+        (end_date + end_time::interval) > $4::timestamp
+        )`,
       [
         serviceType,
         "1",
@@ -985,7 +986,7 @@ export const createReservation = async (req, res) => {
     await pool.query(
       `INSERT INTO reservations 
         (vehicle_id, service_type_id, reserve_date, end_date, start_time, end_time, notes, reservation_status)
-       VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING reservation_id`,
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING reservation_id`,
       [
         vehicleID,
         serviceType,
@@ -1058,7 +1059,8 @@ export const cancelReservation = async (req, res) => {
   }
 };
 
-// Fetch vehicle data for the user for vehicle info page
+// Fetch vehicle data for the user for vehicle info page with its all service records
+// This function retrieves the vehicle data and service records for a specific vehicle owned by the user
 export const fetchVehicleData = async (req, res) => {
   try {
     const vehicleID = req.query.licensePlate;
@@ -1083,10 +1085,58 @@ export const fetchVehicleData = async (req, res) => {
       [vehicleID, userID]
     );
 
+    // const serviceRecords = await pool.query(
+    //   `SELECT sr.reservation_id, sr.service_description, sr.service_cost, sr.final_amount, st.service_name, r.reserve_date, r.start_time, r.end_date, r.end_time, sr.is_paid
+    //   FROM service_records AS sr
+    //   INNER JOIN reservations AS r ON sr.reservation_id = r.reservation_id
+    //   INNER JOIN service_type AS st ON r.service_type_id = st.service_type_id
+    //   WHERE sr.vehicle_id = $1
+    //   ORDER BY sr.created_datetime DESC`,
+    //   [vehicleID]
+    // );
+
+    const serviceRecords = await pool.query(
+      `SELECT sr.reservation_id, 
+          sr.service_description, 
+          sr.service_cost, 
+          sr.discount,
+          sr.final_amount, 
+          st.service_name, 
+          r.reserve_date, 
+          r.start_time, 
+          r.end_date, 
+          r.end_time, 
+          sr.is_paid,
+          COALESCE(
+            json_agg(
+              json_build_object(
+                'id', pi.id,
+                'description', pi.description,
+                'price', pi.price
+              )
+            ) FILTER (WHERE pi.id IS NOT NULL), 
+            '[]'
+          ) AS payment_items
+            FROM service_records AS sr
+            INNER JOIN reservations AS r 
+            ON sr.reservation_id = r.reservation_id
+            INNER JOIN service_type AS st 
+            ON r.service_type_id = st.service_type_id
+            LEFT JOIN payment_item AS pi 
+            ON sr.reservation_id = pi.reservation_id
+            WHERE sr.vehicle_id = $1
+            GROUP BY sr.reservation_id, sr.service_description, sr.service_cost, sr.discount, sr.final_amount,
+            st.service_name, r.reserve_date, r.start_time, r.end_date, r.end_time, sr.is_paid`,
+      [vehicleID]
+    );
+
     if (vehicleData.rows.length === 0) {
       return res.status(400).send({ message: "Vehicle not found" });
     }
-    return res.status(200).send(vehicleData.rows[0]);
+    return res.status(200).send({
+      vehicleData: vehicleData.rows[0],
+      serviceRecords: serviceRecords.rows,
+    });
   } catch (error) {
     console.log(error);
     res.status(500).send("Internal Server Error");
@@ -1102,7 +1152,7 @@ export const loadServiceRecordPayment = async (req, res) => {
       return res.status(401).send({ message: "Unauthorized" });
     }
     const paymentData = await pool.query(
-      `SELECT r.reservation_id, r.vehicle_id, r.reserve_date, r.start_time,r.end_date, r.end_time, st,service_name,sr.final_amount
+      `SELECT r.reservation_id, r.vehicle_id, r.reserve_date, r.start_time, r.end_date, r.end_time, st.service_name, sr.final_amount
       FROM reservations AS r
       INNER JOIN service_records AS sr ON sr.reservation_id = r.reservation_id
       INNER JOIN service_type AS st ON r.service_type_id = st.service_type_id

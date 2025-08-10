@@ -305,14 +305,21 @@ const ReservationInfo = () => {
                       className="progress-bar bg-primary progress-bar-striped progress-bar-animated"
                       role="progressbar"
                       style={{
-                        width: `${
-                          100 - Math.floor((remainingTime / duration) * 100)
-                        }%`,
+                        width: `${(function () {
+                          if (remainingTime <= 0) return "100%";
+                          return `${
+                            100 - Math.floor((remainingTime / duration) * 100)
+                          }%`;
+                        })()}`,
                       }}
                       aria-valuemin="0"
                       aria-valuemax="100"
                     >
-                      {100 - Math.floor((remainingTime / duration) * 100)}%
+                      {remainingTime <= 0
+                        ? "100%"
+                        : `${Math.floor(
+                            100 - Math.floor((remainingTime / duration) * 100)
+                          )}%`}
                     </div>
                   </div>
                 ) : activeReservation.status_name === "Completed" ? (

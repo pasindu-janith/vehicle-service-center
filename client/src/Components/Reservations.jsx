@@ -24,6 +24,7 @@ const Reservations = () => {
           const data = await response.json();
           if (data && data.length > 0) {
             setReservations(data);
+            console.log("Reservations loaded successfully:", data);
             setIsLoading(false);
           } else {
             setIsLoading(false);
@@ -78,7 +79,7 @@ const Reservations = () => {
             </Link>
           </div>
           <div className="table-responsive">
-            <table className="table table-striped">
+            <table className="table table-striped table-bordered">
               <thead>
                 <tr>
                   <th>Res ID</th>
@@ -93,7 +94,7 @@ const Reservations = () => {
               <tbody>
                 {isLoading ? (
                   <tr>
-                    <td colSpan="6" className="text-center">
+                    <td colSpan="7" className="text-center">
                       <div
                         className="spinner-border text-primary mt-4"
                         role="status"
@@ -170,7 +171,7 @@ const Reservations = () => {
                             <button
                               className="btn btn-sm btn-success"
                               onClick={() => {
-                                window.location.href = `/proceed-payment/${reservation.reservation_id}`;
+                                window.location.href = `/myaccount/proceed-payment?resid=${reservation.reservation_id}`;
                               }}
                             >
                               Payment
@@ -180,14 +181,14 @@ const Reservations = () => {
                           ""
                         )}
                         <button
-                          className="btn p-0 btn-outline-primary border-0 no-hover-bg bg-transparent ms-2 text-primary"
+                          className="btn btn-sm btn-info ms-1 text-white"
                           onClick={() =>
                             navigate(
                               `/myaccount/reservation-info/${reservation.reservation_id}`
                             )
                           }
                         >
-                          <CiCircleInfo size={25}></CiCircleInfo>info
+                          <CiCircleInfo size={20} strokeWidth={1}></CiCircleInfo>
                         </button>
                       </td>
                     </tr>

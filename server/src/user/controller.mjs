@@ -96,6 +96,9 @@ export const registerUser = async (req, res) => {
 export const loginUser = async (req, res) => {
   try {
     const { email, password, rememberMe } = req.body;
+
+    const checkMobileorEmail = email.includes("@") ? "email" : "mobile_no";
+
     const checkUser = await pool.query(
       "SELECT * FROM users INNER JOIN mobile_number ON users.mobile_id=mobile_number.mobile_id WHERE email = $1 AND status = $2",
       [email, "1"]
@@ -322,21 +325,27 @@ export const otpVerify = async (req, res) => {
     if (checkMobile.rows.length === 0) {
       return res.status(400).send("Invalid Mobile Number");
     }
+    
     const mobileData = checkMobile.rows[0];
     const otpMatch = await bcrypt.compare(otp, mobileData.otp);
+
     if (!otpMatch) {
       return res.status(400).send({ message: "Invalid OTP" });
     }
+
     const updateMobile = await pool.query(
       "UPDATE mobile_number SET isotpverified = $1 WHERE mobile_id=$2 AND mobile_no = $3",
       ["1", mobileData.mobile_id, mobile]
     );
+
     res.status(200).send({ message: "Success" });
   } catch (error) {
     console.log(error);
     res.status(500).send({ message: "Internal server error" });
   }
+
 };
+
 
 //When user forgets password he will enter email and then this function will be called
 export const forgotPassword = async (req, res) => {
@@ -983,7 +992,7 @@ export const createReservation = async (req, res) => {
     }
 
     // Add reservation
-    await pool.query(
+    const reservationInsertResult = await pool.query(
       `INSERT INTO reservations 
         (vehicle_id, service_type_id, reserve_date, end_date, start_time, end_time, notes, reservation_status)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING reservation_id`,
@@ -998,12 +1007,162 @@ export const createReservation = async (req, res) => {
         "1",
       ]
     );
+    const reservationID = reservationInsertResult.rows[0].reservation_id;
 
+    await sendReservationCreationEmail(checkUser.rows[0].email, {
+      reservationID: reservationID, // Assuming vehicleID is used as reservation ID
+      vehicleID,
+      serviceType: service_type.service_name,
+      serviceDate,
+      serviceStartTime,
+    });
     return res.status(200).send({ message: "Reservation created" });
   } catch (error) {
     console.error(error);
     return res.status(500).send("Internal Server Error");
   }
+};
+
+const sendReservationCreationEmail = async (email, reservationDetails) => {
+  const {
+    reservationID,
+    vehicleID,
+    serviceType,
+    serviceDate,
+    serviceStartTime,
+  } = reservationDetails;
+  const token = tokenGen({ email });
+  sendEmail(
+    email,
+    "Shan Automobile and Hybrid Workshop, Reservation Confirmation",
+    `
+    <!DOCTYPE html>
+  <html>
+  <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reservation Confirmation</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background-color: #f4f4f4;
+      margin: 0;
+      padding: 0;
+      color: #333333;
+    }
+    .email-wrapper {
+      max-width: 600px;
+      margin: 0 auto;
+      background-color: #ffffff;
+      border-radius: 6px;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+    .header {
+      background-color: rgb(140, 0, 0);
+      padding: 20px;
+      text-align: center;
+    }
+    .header h1 {
+      color: #ffffff;
+      margin: 0;
+      font-size: 22px;
+    }
+    .content {
+      padding: 30px 25px;
+    }
+    .content p {
+      font-size: 15px;
+      margin-bottom: 20px;
+      color: #555555;
+    }
+    .details {
+      background-color: #f9f9f9;
+      padding: 15px 20px;
+      border: 1px solid #dddddd;
+      border-radius: 4px;
+      margin-bottom: 25px;
+    }
+    .details ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .details li {
+      font-size: 15px;
+      padding: 8px 0;
+      border-bottom: 1px solid #eeeeee;
+    }
+    .details li:last-child {
+      border-bottom: none;
+    }
+    .details strong {
+      color: rgb(140, 0, 0);
+    }
+    .btn {
+      background-color: rgb(140, 0, 0);
+      color: #ffffff;
+      padding: 12px 24px;
+      text-decoration: none;
+      border-radius: 4px;
+      font-weight: bold;
+      display: inline-block;
+      font-size: 15px;
+    }
+    .btn:hover {
+      background-color: rgb(118, 0, 0);
+    }
+    .footer {
+      background-color: #f4f4f4;
+      padding: 15px;
+      font-size: 12px;
+      color: #777777;
+      text-align: center;
+    }
+    @media screen and (max-width: 600px) {
+      .content {
+        padding: 20px;
+      }
+    }
+  </style>
+  </head>
+  <body>
+  <div class="email-wrapper">
+    <div class="header">
+      <h1>Reservation Confirmation</h1>
+    </div>
+    <div class="content">
+      <p>Dear Customer,</p>
+      <p>Your reservation has been successfully created with the following details:</p>
+      
+      <div class="details">
+        <ul>
+          <li><strong>Reservation ID:</strong> ${reservationID}</li>
+          <li><strong>Vehicle ID:</strong> ${vehicleID}</li>
+          <li><strong>Service Type:</strong> ${serviceType}</li>
+          <li><strong>Service Date:</strong> ${serviceDate}</li>
+          <li><strong>Service Start Time:</strong> ${serviceStartTime}</li>
+        </ul>
+      </div>
+
+      <p style="text-align: center;">
+        <a href="${process.env.CLIENT_URL}/myaccount/reservations" class="btn">View My Reservation</a>
+      </p>
+
+      <p>If the button above doesn't work, copy and paste this link into your browser:</p>
+      <p style="font-size: 14px; color: rgb(140, 0, 0);">
+        ${process.env.CLIENT_URL}/myaccount/reservations
+      </p>
+    </div>
+    <div class="footer">
+      <p>This email was sent by Shan Automobile and Hybrid Workshop. If you did not make this reservation, please ignore this email.</p>
+    </div>
+    </div>
+    </body>
+    </html>
+
+  `
+  );
 };
 
 export const loadAllUserReservations = async (req, res) => {
@@ -1283,3 +1442,28 @@ export const generatePayHash = async (req, res) => {
 
   res.json({ hash: finalHash });
 };
+
+export const getReservationMessages = async (req, res) => {
+  try {
+    const { resid } = req.query;
+    const { token } = req.cookies;
+    const userID = getUserIDFromToken(token, res);
+    if (!userID) {
+      return res.status(401).send({ message: "Unauthorized" });
+    }
+    if (!resid) {
+      return res.status(400).send({ message: "Reservation ID is required" });
+    }
+    const messages = await pool.query(
+      `SELECT * FROM reservation_messages WHERE reservation_id = $1 ORDER BY created_at DESC`,
+      [resid]
+    );
+    if (messages.rows.length === 0) {
+      return res.status(404).send({ message: "No messages found for this reservation" });
+    }
+    return res.status(200).send(messages.rows);
+  } catch (error) {
+    console.log(error);
+    res.status(500).send("Internal Server Error");
+  }
+}

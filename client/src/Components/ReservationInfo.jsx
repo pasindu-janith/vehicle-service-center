@@ -97,7 +97,8 @@ const ReservationInfo = () => {
       const diffMs = end - start;
       const remainingMs = end - now;
       if (diffMs < 0) return "Invalid duration";
-      if (remainingMs <= 0) return "Reservation has ended";
+      if (remainingMs <= 0)
+        return "Reservation has ended. But admin has not updated service as completed.";
 
       const totalMinutes = Math.floor(remainingMs / 60000);
       const days = Math.floor(totalMinutes / (24 * 60));
@@ -293,8 +294,10 @@ const ReservationInfo = () => {
                   ? activeReservation.status_name === "Ongoing"
                     ? getRemainingTime()
                     : activeReservation.status_name === "Completed"
-                    ? "Service completed"
-                    : "Service is cancelled or has not started yet."
+                    ? "Service completed. "
+                    : activeReservation.status_name === "Pending"
+                    ? "Service has not started yet."
+                    : "Service is cancelled by user or admin."
                   : "Loading..."}
               </div>
 

@@ -241,7 +241,7 @@ const ProfileSettings = () => {
                 />
               </div>
             </div>
-            <button type="submit" className="btn btn-danger mt-3">
+            <button type="submit" className="btn btn-primary mt-3">
               Update Profile
             </button>
           </form>
@@ -290,7 +290,7 @@ const ProfileSettings = () => {
                 required
               />
             </div>
-            <button type="submit" className="btn btn-danger mt-1">
+            <button type="submit" className="btn btn-primary mt-1">
               Reset Password
             </button>
           </form>

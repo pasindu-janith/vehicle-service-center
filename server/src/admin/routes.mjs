@@ -16,7 +16,9 @@ import {
   loadCustomerVehicles,
   loadCompletedServices,
   loadVehicleInfo,
+  cancelReservation, 
 } from "./controller.mjs";
+
 
 //User functions here
 
@@ -34,6 +36,7 @@ adminRouter.get("/loadDashboardCounts", countReservations);
 adminRouter.post("/startReservation", startReservation);
 adminRouter.post("/endReservation", completeReservation);
 adminRouter.post("/editReservation", editReservation);
+adminRouter.post("/cancelReservation", cancelReservation);
 adminRouter.get("/loadAllCustomers", loadAllCustomers);
 adminRouter.get("/loadCustomerVehicles", loadCustomerVehicles);
 adminRouter.get("/loadAllVehicles", loadAllVehicles);

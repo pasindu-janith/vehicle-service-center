@@ -11,6 +11,7 @@ import "react-datetime-picker/dist/DateTimePicker.css";
 import "react-calendar/dist/Calendar.css";
 import "react-clock/dist/Clock.css"; // Required for the clock UI
 import "./styles/datetime.css";
+import toastr from "toastr";
 
 const Reservations = () => {
   const [startDateTimeFilter, setStartDateTimeFilter] = useState(new Date());
@@ -33,6 +34,9 @@ const Reservations = () => {
   const [serviceCost, setServiceCost] = useState("");
   const [serviceDiscount, setServiceDiscount] = useState("0.00");
   const [finalAmount, setFinalAmount] = useState("");
+  const [serviceRecordsModal, setServiceRecordsModal] = useState(false);
+  const [serviceRecords, setServiceRecords] = useState([]);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -99,7 +103,9 @@ const Reservations = () => {
     // setLoading(true);
     try {
       const response = await fetch(
-        `http://localhost:4000/api/v1/admin/filterReservationData?serviceType=${serviceType}&vehicleNumber=${vehicleNumber}&startDateTime=${startDateTimeFilter.toLocaleString()}&endDateTime=${endDateTimeFilter.toLocaleString()}`,
+        `http://localhost:4000/api/v1/admin/filterReservationData?serviceType=${serviceType}&
+        vehicleNumber=${vehicleNumber}&startDateTime=${startDateTimeFilter.toLocaleString()}&
+        endDateTime=${endDateTimeFilter.toLocaleString()}`,
         {
           method: "GET",
         }
@@ -107,10 +113,31 @@ const Reservations = () => {
       if (response.ok) {
         const data = await response.json();
         setTableData(data);
-        // setLoading(false);
       }
     } catch (error) {
       console.error("Error loading filtered data:", error);
+    }
+  };
+
+  const loadServiceRecords = async () => {
+    if (!selectedReservation) return;
+    try {
+      const response = await fetch(
+        `http://localhost:4000/api/v1/admin/getServiceRecords?reservationId=${selectedReservation.reservation_id}`,
+        {
+          method: "GET",
+        }
+      );
+      if (response.ok) {
+        const data = await response.json();
+        setServiceRecords(data);
+        setServiceRecordsModal(true);
+      } else {
+        const errorData = await response.json();
+        console.error("Error fetching service records:", errorData);
+      }
+    } catch (error) {
+      console.error("Error fetching service records:", error);
     }
   };
 
@@ -234,12 +261,17 @@ const Reservations = () => {
     if (!selectedReservation) return;
     try {
       const response = await fetch(
-        `http://localhost:4000/api/v1/admin/cancelReservation?reservationId=${selectedReservation.reservation_id}`,
+        `http://localhost:4000/api/v1/admin/cancelReservation`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
+          body: JSON.stringify({
+            cancelReason: document.getElementById("cancelReason").value || "",
+            reservationId: selectedReservation.reservation_id,
+            vehicleNumber: selectedReservation.vehicle_id,
+          }),
         }
       );
       if (response.ok) {
@@ -457,6 +489,7 @@ const Reservations = () => {
                                   className="btn btn-primary btn-sm"
                                   onClick={() => {
                                     setSelectedReservation(row);
+                                    loadServiceRecords();
                                   }}
                                 >
                                   Info
@@ -846,6 +879,178 @@ const Reservations = () => {
                 >
                   End now
                 </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {cancelReservationConfirmation && selectedReservation && (
+        <div
+          className="modal fade show"
+          id="cancelReservationConfirmation"
+          tabIndex="-1"
+          role="dialog"
+          aria-labelledby="cancelReservationConfirmationLabel"
+          aria-hidden="true"
+          style={{ display: "block" }} // Only needed if you want to show the modal immediately
+        >
+          <div className="modal-dialog modal-dialog-centered" role="document">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5
+                  className="modal-title"
+                  id="cancelReservationConfirmationLabel"
+                >
+                  Cancel Reservation
+                </h5>
+                <button
+                  type="button"
+                  className="close"
+                  data-dismiss="modal"
+                  aria-label="Close"
+                  onClick={() => {
+                    setCancelReservationConfirmation(false);
+                    setSelectedReservation(null);
+                  }}
+                >
+                  <span aria-hidden="true">&times;</span>
+                </button>
+              </div>
+              <div className="modal-body">
+                Are you sure you want to cancel this reservation?
+                <label htmlFor="cancelReason">Cancellation message</label>
+                <input
+                  type="text"
+                  className="form-control mt-2"
+                  placeholder="Enter cancellation reason (optional)"
+                  id="cancelReason"
+                  required
+                />
+              </div>
+              <div className="modal-footer">
+                <button
+                  type="button"
+                  className="btn btn-danger"
+                  onClick={() => {
+                    cancelReservation();
+                    setCancelReservationConfirmation(false);
+                    setSelectedReservation(null);
+                  }}
+                >
+                  Yes, Cancel
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  data-dismiss="modal"
+                  onClick={() => {
+                    setCancelReservationConfirmation(false);
+                  }}
+                >
+                  No, Go Back
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {serviceRecordsModal && selectedReservation && (
+        <div
+          className="modal fade show"
+          id="serviceRecordsModal"
+          tabIndex="-1"
+          role="dialog"
+          aria-labelledby="serviceRecordsModalLabel"
+          aria-hidden="true"
+          style={{ display: "block" }} // Only needed if you want to show the modal immediately
+        >
+          <div className="modal-dialog modal-dialog-centered" role="document">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title" id="serviceRecordsModalLabel">
+                  Service Records
+                </h5>
+                <button
+                  type="button"
+                  className="close"
+                  data-dismiss="modal"
+                  aria-label="Close"
+                  onClick={() => {
+                    setServiceRecordsModal(false);
+                    setSelectedReservation(null);
+                  }}
+                >
+                  <span aria-hidden="true">&times;</span>
+                </button>
+              </div>
+              <div className="modal-body">
+                <div className="row">
+                  <div className="col-md-6">
+                    <label htmlFor="">Reservation ID</label>
+                    <input
+                      type="text"
+                      className="form-control mb-3"
+                      id="reservationIdRecord"
+                      value={selectedReservation.reservation_id}
+                      readOnly
+                    />
+                  </div>
+                  <div className="col-md-6">
+                    <label htmlFor="">Vehicle Number</label>
+                    <input
+                      type="text"
+                      className="form-control mb-3"
+                      id="vehicleNumberRecord"
+                      value={selectedReservation.vehicle_id}
+                      readOnly
+                    />
+                  </div>
+                  <div className="col-md-6">
+                    <label htmlFor="">Service Type</label>
+                    <input
+                      type="text"
+                      className="form-control mb-3"
+                      value={selectedReservation.service_name}
+                      readOnly
+                    />
+                  </div>
+                  <div className="col-md-6">
+                    <label htmlFor="">Start Time</label>
+                    <input
+                      type="text"
+                      className="form-control mb-3"
+                      value={`${new Date(
+                        selectedReservation.reserve_date
+                      ).toLocaleDateString("en-CA")} ${
+                        selectedReservation.start_time
+                      }`}
+                      readOnly
+                    />
+                  </div>
+                  <div className="col-md-6">
+                    <label htmlFor="">End Time</label>
+                    <input
+                      type="text"
+                      className="form-control mb-3"
+                      value={`${new Date(
+                        selectedReservation.end_date
+                      ).toLocaleDateString("en-CA")} ${
+                        selectedReservation.end_time
+                      }`}
+                      readOnly
+                    />
+                  </div>
+                  <div className="col-md-12">
+                    <label htmlFor="">Notes</label>
+                    <textarea
+                      className="form-control mb-3"
+                      rows="3"
+                      value={selectedReservation.notes || ""}
+                      readOnly
+                    ></textarea>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

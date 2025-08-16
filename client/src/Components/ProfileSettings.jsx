@@ -14,6 +14,8 @@ const ProfileSettings = () => {
     addressLane: "",
     addressCity: "",
   });
+  const [isResetPasswordLoading, setIsResetPasswordLoading] = useState(false);
+  const [isProfileLoading, setIsProfileLoading] = useState(false);
 
   const handleChange = (e) => {
     const { id, value } = e.target;
@@ -58,6 +60,7 @@ const ProfileSettings = () => {
 
   const handleProfileSubmit = async (e) => {
     e.preventDefault();
+    setIsProfileLoading(true);
     try {
       const response = await fetch(
         "http://localhost:4000/api/v1/user/updateUserProfileData",
@@ -78,11 +81,14 @@ const ProfileSettings = () => {
       }
     } catch (error) {
       console.error("Error:", error);
+    } finally {
+      setIsProfileLoading(false);
     }
   };
 
   const handleAccountSubmit = async (e) => {
     e.preventDefault();
+    setIsResetPasswordLoading(true);
     const oldPassword = document.getElementById("currentPassword").value;
     const newPassword = document.getElementById("newPassword").value;
     const confirmPassword = document.getElementById("confirmPassword").value;
@@ -109,12 +115,17 @@ const ProfileSettings = () => {
       );
       if (response.ok) {
         toastr.success("Password updated successfully!");
+        document.getElementById("currentPassword").value = "";
+        document.getElementById("newPassword").value = "";
+        document.getElementById("confirmPassword").value = "";
       } else {
         console.error("Error updating password:", response.statusText);
         toastr.error(data.message || "Failed to update password.");
       }
     } catch (error) {
       console.error("Error:", error);
+    } finally {
+      setIsResetPasswordLoading(false);
     }
   };
 
@@ -241,7 +252,11 @@ const ProfileSettings = () => {
                 />
               </div>
             </div>
-            <button type="submit" className="btn btn-primary mt-3">
+            <button
+              type="submit"
+              className="btn btn-primary mt-3"
+              disabled={isProfileLoading}
+            >
               Update Profile
             </button>
           </form>
@@ -290,7 +305,11 @@ const ProfileSettings = () => {
                 required
               />
             </div>
-            <button type="submit" className="btn btn-primary mt-1">
+            <button
+              type="submit"
+              className="btn btn-primary mt-1"
+              disabled={isResetPasswordLoading}
+            >
               Reset Password
             </button>
           </form>

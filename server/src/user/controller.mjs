@@ -1144,7 +1144,7 @@ const sendReservationCreationEmail = async (email, reservationDetails) => {
           <li><strong>Service Start Time:</strong> ${serviceStartTime}</li>
         </ul>
       </div>
-
+      <p>Please be there at your reserved time.</p>
       <p style="text-align: center;">
         <a href="${process.env.CLIENT_URL}/myaccount/reservations" class="btn">View My Reservation</a>
       </p>
@@ -1403,12 +1403,21 @@ export const fetchReservationData = async (req, res) => {
       WHERE r.reservation_id = $1 AND v.user_id = $2`,
       [resid, userID]
     );
+
+    const reservationMessages = await pool.query(
+      `SELECT * FROM reservation_messages WHERE reservation_id = $1 ORDER BY created_at DESC`,
+      [resid]
+    );
+  
     if (reservationData.rows.length === 0) {
       return res
         .status(404)
         .send({ message: "Reservation not found for this user" });
     }
-    return res.status(200).send(reservationData.rows[0]);
+    return res.status(200).send({
+      reservationData: reservationData.rows[0],
+      messages: reservationMessages.rows,
+    });
   } catch (error) {
     console.log(error);
     res.status(500).send("Internal Server Error");

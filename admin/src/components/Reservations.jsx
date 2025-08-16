@@ -269,7 +269,7 @@ const Reservations = () => {
           },
           body: JSON.stringify({
             cancelReason: document.getElementById("cancelReason").value || "",
-            reservationId: selectedReservation.reservation_id,
+            reservationID: selectedReservation.reservation_id,
             vehicleNumber: selectedReservation.vehicle_id,
           }),
         }

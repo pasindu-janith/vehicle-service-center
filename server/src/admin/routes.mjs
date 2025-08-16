@@ -16,7 +16,8 @@ import {
   loadCustomerVehicles,
   loadCompletedServices,
   loadVehicleInfo,
-  cancelReservation, 
+  cancelReservation,
+  resetAdminPassword, 
 } from "./controller.mjs";
 
 
@@ -41,4 +42,6 @@ adminRouter.get("/loadAllCustomers", loadAllCustomers);
 adminRouter.get("/loadCustomerVehicles", loadCustomerVehicles);
 adminRouter.get("/loadAllVehicles", loadAllVehicles);
 adminRouter.get("/loadVehicleInfo", loadVehicleInfo);
+adminRouter.post("/reset-password", resetAdminPassword);
+
 export default adminRouter;

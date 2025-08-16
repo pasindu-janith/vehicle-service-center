@@ -10,7 +10,7 @@ const OTPVerify = () => {
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [timer, setTimer] = useState(60);
   const [isResending, setIsResending] = useState(false);
-  
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   if (!location.state) {
@@ -78,7 +78,11 @@ const OTPVerify = () => {
   };
 
   // Handle OTP verification
-  const verifyOtp = async () => {
+  const verifyOtp = async (e) => {
+    e.preventDefault();
+    
+    if (isSubmitting) return; // Prevent multiple submissions
+    setIsSubmitting(true);
     const otpValue = otp.join("");
 
     // Validate OTP
@@ -123,6 +127,16 @@ const OTPVerify = () => {
     if (timer > 0) return;
     setIsResending(true);
     try {
+      const response = await fetch(
+        "http://localhost:4000/api/v1/user/resendotp",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ mobile }),
+        }
+      );
       //resend otp function
       const data = await response.json();
 
@@ -174,7 +188,11 @@ const OTPVerify = () => {
           </div>
 
           <div className="d-grid gap-2">
-            <button className="btn btn-danger" onClick={verifyOtp}>
+            <button
+              className="btn btn-danger"
+              onClick={verifyOtp}
+              disabled={isSubmitting}
+            >
               Verify OTP
             </button>
           </div>

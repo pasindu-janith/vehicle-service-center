@@ -132,8 +132,7 @@ export const resetAdminPassword = async (req, res) => {
     }
 
     // Hash new password
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(newPassword, salt);
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
 
     // Update password in database
     const updateResult = await pool.query(
@@ -562,6 +561,12 @@ export const completeReservation = async (req, res) => {
       "SELECT email FROM users WHERE user_id = (SELECT user_id FROM vehicles WHERE license_plate = $1)",
       [vehicleNumber]
     );
+
+    const serviceType = await pool.query(
+      "SELECT service_name FROM service_type WHERE service_type_id = (SELECT service_type_id FROM reservations WHERE reservation_id = $1)",
+      [reservationId]
+    );
+
     if (userEmail.rows.length > 0) {
       const email = userEmail.rows[0].email;
       const emailContent = `
@@ -667,6 +672,11 @@ export const completeReservation = async (req, res) => {
           
           <div class="details">
             <ul>
+              <li><strong>Vehicle Number:</strong> ${vehicleNumber}</li>
+              <li><strong>Service Type:</strong> ${
+                serviceType.rows[0].service_name
+              }</li>
+              <li><strong>Reservation Status:</strong> Completed</li>              
               <li><strong>Service Cost:</strong> ${serviceCost}</li>
               <li><strong>Discount:</strong> ${serviceDiscount}</li>
               <li><strong>Final Amount:</strong> ${
@@ -749,31 +759,183 @@ export const editReservation = async (req, res) => {
 
 export const cancelReservation = async (req, res) => {
   try {
-    const reservationID = req.query.reservationId;
+    const { reservationID, cancelReason, vehicleNumber } = req.body;
 
     if (!reservationID) {
       return res.status(400).send({ message: "Reservation ID is required" });
     }
 
     const checkReservation = await pool.query(
-      "SELECT * FROM reservations WHERE reservation_id = $1",
-      [reservationID]
+      `SELECT service_name,reserve_date FROM reservations r 
+      INNER JOIN service_type st ON r.service_type_id = st.service_type_id
+      WHERE r.reservation_id = $1 AND r.vehicle_id = $2`,
+      [reservationID, vehicleNumber]
     );
 
     if (checkReservation.rows.length === 0) {
       return res.status(400).send({ message: "Invalid Reservation ID" });
     }
 
+    const userEmail = await pool.query(
+      `SELECT email FROM users WHERE user_id = (SELECT user_id FROM vehicles WHERE license_plate = $1)`,
+      [vehicleNumber]
+    );
+    if (userEmail.rows.length === 0) {
+      return res
+        .status(404)
+        .send({ message: "User not found for this vehicle" });
+    }
     const cancelReservation = await pool.query(
       "UPDATE reservations SET reservation_status = $1 WHERE reservation_id=$2",
       ["4", reservationID]
     );
 
-    const cancelMessage = await pool.query(
-      "INSERT INTO reservation_messages (reservation_id, message, role) VALUES ($1, $2, $3)",
-      [reservationID, "Reservation cancelled by admin", "1"]
+    const resCancelMsg = await pool.query(
+      "INSERT INTO reservation_messages (reservation_id, message, role, created_at) VALUES ($1, $2, $3, $4)",
+      [reservationID, cancelReason, "1", toSQLDateTime(new Date())]
     );
 
+    if (userEmail.rows.length > 0) {
+      const email = userEmail.rows[0].email;
+
+      await sendEmail(
+        email,
+        "Reservation Cancelled",
+        `<!DOCTYPE html>
+        <html>
+          <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Reservation Cancelled</title>
+          <style>
+            body {
+                font-family: 'Segoe UI', Arial, sans-serif;
+                background-color: #f4f4f4;
+                margin: 0;
+                padding: 0;
+                color: #333333;
+              }
+
+              a {
+                color: rgba(255, 255, 255, 1);
+                text-decoration: none;
+              }
+
+              .email-wrapper {
+                max-width: 600px;
+                margin: 0 auto;
+                background-color: #ffffff;
+                border-radius: 6px;
+                overflow: hidden;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+              }
+              .header {
+                background-color: rgb(140, 0, 0);
+                padding: 20px;
+                text-align: center;
+              }
+              .header h1 {
+                color: #ffffff;
+                margin: 0;
+                font-size: 22px;
+              }
+              .content {
+                padding: 30px 25px;
+              }
+              .content p {
+                font-size: 15px;
+                margin-bottom: 18px;
+                color: #555555;
+              }
+              .details {
+                background-color: #f9f9f9;
+                padding: 15px 20px;
+                border: 1px solid #dddddd;
+                border-radius: 4px;
+                margin-bottom: 25px;
+              }
+              .details ul {
+                list-style: none;
+                padding: 0;
+                margin: 0;
+              }
+              .details li {
+                font-size: 15px;
+                padding: 8px 0;
+                border-bottom: 1px solid #eeeeee;
+              }
+              .details li:last-child {
+                border-bottom: none;
+              }
+              .details strong {
+                color: rgb(140, 0, 0);
+              }
+              .btn {
+                background-color: rgb(140, 0, 0);
+                color: #ffffff;
+                padding: 12px 24px;
+                text-decoration: none;
+                border-radius: 4px;
+                font-weight: bold;
+                display: inline-block;
+                font-size: 15px;
+              }
+              .btn:hover {
+                background-color: rgb(118, 0, 0);
+              }
+              .footer {
+                background-color: #f4f4f4;
+                padding: 15px;
+                font-size: 12px;
+                color: #777777;
+                text-align: center;
+              }
+              </style>
+            </head>
+            <body>
+            <div class="email-wrapper">
+              <div class="header">
+                <h1>Reservation Cancelled</h1>
+              </div>
+              <div class="content">
+                <p>Dear Customer,</p>
+                <p>Your reservation with ID <strong>${reservationID}</strong> has been cancelled successfully. Below are the details:</p>
+                
+                <div class="details">
+                  <ul>
+                    <li><strong>Vehicle Number:</strong> ${vehicleNumber}</li>
+                    <li><strong>Service Type:</strong>${
+                      checkReservation.rows[0].service_name
+                    }</li>
+                    <li><strong>Reservation Date:</strong> ${
+                      toSQLDateTime(checkReservation.rows[0].reserve_date).split(
+                        " "
+                      )[0]
+                    }</li>
+                    <li><strong>Reservation Status:</strong> Cancelled</li>
+                    <li><strong>Cancelled By:</strong> Admin, Auto Lanka Services</li>
+                    <li><strong>Cancellation Date:</strong> ${
+                      new Date().toISOString().split("T")[0]
+                    }</li>              
+                    <li><strong>Cancel Reason:</strong> ${cancelReason}</li>
+                  </ul>
+                </div>
+
+                <p style="text-align: center;">
+                  <a href="${
+                    process.env.CLIENT_URL
+                  }/myaccount/reservation-info/${reservationID}" class="btn">View Reservation Details</a>
+                </p>
+                </div>
+                  <div class="footer">
+                    <p>This email was sent by Shan Automobile and Hybrid Workshop. If you did not make this reservation, please ignore this email.</p>
+                  </div>
+                </div>
+              </body>
+              </html>
+    `
+      );
+    }
     return res.status(200).send({ message: "Reservation cancelled" });
   } catch (error) {
     console.log(error);

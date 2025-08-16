@@ -1,4 +1,6 @@
 import React from "react";
+import "toastr/build/toastr.min.css";
+import toastr from "toastr";
 
 const Profile = () => {
   const [formData, setFormData] = React.useState({
@@ -6,37 +8,42 @@ const Profile = () => {
     newPassword: "",
     confirmPassword: "",
   });
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsSubmitting(true);
     const { oldPassword, newPassword, confirmPassword } = formData;
 
     if (!oldPassword || !newPassword || !confirmPassword) {
-      alert("All fields are required.");
+      toastr.warning("Please fill in all fields.");
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      alert("New passwords do not match.");
+      toastr.error("New password and confirm password do not match.");
       return;
     }
 
     try {
-      const response = await fetch("http://localhost:4000/api/v1/admin/reset-password", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ oldPassword, newPassword }),
-      });
+      const response = await fetch(
+        "http://localhost:4000/api/v1/admin/reset-password",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ oldPassword, newPassword }),
+          credentials: "include", // Include credentials for cross-origin requests
+        }
+      );
 
       if (!response.ok) {
         const data = await response.json();
-        alert(data.message || "Password reset failed.");
+        toastr.error(data.message || "Failed to update password.");
         return;
       }
-
-      alert("Password updated successfully.");
+      toastr.success("Password updated successfully.");
       setFormData({
         oldPassword: "",
         newPassword: "",
@@ -44,6 +51,8 @@ const Profile = () => {
       });
     } catch (error) {
       alert("An error occurred. Please try again.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -100,7 +109,11 @@ const Profile = () => {
                   </div>
                 </div>
                 <div className="col-12 d-flex justify-content-end">
-                  <button type="submit" className="btn btn-primary">
+                  <button
+                    type="submit"
+                    className="btn btn-primary"
+                    disabled={isSubmitting}
+                  >
                     Update
                   </button>
                 </div>

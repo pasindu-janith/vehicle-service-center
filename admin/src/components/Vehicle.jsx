@@ -419,7 +419,10 @@ const Vehicle = () => {
           tabIndex="-1"
           role="dialog"
         >
-          <div className="modal-dialog modal-md" role="document">
+          <div
+            className="modal-dialog modal-lg modal-dialog-scrollable"
+            role="document"
+          >
             <div className="modal-content">
               <div className="modal-header">
                 <h5 className="modal-title">Service Record Details</h5>
@@ -432,6 +435,16 @@ const Vehicle = () => {
                 </button>
               </div>
               <div className="modal-body">
+                <p>
+                  <strong>Reservation ID:</strong>{" "}
+                  {selectedRecord.reservation_id}
+                </p>
+                <p>
+                  <strong>Vehicle:</strong>{" "}
+                  {selectedVehicle.license_plate} {selectedVehicle.vehicle_brand}{" "}
+                  {" "}
+                  {selectedVehicle.model}{" "}{selectedVehicle.vehicle_type}
+                </p>
                 <p>
                   <strong>Service Name:</strong> {selectedRecord.service_name}
                 </p>
@@ -452,9 +465,6 @@ const Vehicle = () => {
                 <p>
                   <strong>Description:</strong>{" "}
                   {selectedRecord.service_description}
-                </p>
-                <p>
-                  <strong>Amount:</strong> {selectedRecord.final_amount}
                 </p>
                 <p>
                   <strong>Payment Status:</strong>{" "}
@@ -483,6 +493,20 @@ const Vehicle = () => {
                     </tbody>
                   </table>
                 )}
+
+                <p>
+                  <strong>Service Cost:</strong>
+                  {" Rs."} {selectedRecord.service_cost}
+                </p>
+
+                <p>
+                  <strong>Discount:</strong> {" Rs."} {selectedRecord.discount}
+                </p>
+
+                <p>
+                  <strong>Net Amount:</strong> {" Rs."}{" "}
+                  {selectedRecord.final_amount}
+                </p>
               </div>
               <div className="modal-footer">
                 <button

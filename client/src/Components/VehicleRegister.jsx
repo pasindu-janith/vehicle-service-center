@@ -23,7 +23,7 @@ const VehicleRegister = () => {
     fuelType: "",
     vehicleImage: null,
   });
-
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -183,7 +183,8 @@ const VehicleRegister = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+    if (isSubmitting) return; // Prevent multiple submissions
+    setIsSubmitting(true);
     // Prepare data for sending (e.g., to backend)
     const submissionData = new FormData();
     Object.keys(formData).forEach((key) => {
@@ -413,7 +414,7 @@ const VehicleRegister = () => {
               <button
                 type="submit"
                 className="btn btn-primary me-2"
-                disabled={!profileUpdated}
+                disabled={!profileUpdated || isSubmitting}
               >
                 Submit
               </button>

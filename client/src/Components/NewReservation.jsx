@@ -7,6 +7,7 @@ const NewReservation = () => {
   const [serviceTypes, setServiceTypes] = useState([]);
   const [vehicles, setVehicles] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [[isSubmitting, setIsSubmitting]] = useState(false);
   const [serviceDescription, setServiceDescription] = useState("");
   const [serviceDuration, setServiceDuration] = useState(0);
   const [formData, setFormData] = useState({
@@ -85,7 +86,8 @@ const NewReservation = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+    if (isSubmitting) return; // Prevent multiple submissions
+    setIsSubmitting(true);
     const data = {
       vehicleID: formData.vehicle,
       serviceType: formData.serviceType,
@@ -109,6 +111,7 @@ const NewReservation = () => {
       );
       if (response.ok) {
         toastr.success("Reservation created successfully!");
+        setIsSubmitting(false);
         navigate("/myaccount/reservations");
       } else {
         const errorData = await response.json();
@@ -292,7 +295,7 @@ const NewReservation = () => {
           </div>
           {/* Submit Button */}
           <div className="d-grid">
-            <button type="submit" className="btn btn-primary">
+            <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
               Reserve Now
             </button>
           </div>

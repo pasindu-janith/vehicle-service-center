@@ -12,6 +12,7 @@ import "react-calendar/dist/Calendar.css";
 import "react-clock/dist/Clock.css"; // Required for the clock UI
 import "./styles/datetime.css";
 import toastr from "toastr";
+import { BASE_URL } from "../config.js";
 
 const Reservations = () => {
   const [startDateTimeFilter, setStartDateTimeFilter] = useState(new Date());
@@ -41,7 +42,7 @@ const Reservations = () => {
     const fetchData = async () => {
       try {
         const response = await fetch(
-          "http://localhost:4000/api/v1/admin/loadAllReservations"
+          `${BASE_URL}/loadAllReservations`
         );
         if (response.ok) {
           const jsonData = await response.json();
@@ -81,7 +82,7 @@ const Reservations = () => {
     const loadServiceTypes = async () => {
       try {
         const response = await fetch(
-          "http://localhost:4000/api/v1/user/loadServiceTypes",
+          `${BASE_URL}/loadServiceTypes`,
           {
             method: "GET",
           }
@@ -103,7 +104,7 @@ const Reservations = () => {
     // setLoading(true);
     try {
       const response = await fetch(
-        `http://localhost:4000/api/v1/admin/filterReservationData?serviceType=${serviceType}&
+        `${BASE_URL}/filterReservationData?serviceType=${serviceType}&
         vehicleNumber=${vehicleNumber}&startDateTime=${startDateTimeFilter.toLocaleString()}&
         endDateTime=${endDateTimeFilter.toLocaleString()}`,
         {
@@ -123,7 +124,7 @@ const Reservations = () => {
     if (!selectedReservation) return;
     try {
       const response = await fetch(
-        `http://localhost:4000/api/v1/admin/getServiceRecords?reservationId=${selectedReservation.reservation_id}`,
+        `${BASE_URL}/getServiceRecords?reservationId=${selectedReservation.reservation_id}`,
         {
           method: "GET",
         }
@@ -147,7 +148,7 @@ const Reservations = () => {
     const endTime = endDateTime ? endDateTime.toISOString() : null;
     try {
       const response = await fetch(
-        `http://localhost:4000/api/v1/admin/startReservation?reservationId=${
+        `${BASE_URL}/startReservation?reservationId=${
           selectedReservation.reservation_id
         }&startDateTime=${startTime.toLocaleString()}&endDateTime=${endTime.toLocaleString()}`,
         {
@@ -182,7 +183,7 @@ const Reservations = () => {
     if (!selectedReservation) return;
     try {
       const response = await fetch(
-        `http://localhost:4000/api/v1/admin/endReservation`,
+        `${BASE_URL}/endReservation`,
         {
           method: "POST",
           headers: {
@@ -226,7 +227,7 @@ const Reservations = () => {
     const endTime = endDateTime ? endDateTime.toISOString() : null;
     try {
       const response = await fetch(
-        `http://localhost:4000/api/v1/admin/editReservation?reservationId=${
+        `${BASE_URL}/editReservation?reservationId=${
           selectedReservation.reservation_id
         }&startDateTime=${startTime.toLocaleString()}&endDateTime=${endTime.toLocaleString()}`,
         {
@@ -261,7 +262,7 @@ const Reservations = () => {
     if (!selectedReservation) return;
     try {
       const response = await fetch(
-        `http://localhost:4000/api/v1/admin/cancelReservation`,
+        `${BASE_URL}/cancelReservation`,
         {
           method: "POST",
           headers: {

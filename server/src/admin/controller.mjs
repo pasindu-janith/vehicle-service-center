@@ -180,7 +180,9 @@ export const loadCompletedServices = async (req, res) => {
 
 export const loadServiceTypes = async (req, res) => {
   try {
-    const result = await pool.query("SELECT * FROM service_type");
+    const result = await pool.query(
+      "SELECT service_type_id,service_name FROM service_type"
+    );
     res.json(result.rows);
   } catch (err) {
     console.error("Error fetching vehicle types:", err);
@@ -908,9 +910,9 @@ export const cancelReservation = async (req, res) => {
                       checkReservation.rows[0].service_name
                     }</li>
                     <li><strong>Reservation Date:</strong> ${
-                      toSQLDateTime(checkReservation.rows[0].reserve_date).split(
-                        " "
-                      )[0]
+                      toSQLDateTime(
+                        checkReservation.rows[0].reserve_date
+                      ).split(" ")[0]
                     }</li>
                     <li><strong>Reservation Status:</strong> Cancelled</li>
                     <li><strong>Cancelled By:</strong> Admin, Auto Lanka Services</li>

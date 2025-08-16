@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import Chart from "chart.js/auto";
+import { BASE_URL } from "../config.js";
 
 const Dashboard = () => {
   const [pendingReservationsToday, setPendingReservationsToday] = useState(0);
@@ -63,7 +64,7 @@ const Dashboard = () => {
     {
       const loadPendingServicesCounts = async () => {
         const response = await fetch(
-          "http://localhost:4000/api/v1/admin/loadPendingServicesCounts"
+          `${BASE_URL}/loadPendingServicesCounts`
         );
         if (response.ok) {
           const jsonData = await response.json();
@@ -162,7 +163,7 @@ const Dashboard = () => {
     const fetchData = async () => {
       try {
         const response = await fetch(
-          "http://localhost:4000/api/v1/admin/loadDashboardCounts"
+          `${BASE_URL}/loadDashboardCounts`
         );
         if (response.ok) {
           const jsonData = await response.json();

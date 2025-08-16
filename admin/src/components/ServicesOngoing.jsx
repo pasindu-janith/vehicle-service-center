@@ -6,6 +6,7 @@ import "datatables.net-buttons-dt";
 import "datatables.net-dt/css/dataTables.dataTables.css";
 import "datatables.net-responsive-dt/css/responsive.dataTables.css";
 import "datatables.net-buttons-dt/css/buttons.dataTables.css";
+import { BASE_URL } from "../config.js";
 
 const ServicesOngoing = () => {
   const [tableData, setTableData] = useState([]);
@@ -17,7 +18,7 @@ const ServicesOngoing = () => {
     const fetchData = async () => {
       try {
         const response = await fetch(
-          "http://localhost:4000/api/v1/admin/loadOngoingServices"
+          `${BASE_URL}/loadOngoingServices`
         );
         if (response.ok) {
           const jsonData = await response.json();

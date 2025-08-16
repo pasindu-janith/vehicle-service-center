@@ -17,7 +17,8 @@ import {
   loadCompletedServices,
   loadVehicleInfo,
   cancelReservation,
-  resetAdminPassword, 
+  resetAdminPassword,
+  loadServiceTypes, 
 } from "./controller.mjs";
 
 
@@ -32,6 +33,7 @@ adminRouter.get("/loadOngoingServices", loadOngoingServices);
 adminRouter.get("/loadPendingServices", loadPendingServices);
 adminRouter.get("/loadCompletedServices", loadCompletedServices);
 adminRouter.get("/filterReservationData", loadReservationWithFilter);
+adminRouter.get("/loadServiceTypes", loadServiceTypes);
 adminRouter.get("/loadAllReservations", loadAllReservations);
 adminRouter.get("/loadDashboardCounts", countReservations);
 adminRouter.post("/startReservation", startReservation);

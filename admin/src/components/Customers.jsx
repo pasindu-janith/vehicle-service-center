@@ -6,6 +6,8 @@ import "datatables.net-buttons-dt";
 import "datatables.net-dt/css/dataTables.dataTables.css";
 import "datatables.net-responsive-dt/css/responsive.dataTables.css";
 import "datatables.net-buttons-dt/css/buttons.dataTables.css";
+import { BASE_URL } from "../config.js";
+
 const Customers = () => {
   const [tableData, setTableData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -18,7 +20,7 @@ const Customers = () => {
     const fetchData = async () => {
       try {
         const response = await fetch(
-          "http://localhost:4000/api/v1/admin/loadAllCustomers",
+          `${BASE_URL}/loadAllCustomers`,
           {
             method: "GET",
             headers: {
@@ -42,7 +44,7 @@ const Customers = () => {
   const loadCustomerVehicles = async (userID) => {
     try {
       const response = await fetch(
-        "http://localhost:4000/api/v1/admin/loadCustomerVehicles?customerId=" +
+        `${BASE_URL}/loadCustomerVehicles?customerId=` +
           userID
       );
       if (response.ok) {

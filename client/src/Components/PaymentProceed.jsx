@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { FaCreditCard } from "react-icons/fa";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { useSearchParams } from "react-router-dom";
+import BASE_URL from "../config.js";
 
 const MERCHANT_ID = "1230724"; // Replace with your real merchant ID
 
@@ -37,7 +38,7 @@ const PaymentProceed = () => {
       }
       try {
         const response = await fetch(
-          `http://localhost:4000/api/v1/user/loadPaymentPageData?resid=${resid}`,
+          `${BASE_URL}/loadPaymentPageData?resid=${resid}`,
           {
             method: "GET",
             headers: {
@@ -68,7 +69,7 @@ const PaymentProceed = () => {
       return;
     }
     const amount = parseFloat(reservationData.final_amount).toFixed(2);
-    const response = await fetch("http://localhost:4000/api/v1/user/pay-hash", {
+    const response = await fetch(`${BASE_URL}/pay-hash`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

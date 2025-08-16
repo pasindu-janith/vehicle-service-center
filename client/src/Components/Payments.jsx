@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./styles/Dashboard.css";
+import BASE_URL from "../config.js";
 
 export const Payments = () => {
   const [paymentData, setPaymentData] = useState([]);
@@ -11,7 +12,7 @@ export const Payments = () => {
     const loadSerivceRecords = async () => {
       try {
         const response = await fetch(
-          "http://localhost:4000/api/v1/user/loadServiceRecordPayment",
+          `${BASE_URL}/loadServiceRecordPayment`,
           {
             method: "GET",
             credentials: "include",

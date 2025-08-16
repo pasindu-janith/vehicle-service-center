@@ -11,6 +11,7 @@ import "react-calendar/dist/Calendar.css";
 import "./styles/Dashboard.css";
 import { useUser } from "../Context/UserContext";
 import { motion } from "framer-motion";
+import BASE_URL from "../config.js";
 
 const Dashboard = () => {
   const { user } = useUser();
@@ -41,7 +42,7 @@ const Dashboard = () => {
     const loadReservations = async () => {
       try {
         const response = await fetch(
-          "http://localhost:4000/api/v1/user/loadAllUserReservations",
+          `${BASE_URL}/loadAllUserReservations`,
           {
             method: "GET",
             credentials: "include",

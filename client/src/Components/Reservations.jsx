@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { CiCircleInfo } from "react-icons/ci";
 import "./styles/Dashboard.css";
+import BASE_URL from "../config.js";
 
 const Reservations = () => {
   const [reservations, setReservations] = useState([]);
@@ -14,7 +15,7 @@ const Reservations = () => {
     const loadReservations = async () => {
       try {
         const response = await fetch(
-          "http://localhost:4000/api/v1/user/loadAllUserReservations",
+          `${BASE_URL}/loadAllUserReservations`,
           {
             method: "GET",
             credentials: "include",
@@ -40,7 +41,7 @@ const Reservations = () => {
   const deleteReservation = async () => {
     try {
       const response = await fetch(
-        `http://localhost:4000/api/v1/user/cancelReservation?rid=${selectedReservation.reservation_id}`,
+        `${BASE_URL}/cancelReservation?rid=${selectedReservation.reservation_id}`,
         {
           method: "PUT",
           headers: {

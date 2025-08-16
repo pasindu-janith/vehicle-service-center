@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { CiCircleInfo } from "react-icons/ci";
+import BASE_URL from "../config.js";
 
 const ReservationInfo = () => {
   const { resid: reservationID } = useParams();
@@ -15,7 +16,7 @@ const ReservationInfo = () => {
     const loadReservationInfo = async () => {
       try {
         const response = await fetch(
-          `http://localhost:4000/api/v1/user/fetchReservationData?resid=${reservationID}`,
+          `${BASE_URL}/fetchReservationData?resid=${reservationID}`,
           {
             method: "GET",
             headers: {

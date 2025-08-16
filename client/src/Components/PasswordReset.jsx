@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import images from "../assets/assets";
 import "./styles/forms.css";
 import toastr from "toastr";
+import BASE_URL from "../config.js";
 
 const PasswordReset = () => {
   const navigate = useNavigate();
@@ -18,7 +19,7 @@ const PasswordReset = () => {
     const verifyToken = async () => {
       try {
         const response = await fetch(
-          `http://localhost:4000/api/v1/user/verify-password-token?token=${token}`,
+          `${BASE_URL}/verify-password-token?token=${token}`,
           {
             method: "GET",
             headers: {

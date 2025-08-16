@@ -5,6 +5,7 @@ import "./styles/forms.css";
 import "toastr/build/toastr.min.css";
 import toastr from "toastr";
 import images from "../assets/assets";
+import BASE_URL from "../config.js";
 
 const OTPVerify = () => {
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
@@ -93,7 +94,7 @@ const OTPVerify = () => {
 
     try {
       const response = await fetch(
-        "http://localhost:4000/api/v1/user/otpverify",
+        `${BASE_URL}/otpverify`,
         {
           method: "POST",
           headers: {
@@ -128,7 +129,7 @@ const OTPVerify = () => {
     setIsResending(true);
     try {
       const response = await fetch(
-        "http://localhost:4000/api/v1/user/resendotp",
+        `${BASE_URL}/resendotp`,
         {
           method: "POST",
           headers: {

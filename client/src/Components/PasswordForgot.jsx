@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "./styles/forms.css";
 import toastr from "toastr";
-import { s } from "framer-motion/client";
+import BASE_URL from "../config.js";
 
 const PasswordForgot = () => {
   const navigate = useNavigate();
@@ -40,7 +40,7 @@ const PasswordForgot = () => {
 
     try {
       const response = await fetch(
-        "http://localhost:4000/api/v1/user/forgot-password-process",
+        `${BASE_URL}/forgot-password-process`,
         {
           method: "POST",
           headers: {

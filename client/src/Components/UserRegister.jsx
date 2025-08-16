@@ -5,6 +5,7 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.bundle.min.js";
 import "toastr/build/toastr.min.css";
 import toastr from "toastr";
+import BASE_URL from "../config.js";
 
 const RegisterForm = () => {
   const navigate = useNavigate();
@@ -91,7 +92,7 @@ const RegisterForm = () => {
 
       // Send data to backend API
       const response = await fetch(
-        "http://localhost:4000/api/v1/user/register",
+        `${BASE_URL}/register`,
         {
           method: "POST",
           headers: {

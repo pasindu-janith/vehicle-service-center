@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { data } from "react-router-dom";
 import toastr from "toastr";
 import "toastr/build/toastr.min.css";
+import BASE_URL from "../config.js";
 
 const ProfileSettings = () => {
   const [formProfileData, setProfileFormData] = useState({
@@ -29,7 +30,7 @@ const ProfileSettings = () => {
     const fetchUserData = async () => {
       try {
         const response = await fetch(
-          "http://localhost:4000/api/v1/user/getUserData",
+          `${BASE_URL}/getUserData`,
           {
             method: "GET",
             credentials: "include",
@@ -63,7 +64,7 @@ const ProfileSettings = () => {
     setIsProfileLoading(true);
     try {
       const response = await fetch(
-        "http://localhost:4000/api/v1/user/updateUserProfileData",
+        `${BASE_URL}/updateUserProfileData`,
         {
           method: "POST",
           headers: {
@@ -100,7 +101,7 @@ const ProfileSettings = () => {
 
     try {
       const response = await fetch(
-        "http://localhost:4000/api/v1/user/resetUserPassword",
+        `${BASE_URL}/resetUserPassword`,
         {
           method: "POST",
           headers: {

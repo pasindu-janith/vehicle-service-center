@@ -5,6 +5,7 @@ import { MdDelete } from "react-icons/md";
 import { IoMdInformationCircleOutline } from "react-icons/io";
 import { useEffect } from "react";
 import "./styles/Dashboard.css";
+import { BASE_URL, BASE_IMAGES_URL } from "../config.js";
 
 const MyVehicle = () => {
   // Example vehicle data (later you can fetch from database)
@@ -16,13 +17,10 @@ const MyVehicle = () => {
   useEffect(() => {
     const loadAllUserVehicles = async () => {
       try {
-        const response = await fetch(
-          "http://localhost:4000/api/v1/user/loadAllUserVehicles",
-          {
-            method: "GET",
-            credentials: "include",
-          }
-        );
+        const response = await fetch(`${BASE_URL}/loadAllUserVehicles`, {
+          method: "GET",
+          credentials: "include",
+        });
         if (response.ok) {
           const data = await response.json();
           if (data && data.length > 0) {
@@ -53,7 +51,7 @@ const MyVehicle = () => {
   const deleteVehicle = async () => {
     try {
       const response = await fetch(
-        `http://localhost:4000/api/v1/user/deleteVehicle?licensePlate=${selectedVehicle.license_plate}`,
+        `${BASE_URL}/deleteVehicle?licensePlate=${selectedVehicle.license_plate}`,
         {
           method: "PUT",
           headers: {
@@ -97,21 +95,25 @@ const MyVehicle = () => {
           <>
             {vehicles.map((vehicle) => (
               <div className="col-md-3" key={vehicle.license_plate}>
-                <div
-                  className="card mb-3 shadow-lg vehicle-card"
-                >
+                <div className="card mb-3 shadow-lg vehicle-card">
                   <img
-                    src={`http://localhost:4000${vehicle.imgpath}`}
+                    src={`${BASE_IMAGES_URL}${vehicle.imgpath}`}
                     style={{ height: "300px", objectFit: "contain" }}
                     className="card-img-top"
                     alt="..."
                   />
                   <div className="card-body">
                     <h3 className="card-title">{vehicle.license_plate}</h3>
-                    <p>{vehicle.vehicle_brand} {vehicle.model} {vehicle.make_year}{" | "}
-                    {vehicle.vehicle_type}</p>
+                    <p>
+                      {vehicle.vehicle_brand} {vehicle.model}{" "}
+                      {vehicle.make_year}
+                      {" | "}
+                      {vehicle.vehicle_type}
+                    </p>
                     <button
-                      onClick={() => window.location.href = `/myaccount/vehicle-info/${vehicle.license_plate}`}
+                      onClick={() =>
+                        (window.location.href = `/myaccount/vehicle-info/${vehicle.license_plate}`)
+                      }
                       className="btn btn-primary mt-1 me-1"
                     >
                       <IoMdInformationCircleOutline size={20} /> More info

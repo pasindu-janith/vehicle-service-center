@@ -14,19 +14,17 @@ import VehicleInfo from "../Components/VehicleInfo";
 import ReservationInfo from "../Components/ReservationInfo";
 import PaymentProceed from "../Components/PaymentProceed";
 import PaymentInvoice from "../Components/PaymentInvoice";
+import BASE_URL from "../config.js";
 
 const UserPanel = () => {
   const navigate = useNavigate();
   useEffect(() => {
     const verifyLoginStatus = async () => {
       try {
-        const response = await fetch(
-          "http://localhost:4000/api/v1/user/authUser",
-          {
-            method: "GET",
-            credentials: "include",
-          }
-        );
+        const response = await fetch(`${BASE_URL}/authUser`, {
+          method: "GET",
+          credentials: "include",
+        });
         if (!response.ok) {
           navigate("/login");
         }

@@ -2,12 +2,13 @@ import { form } from "framer-motion/client";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import toastr from "toastr";
+import BASE_URL from "../config";
 
 const NewReservation = () => {
   const [serviceTypes, setServiceTypes] = useState([]);
   const [vehicles, setVehicles] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [[isSubmitting, setIsSubmitting]] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [serviceDescription, setServiceDescription] = useState("");
   const [serviceDuration, setServiceDuration] = useState(0);
   const [formData, setFormData] = useState({
@@ -24,7 +25,7 @@ const NewReservation = () => {
     const loadServiceTypes = async () => {
       try {
         const response = await fetch(
-          "http://localhost:4000/api/v1/user/loadServiceTypes",
+          `${BASE_URL}/loadServiceTypes`,
           {
             method: "GET",
           }
@@ -41,7 +42,7 @@ const NewReservation = () => {
     const loadAllUserVehicles = async () => {
       try {
         const response = await fetch(
-          "http://localhost:4000/api/v1/user/loadAllUserVehicles",
+          `${BASE_URL}/loadAllUserVehicles`,
           {
             method: "GET",
             credentials: "include",
@@ -99,7 +100,7 @@ const NewReservation = () => {
 
     try {
       const response = await fetch(
-        "http://localhost:4000/api/v1/user/createReservation",
+        `${BASE_URL}/createReservation`,
         {
           method: "POST",
           credentials: "include",

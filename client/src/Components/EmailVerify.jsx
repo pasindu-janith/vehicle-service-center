@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import images from "../assets/assets";
 import "./styles/forms.css";
 import toastr from "toastr";
+import BASE_URL from "../config.js";
 
 const EmailVerify = () => {
   const navigate = useNavigate();
@@ -29,7 +30,7 @@ const EmailVerify = () => {
     setIsResending(true);
     try {
       const response = await fetch(
-        "http://localhost:4000/api/v1/user/resend-verify-email",
+        `${BASE_URL}/resend-verify-email`,
         {
           method: "POST",
           headers: {

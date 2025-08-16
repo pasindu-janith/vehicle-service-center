@@ -1,6 +1,7 @@
 import React from "react";
 import "toastr/build/toastr.min.css";
 import toastr from "toastr";
+import { BASE_URL } from "../config.js";
 
 const Profile = () => {
   const [formData, setFormData] = React.useState({
@@ -27,7 +28,7 @@ const Profile = () => {
 
     try {
       const response = await fetch(
-        "http://localhost:4000/api/v1/admin/reset-password",
+        `${BASE_URL}/reset-password`,
         {
           method: "POST",
           headers: {

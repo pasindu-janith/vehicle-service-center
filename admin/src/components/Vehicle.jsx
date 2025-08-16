@@ -7,6 +7,8 @@ import "datatables.net-dt/css/dataTables.dataTables.css";
 import "datatables.net-responsive-dt/css/responsive.dataTables.css";
 import "datatables.net-buttons-dt/css/buttons.dataTables.css";
 import images from "../assets/assets";
+import { BASE_IMAGES_URL, BASE_URL } from "../config.js";
+
 const Vehicle = () => {
   const [tableData, setTableData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -23,7 +25,7 @@ const Vehicle = () => {
     const fetchData = async () => {
       try {
         const response = await fetch(
-          "http://localhost:4000/api/v1/admin/loadAllVehicles",
+          `${BASE_URL}/loadAllVehicles`,
           {
             method: "GET",
             headers: {
@@ -47,7 +49,7 @@ const Vehicle = () => {
   const loadVehicleData = async (vehicleID) => {
     try {
       const response = await fetch(
-        "http://localhost:4000/api/v1/admin/loadVehicleInfo?vehicleNumber=" +
+        `${BASE_URL}/loadVehicleInfo?vehicleNumber=` +
           vehicleID
       );
       if (response.ok) {
@@ -174,7 +176,7 @@ const Vehicle = () => {
                   <div className="row">
                     <div className="col-md-7 col-12">
                       <img
-                        src={`http://localhost:4000${
+                        src={`${BASE_IMAGES_URL}${
                           selectedVehicle ? selectedVehicle.imgpath : images.car
                         }`}
                         style={{

@@ -1,5 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import { CLIENT_BASE_URL } from "../config.js";
 
 const Navbar = () => {
   return (
@@ -12,17 +13,15 @@ const Navbar = () => {
           </a>
         </li>
         <li className="nav-item d-none d-sm-inline-block">
-          <Link to="http://localhost:5173/" className="nav-link">
+          <Link to={CLIENT_BASE_URL} className="nav-link">
             Home
           </Link>
         </li>
-        
       </ul>
       {/* Right navbar links */}
       <ul className="navbar-nav ml-auto">
-        
         {/* Messages Dropdown Menu */}
-        
+
         {/* Notifications Dropdown Menu */}
         <li className="nav-item dropdown">
           <a className="nav-link" data-toggle="dropdown" href="#">
@@ -64,7 +63,6 @@ const Navbar = () => {
             <i className="fas fa-expand-arrows-alt" />
           </a>
         </li>
-        
       </ul>
     </nav>
   );

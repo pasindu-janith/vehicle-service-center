@@ -13,6 +13,7 @@ import ServicesCompleted from "./../components/ServicesCompleted";
 import Reservations from "./../components/Reservations";
 import Vehicle from "./../components/Vehicle";
 import Messages from "./../components/Messages";
+import { BASE_URL } from "../config.js";
 
 const AdminPanel = () => {
   const navigate = useNavigate();
@@ -20,7 +21,7 @@ const AdminPanel = () => {
     const verifyLoginStatus = async () => {
       try {
         const response = await fetch(
-          "http://localhost:4000/api/v1/admin/authAdmin",
+          `${BASE_URL}/authAdmin`,
           {
             method: "GET",
             credentials: "include",

@@ -6,6 +6,7 @@ import "./styles/Navbar.css";
 import { CgProfile } from "react-icons/cg";
 import { CiLogout, CiSettings } from "react-icons/ci";
 import { useUser } from "../Context/UserContext";
+import BASE_URL from "../config.js";
 
 
 const NavbarUserPanel = () => {
@@ -40,7 +41,7 @@ const NavbarUserPanel = () => {
     try {
       localStorage.removeItem("user");
       // This endpoint should verify the token in the cookie
-      const response = await fetch("http://localhost:4000/api/v1/user/logout", {
+      const response = await fetch(`${BASE_URL}/logout`, {
         method: "GET",
         credentials: "include",
       });
@@ -184,7 +185,7 @@ const NavbarUserPanel = () => {
               </Link>
             </li>
             <li>
-              <Link to="#expertise" className="nav-link">
+              <Link to="/myaccount/payments" className="nav-link">
                 Payments
               </Link>
             </li>

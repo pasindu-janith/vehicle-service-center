@@ -5,6 +5,7 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.bundle.min.js";
 import "toastr/build/toastr.min.css";
 import toastr from "toastr";
+import BASE_URL from "../config.js";
 
 const RegisterForm = () => {
   const navigate = useNavigate();
@@ -55,10 +56,33 @@ const RegisterForm = () => {
       return;
     }
 
+    // Validate password strength
+    if (formData.password.length < 8) {
+      toastr.error("Password must be at least 8 characters long.");
+      return;
+    }
+
+    // Check for at least one uppercase letter, one lowercase letter, and one number
+    if (
+      !/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{8,}$/.test(formData.password)
+    ) {
+      toastr.error(
+        "Password must contain at least one uppercase letter, one lowercase letter, and one number."
+      );
+      return;
+    }
+
     // Validate mobile number
     const mobilePattern = /^[0-9]{9}$/;
     if (!mobilePattern.test(formData.mobile)) {
       toastr.error("Invalid mobile number. Please enter 9 digits after +94.");
+      return;
+    }
+
+    // Validate email format
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailPattern.test(formData.email)) {
+      toastr.error("Invalid email format. Please enter a valid email.");
       return;
     }
 
@@ -68,7 +92,7 @@ const RegisterForm = () => {
 
       // Send data to backend API
       const response = await fetch(
-        "http://localhost:4000/api/v1/user/register",
+        `${BASE_URL}/register`,
         {
           method: "POST",
           headers: {

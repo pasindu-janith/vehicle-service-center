@@ -87,11 +87,15 @@ export const resetAdminPassword = async (req, res) => {
     const { adminToken } = req.cookies;
 
     if (!adminToken) {
-      return res.status(401).send({ message: "No authentication token provided" });
+      return res
+        .status(401)
+        .send({ message: "No authentication token provided" });
     }
 
     if (!oldPassword || !newPassword) {
-      return res.status(400).send({ message: "Old and new passwords are required" });
+      return res
+        .status(400)
+        .send({ message: "Old and new passwords are required" });
     }
 
     // Verify token and get admin ID
@@ -122,12 +126,13 @@ export const resetAdminPassword = async (req, res) => {
 
     // Validate new password (add your own password requirements here)
     if (newPassword.length < 8) {
-      return res.status(400).send({ message: "New password must be at least 8 characters long" });
+      return res
+        .status(400)
+        .send({ message: "New password must be at least 8 characters long" });
     }
 
     // Hash new password
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(newPassword, salt);
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
 
     // Update password in database
     const updateResult = await pool.query(
@@ -163,7 +168,37 @@ export const loadOngoingServices = async (req, res) => {
 export const loadCompletedServices = async (req, res) => {
   try {
     const completedServices = await pool.query(
-      "SELECT * FROM reservations INNER JOIN service_type ON reservations.service_type_id=service_type.service_type_id WHERE reservation_status=(SELECT reservation_status_id FROM reservation_status WHERE status_name=$1) LIMIT 100",
+      `SELECT sr.reservation_id, 
+          sr.service_description, 
+          sr.service_cost, 
+          sr.discount,
+          sr.final_amount, 
+          st.service_name, 
+          r.reserve_date, 
+          r.start_time, 
+          r.end_date, 
+          r.end_time, 
+          sr.is_paid,
+          COALESCE(
+            json_agg(
+              json_build_object(
+                'id', pi.id,
+                'description', pi.description,
+                'price', pi.price
+              )
+            ) FILTER (WHERE pi.id IS NOT NULL), 
+            '[]'
+          ) AS payment_items
+            FROM service_records AS sr
+            INNER JOIN reservations AS r 
+            ON sr.reservation_id = r.reservation_id
+            INNER JOIN service_type AS st 
+            ON r.service_type_id = st.service_type_id
+            LEFT JOIN payment_item AS pi 
+            ON sr.reservation_id = pi.reservation_id
+            WHERE r.reservation_status = (SELECT reservation_status_id FROM reservation_status WHERE status_name = $1)
+            GROUP BY sr.reservation_id, sr.service_description, sr.service_cost, sr.discount, sr.final_amount,
+            st.service_name, r.reserve_date, r.start_time, r.end_date, r.end_time, sr.is_paid`,
       ["Completed"]
     );
     res.status(200).send(completedServices.rows);
@@ -175,7 +210,9 @@ export const loadCompletedServices = async (req, res) => {
 
 export const loadServiceTypes = async (req, res) => {
   try {
-    const result = await pool.query("SELECT * FROM service_type");
+    const result = await pool.query(
+      "SELECT service_type_id,service_name FROM service_type"
+    );
     res.json(result.rows);
   } catch (err) {
     console.error("Error fetching vehicle types:", err);
@@ -354,6 +391,147 @@ export const startReservation = async (req, res) => {
       return res.status(404).send({ message: "Reservation not found" });
     }
 
+    const userEmail = await pool.query(
+      `SELECT email FROM users WHERE user_id = (SELECT user_id FROM vehicles WHERE license_plate = 
+      (SELECT vehicle_id FROM reservations WHERE reservation_id = $1))`,
+      [reservationId]
+    );
+
+    const serviceType = await pool.query(
+      "SELECT service_name FROM service_type WHERE service_type_id = (SELECT service_type_id FROM reservations WHERE reservation_id = $1)",
+      [reservationId]
+    );
+
+    if (userEmail.rows.length > 0) {
+      const email = userEmail.rows[0].email;
+      const emailContent = `
+      <!DOCTYPE html>
+
+      <html>
+      <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Reservation Started</title>
+
+      <style>
+        body {
+          font-family: 'Segoe UI', Arial, sans-serif;     
+          background-color: #f4f4f4;
+          margin: 0;
+          padding: 0;
+          color: #333333;
+        }
+          
+        .email-wrapper {
+          max-width: 600px;
+          margin: 0 auto;
+          background-color: #ffffff;
+          border-radius: 6px;
+          overflow: hidden;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        .header {
+          background-color: rgb(140, 0, 0);
+          padding: 20px;
+          text-align: center;
+        }
+        .header h1 {
+          color: #ffffff;
+          margin: 0;
+          font-size: 22px;
+        }
+        .content {
+          padding: 30px 25px;
+        }
+        .content p {
+          font-size: 15px;
+          margin-bottom: 18px;
+          color: #555555;
+        }
+        .details {
+          background-color: #f9f9f9;
+          padding: 15px 20px;
+          border: 1px solid #dddddd;
+          border-radius: 4px;
+          margin-bottom: 25px;
+        }
+        .details ul {
+          list-style: none;
+          padding: 0;
+          margin: 0;
+        }
+        .details li {
+          font-size: 15px;
+          padding: 8px 0;
+          border-bottom: 1px solid #eeeeee;
+        }
+        .details li:last-child {
+          border-bottom: none;
+        }
+        .details strong {
+          color: rgb(140, 0, 0);
+        }
+        .btn {
+          background-color: rgb(140, 0, 0);
+          color: #ffffff !important;
+          padding: 12px 24px;
+          text-decoration: none !important;
+          border-radius: 4px;
+          font-weight: bold;
+          display: inline-block;
+          font-size: 15px;
+        }
+        .btn:hover {
+          background-color: rgb(118, 0, 0);
+        }
+        .footer {
+          background-color: #f4f4f4;
+          padding: 15px;
+          font-size: 12px;
+          color: #777777;
+          text-align: center;
+        }
+      </style>
+      </head>
+      <body>
+      <div class="email-wrapper">
+
+        <div class="header">
+          <h1>Reservation Started</h1>
+        </div>
+        <div class="content">
+          <p>Dear Customer,</p>
+          <p>Your reservation with ID <strong>${reservationId}</strong> has been started successfully. Below are the details:</p>
+          <div class="details">
+            <ul>
+              <li><strong>Vehicle Number:</strong> ${
+                updateReservation.rows[0].vehicle_id
+              }</li>
+              <li><strong>Service Type:</strong> ${
+                serviceType.rows[0].service_name
+              }</li>
+              <li><strong>Reservation Status:</strong> Ongoing</li>
+              <li><strong>Started Date:</strong> ${startDateString}</li>
+              <li><strong>Started Time:</strong> ${startTimeString}</li>
+              <li><strong>Expected End Date & Time:</strong> ${endDateString}${"  "}${endTimeString}</li>
+
+            </ul>
+          </div>
+          <p style="text-align: center;">
+            <a href="${
+              process.env.CLIENT_URL
+            }/myaccount/reservation-info/${reservationId}" class="btn">View Reservation Details</a>
+          </p>
+        </div>
+        <div class="footer">
+          <p>This email was sent by Shan Automobile and Hybrid Workshop. If you did not make this reservation, please ignore this email.</p>
+        </div>
+      </div>
+      </body>
+      </html>
+      `;
+      await sendEmail(email, "Reservation Started", emailContent);
+    }
     res.status(200).send({
       ...updateReservation.rows[0],
       status_name: "Ongoing",
@@ -411,6 +589,153 @@ export const completeReservation = async (req, res) => {
       }
     }
 
+    const userEmail = await pool.query(
+      "SELECT email FROM users WHERE user_id = (SELECT user_id FROM vehicles WHERE license_plate = $1)",
+      [vehicleNumber]
+    );
+
+    const serviceType = await pool.query(
+      "SELECT service_name FROM service_type WHERE service_type_id = (SELECT service_type_id FROM reservations WHERE reservation_id = $1)",
+      [reservationId]
+    );
+
+    if (userEmail.rows.length > 0) {
+      const email = userEmail.rows[0].email;
+      const emailContent = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Reservation Completed</title>
+        <style>
+          body {
+              font-family: 'Segoe UI', Arial, sans-serif;
+              background-color: #f4f4f4;
+              margin: 0;
+              padding: 0;
+              color: #333333;
+            }
+
+            a {
+              color: rgba(255, 255, 255, 1);
+              text-decoration: none;
+            }
+
+            .email-wrapper {
+              max-width: 600px;
+              margin: 0 auto;
+              background-color: #ffffff;
+              border-radius: 6px;
+              overflow: hidden;
+              box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            }
+            .header {
+              background-color: rgb(140, 0, 0);
+              padding: 20px;
+              text-align: center;
+            }
+            .header h1 {
+              color: #ffffff;
+              margin: 0;
+              font-size: 22px;
+            }
+            .content {
+              padding: 30px 25px;
+            }
+            .content p {
+              font-size: 15px;
+              margin-bottom: 18px;
+              color: #555555;
+            }
+            .details {
+              background-color: #f9f9f9;
+              padding: 15px 20px;
+              border: 1px solid #dddddd;
+              border-radius: 4px;
+              margin-bottom: 25px;
+            }
+            .details ul {
+              list-style: none;
+              padding: 0;
+              margin: 0;
+            }
+            .details li {
+              font-size: 15px;
+              padding: 8px 0;
+              border-bottom: 1px solid #eeeeee;
+            }
+            .details li:last-child {
+              border-bottom: none;
+            }
+            .details strong {
+              color: rgb(140, 0, 0);
+            }
+            .btn {
+              background-color: rgb(140, 0, 0);
+              color: #ffffff;
+              padding: 12px 24px;
+              text-decoration: none;
+              border-radius: 4px;
+              font-weight: bold;
+              display: inline-block;
+              font-size: 15px;
+            }
+            .btn:hover {
+              background-color: rgb(118, 0, 0);
+            }
+            .footer {
+              background-color: #f4f4f4;
+              padding: 15px;
+              font-size: 12px;
+              color: #777777;
+              text-align: center;
+            }
+      </style>
+      </head>
+      <body>
+      <div class="email-wrapper">
+        <div class="header">
+          <h1>Reservation Completed</h1>
+        </div>
+        <div class="content">
+          <p>Dear Customer,</p>
+          <p>Your reservation with ID <strong>${reservationId}</strong> has been completed successfully. Below are the details:</p>
+          
+          <div class="details">
+            <ul>
+              <li><strong>Vehicle Number:</strong> ${vehicleNumber}</li>
+              <li><strong>Service Type:</strong> ${
+                serviceType.rows[0].service_name
+              }</li>
+              <li><strong>Reservation Status:</strong> Completed</li>              
+              <li><strong>Service Cost:</strong> ${serviceCost}</li>
+              <li><strong>Discount:</strong> ${serviceDiscount}</li>
+              <li><strong>Final Amount:</strong> ${
+                parseFloat(serviceCost) - parseFloat(serviceDiscount)
+              }</li>
+              <li><strong>Notes:</strong> ${
+                notes || "No description provided"
+              }</li>
+            </ul>
+          </div>
+
+          <p style="text-align: center;">
+            <a href="${
+              process.env.CLIENT_URL
+            }/myaccount/proceed-payment?resid=${reservationId}" class="btn">Proceed to Payment</a>
+          </p>
+          </div>
+            <div class="footer">
+              <p>This email was sent by Shan Automobile and Hybrid Workshop. If you did not make this reservation, please ignore this email.</p>
+            </div>
+          </div>
+        </body>
+        </html>
+    `;
+      await sendEmail(email, "Reservation Completed", emailContent);
+    }
+
     res.status(200).send({
       ...updateReservation.rows[0],
       status_name: "Completed",
@@ -461,6 +786,192 @@ export const editReservation = async (req, res) => {
   } catch (error) {
     console.error("Error editing reservation:", error);
     res.status(500).send("Internal Server Error");
+  }
+};
+
+export const cancelReservation = async (req, res) => {
+  try {
+    const { reservationID, cancelReason, vehicleNumber } = req.body;
+
+    if (!reservationID) {
+      return res.status(400).send({ message: "Reservation ID is required" });
+    }
+
+    const checkReservation = await pool.query(
+      `SELECT service_name,reserve_date FROM reservations r 
+      INNER JOIN service_type st ON r.service_type_id = st.service_type_id
+      WHERE r.reservation_id = $1 AND r.vehicle_id = $2`,
+      [reservationID, vehicleNumber]
+    );
+
+    if (checkReservation.rows.length === 0) {
+      return res.status(400).send({ message: "Invalid Reservation ID" });
+    }
+
+    const userEmail = await pool.query(
+      `SELECT email FROM users WHERE user_id = (SELECT user_id FROM vehicles WHERE license_plate = $1)`,
+      [vehicleNumber]
+    );
+    if (userEmail.rows.length === 0) {
+      return res
+        .status(404)
+        .send({ message: "User not found for this vehicle" });
+    }
+    const cancelReservation = await pool.query(
+      "UPDATE reservations SET reservation_status = $1 WHERE reservation_id=$2",
+      ["4", reservationID]
+    );
+
+    const resCancelMsg = await pool.query(
+      "INSERT INTO reservation_messages (reservation_id, message, role, created_at) VALUES ($1, $2, $3, $4)",
+      [reservationID, cancelReason, "1", toSQLDateTime(new Date())]
+    );
+
+    if (userEmail.rows.length > 0) {
+      const email = userEmail.rows[0].email;
+
+      await sendEmail(
+        email,
+        "Reservation Cancelled",
+        `<!DOCTYPE html>
+        <html>
+          <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Reservation Cancelled</title>
+          <style>
+            body {
+                font-family: 'Segoe UI', Arial, sans-serif;
+                background-color: #f4f4f4;
+                margin: 0;
+                padding: 0;
+                color: #333333;
+              }
+
+              a {
+                color: rgba(255, 255, 255, 1);
+                text-decoration: none;
+              }
+
+              .email-wrapper {
+                max-width: 600px;
+                margin: 0 auto;
+                background-color: #ffffff;
+                border-radius: 6px;
+                overflow: hidden;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+              }
+              .header {
+                background-color: rgb(140, 0, 0);
+                padding: 20px;
+                text-align: center;
+              }
+              .header h1 {
+                color: #ffffff;
+                margin: 0;
+                font-size: 22px;
+              }
+              .content {
+                padding: 30px 25px;
+              }
+              .content p {
+                font-size: 15px;
+                margin-bottom: 18px;
+                color: #555555;
+              }
+              .details {
+                background-color: #f9f9f9;
+                padding: 15px 20px;
+                border: 1px solid #dddddd;
+                border-radius: 4px;
+                margin-bottom: 25px;
+              }
+              .details ul {
+                list-style: none;
+                padding: 0;
+                margin: 0;
+              }
+              .details li {
+                font-size: 15px;
+                padding: 8px 0;
+                border-bottom: 1px solid #eeeeee;
+              }
+              .details li:last-child {
+                border-bottom: none;
+              }
+              .details strong {
+                color: rgb(140, 0, 0);
+              }
+              .btn {
+                background-color: rgb(140, 0, 0);
+                color: #ffffff;
+                padding: 12px 24px;
+                text-decoration: none;
+                border-radius: 4px;
+                font-weight: bold;
+                display: inline-block;
+                font-size: 15px;
+              }
+              .btn:hover {
+                background-color: rgb(118, 0, 0);
+              }
+              .footer {
+                background-color: #f4f4f4;
+                padding: 15px;
+                font-size: 12px;
+                color: #777777;
+                text-align: center;
+              }
+              </style>
+            </head>
+            <body>
+            <div class="email-wrapper">
+              <div class="header">
+                <h1>Reservation Cancelled</h1>
+              </div>
+              <div class="content">
+                <p>Dear Customer,</p>
+                <p>Your reservation with ID <strong>${reservationID}</strong> has been cancelled successfully. Below are the details:</p>
+                
+                <div class="details">
+                  <ul>
+                    <li><strong>Vehicle Number:</strong> ${vehicleNumber}</li>
+                    <li><strong>Service Type:</strong>${
+                      checkReservation.rows[0].service_name
+                    }</li>
+                    <li><strong>Reservation Date:</strong> ${
+                      toSQLDateTime(
+                        checkReservation.rows[0].reserve_date
+                      ).split(" ")[0]
+                    }</li>
+                    <li><strong>Reservation Status:</strong> Cancelled</li>
+                    <li><strong>Cancelled By:</strong> Admin, Auto Lanka Services</li>
+                    <li><strong>Cancellation Date:</strong> ${
+                      new Date().toISOString().split("T")[0]
+                    }</li>              
+                    <li><strong>Cancel Reason:</strong> ${cancelReason}</li>
+                  </ul>
+                </div>
+
+                <p style="text-align: center;">
+                  <a href="${
+                    process.env.CLIENT_URL
+                  }/myaccount/reservation-info/${reservationID}" class="btn">View Reservation Details</a>
+                </p>
+                </div>
+                  <div class="footer">
+                    <p>This email was sent by Shan Automobile and Hybrid Workshop. If you did not make this reservation, please ignore this email.</p>
+                  </div>
+                </div>
+              </body>
+              </html>
+    `
+      );
+    }
+    return res.status(200).send({ message: "Reservation cancelled" });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send("Internal Server Error"); // If the token is invalid or the user does not exist, it returns an error message
   }
 };
 
@@ -534,8 +1045,8 @@ export const loadVehicleInfo = async (req, res) => {
     }
 
     const vehicleOwner = await pool.query(
-      `SELECT * FROM users AS u
-      INNER JOIN mobile_number AS m ON u.mobile_id = m.mobile_id
+      `SELECT user_id,first_name,last_name,nicno,email,mobile_no,address_line1,address_line2,
+      address_line3 FROM users AS u INNER JOIN mobile_number AS m ON u.mobile_id = m.mobile_id
       INNER JOIN addresses AS a ON u.address_id = a.address_id
       WHERE u.user_id = (
         SELECT user_id FROM vehicles WHERE license_plate = $1 AND status = $2
@@ -544,10 +1055,37 @@ export const loadVehicleInfo = async (req, res) => {
     );
 
     const serviceRecords = await pool.query(
-      `SELECT * FROM service_records sr 
-      INNER JOIN reservations r ON sr.reservation_id = r.reservation_id
-      INNER JOIN service_type st ON r.service_type_id = st.service_type_id
-      WHERE sr.vehicle_id = $1 ORDER BY created_datetime DESC`,
+      `SELECT sr.reservation_id, 
+          sr.service_description, 
+          sr.service_cost, 
+          sr.discount,
+          sr.final_amount, 
+          st.service_name, 
+          r.reserve_date, 
+          r.start_time, 
+          r.end_date, 
+          r.end_time, 
+          sr.is_paid,
+          COALESCE(
+            json_agg(
+              json_build_object(
+                'id', pi.id,
+                'description', pi.description,
+                'price', pi.price
+              )
+            ) FILTER (WHERE pi.id IS NOT NULL), 
+            '[]'
+          ) AS payment_items
+            FROM service_records AS sr
+            INNER JOIN reservations AS r 
+            ON sr.reservation_id = r.reservation_id
+            INNER JOIN service_type AS st 
+            ON r.service_type_id = st.service_type_id
+            LEFT JOIN payment_item AS pi 
+            ON sr.reservation_id = pi.reservation_id
+            WHERE sr.vehicle_id = $1
+            GROUP BY sr.reservation_id, sr.service_description, sr.service_cost, sr.discount, sr.final_amount,
+            st.service_name, r.reserve_date, r.start_time, r.end_date, r.end_time, sr.is_paid`,
       [vehicleNumber]
     );
 

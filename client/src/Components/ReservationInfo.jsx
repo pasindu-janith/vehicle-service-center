@@ -1,28 +1,22 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { CiCircleInfo } from "react-icons/ci";
+import BASE_URL from "../config.js";
 
 const ReservationInfo = () => {
   const { resid: reservationID } = useParams();
   const navigate = useNavigate();
   const [activeReservation, setActiveReservation] = useState(null);
+  const [messages, setMessages] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [remainingTime, setRemainingTime] = useState(0);
   const [duration, setDuration] = useState(0);
-  const adminMessages = [
-    {
-      text: "Vehicle has been inspected. Diagnostic started.",
-      time: "2025-06-20T09:10:00",
-    },
-    {
-      text: "Oil change in progress.",
-      time: "2025-06-20T10:00:00",
-    },
-  ];
+  
   useEffect(() => {
     const loadReservationInfo = async () => {
       try {
         const response = await fetch(
-          `http://localhost:4000/api/v1/user/fetchReservationData?resid=${reservationID}`,
+          `${BASE_URL}/fetchReservationData?resid=${reservationID}`,
           {
             method: "GET",
             headers: {
@@ -34,29 +28,38 @@ const ReservationInfo = () => {
 
         if (response.ok) {
           const data = await response.json();
-          setActiveReservation(data);
+          setActiveReservation(data.reservationData);
+          setMessages(data.messages || []);
+          console.log("Reservation data:", data.messages);
 
-          console.log("Reservation data:", data);
-
-          const start = new Date(
-            `${new Date(data.reserve_date).toLocaleDateString("en-CA")}T${
-              data.start_time
-            }`
-          );
-          const end = new Date(
-            `${new Date(data.end_date).toLocaleDateString("en-CA")}T${
-              data.end_time
-            }`
-          );
-          const now = new Date();
-          setRemainingTime(end - now);
-          setDuration(end - start);
+          // Fix: Access properties through data.reservationData
+          const reservationData = data.reservationData;
+          if (reservationData && reservationData.reserve_date && reservationData.start_time && 
+              reservationData.end_date && reservationData.end_time) {
+            
+            const start = new Date(
+              `${new Date(reservationData.reserve_date).toLocaleDateString("en-CA")}T${
+                reservationData.start_time
+              }`
+            );
+            const end = new Date(
+              `${new Date(reservationData.end_date).toLocaleDateString("en-CA")}T${
+                reservationData.end_time
+              }`
+            );
+            const now = new Date();
+            
+            setRemainingTime(end - now);
+            setDuration(end - start);
+          }
         } else {
           navigate("/myaccount/reservations"); // Redirect to reservations page on error
         }
       } catch (error) {
         console.error("Error fetching reservation data:", error);
         navigate("/myaccount/reservations"); // Redirect to reservations page on error
+      } finally {
+        setIsLoading(false);
       }
     };
     loadReservationInfo();
@@ -97,7 +100,8 @@ const ReservationInfo = () => {
       const diffMs = end - start;
       const remainingMs = end - now;
       if (diffMs < 0) return "Invalid duration";
-      if (remainingMs <= 0) return "Reservation has ended";
+      if (remainingMs <= 0)
+        return "Reservation has ended. But admin has not updated service as completed.";
 
       const totalMinutes = Math.floor(remainingMs / 60000);
       const days = Math.floor(totalMinutes / (24 * 60));
@@ -152,6 +156,13 @@ const ReservationInfo = () => {
       );
     }
     return "";
+  };
+
+  // Fix: Calculate progress percentage properly
+  const getProgressPercentage = () => {
+    if (remainingTime <= 0) return 100;
+    if (duration <= 0) return 0;
+    return Math.max(0, Math.min(100, 100 - Math.floor((remainingTime / duration) * 100)));
   };
 
   return (
@@ -293,8 +304,10 @@ const ReservationInfo = () => {
                   ? activeReservation.status_name === "Ongoing"
                     ? getRemainingTime()
                     : activeReservation.status_name === "Completed"
-                    ? "Service completed"
-                    : "Service is cancelled or has not started yet."
+                    ? "Service completed. "
+                    : activeReservation.status_name === "Pending"
+                    ? "Service has not started yet."
+                    : "Service is cancelled by user or admin."
                   : "Loading..."}
               </div>
 
@@ -305,14 +318,12 @@ const ReservationInfo = () => {
                       className="progress-bar bg-primary progress-bar-striped progress-bar-animated"
                       role="progressbar"
                       style={{
-                        width: `${
-                          100 - Math.floor((remainingTime / duration) * 100)
-                        }%`,
+                        width: `${getProgressPercentage()}%`,
                       }}
                       aria-valuemin="0"
                       aria-valuemax="100"
                     >
-                      {100 - Math.floor((remainingTime / duration) * 100)}%
+                      {getProgressPercentage()}%
                     </div>
                   </div>
                 ) : activeReservation.status_name === "Completed" ? (
@@ -352,18 +363,31 @@ const ReservationInfo = () => {
               className="border rounded p-3 flex-grow-1 overflow-auto bg-light"
               style={{ whiteSpace: "pre-wrap" }}
             >
-              {adminMessages.length > 0 ? (
-                adminMessages.map((msg, index) => (
-                  <div
-                    key={index}
-                    className="bg-white border rounded shadow-sm p-2 mb-3"
-                  >
-                    <div className="text-muted small mb-1">
-                      {new Date(msg.time).toLocaleString()}
+              {messages.length > 0 ? (
+                messages.map((msg) =>
+                  msg.role == "1" && msg.message ? (
+                    <div
+                      key={msg.id}
+                      className="bg-white border rounded shadow-sm p-2 mb-3"
+                    >
+                      <div className="text-muted small mb-1">
+                        {new Date(msg.created_at).toLocaleString()}
+                      </div>
+                      <div className="text-dark">{msg.message}</div>
                     </div>
-                    <div className="text-dark">{msg.text}</div>
-                  </div>
-                ))
+                  ) : (
+                    <div
+                      key={msg.id}
+                      className="border rounded shadow-sm p-2 mb-3"
+                      style={{ backgroundColor: "#b0f3ffff" }}
+                    >
+                      <div className="text-muted small mb-1">
+                        {new Date(msg.created_at).toLocaleString()}
+                      </div>
+                      <div className="text-dark">{msg.message}</div>
+                    </div>
+                  )
+                )
               ) : (
                 <div className="text-muted">No messages from admin yet.</div>
               )}

@@ -3,6 +3,8 @@ import pool from "../../db.mjs";
 import { decodeToken, tokenGen, tokenGenLogin } from "../utils/jwt.mjs";
 import { verifyToken } from "../utils/jwt.mjs";
 import { sendEmail } from "../utils/email.mjs";
+import { sendSMS } from "../utils/sms.mjs";
+
 import dotenv from "dotenv";
 import crypto from "crypto";
 
@@ -34,7 +36,11 @@ export const registerUser = async (req, res) => {
       return res.status(400).send("Mobile number already exists");
     }
 
-    const hashedOTP = await bcrypt.hash("123456", 10);
+    const otpGenerated = String(
+      Math.floor(100000 + Math.random() * 900000)
+    ).padStart(6, "0");
+
+    const hashedOTP = await bcrypt.hash(otpGenerated, 10);
 
     const now = new Date();
     const currentDateTime = now.toISOString().slice(0, 19).replace("T", " ");
@@ -78,14 +84,18 @@ export const registerUser = async (req, res) => {
         addressID,
       ]
     );
+    const messageText = `Your OTP for Shan Automobile and Hybrid Workshop registration is ${otpGenerated}. Please do not share this OTP with anyone.`;
+    const smsResponse = await sendSMS(mobile, messageText);
+    if (!smsResponse.success) {
+      return res.status(500).send({ message: "Failed to send OTP via SMS" });
+    }
 
-    const otp = String(Math.floor(100000 + Math.random() * 900000)).padStart(
-      6,
-      "0"
-    );
-
-    sendVerificationEmail(email);
-
+    const emailResponse = await sendVerificationEmail(email);
+    if (!emailResponse.success) {
+      return res
+        .status(500)
+        .send({ message: "Failed to send verification email" });
+    }
     res.status(201).send({ message: "Success" });
   } catch (error) {
     console.log(error);
@@ -96,6 +106,9 @@ export const registerUser = async (req, res) => {
 export const loginUser = async (req, res) => {
   try {
     const { email, password, rememberMe } = req.body;
+
+    const checkMobileorEmail = email.includes("@") ? "email" : "mobile_no";
+
     const checkUser = await pool.query(
       "SELECT * FROM users INNER JOIN mobile_number ON users.mobile_id=mobile_number.mobile_id WHERE email = $1 AND status = $2",
       [email, "1"]
@@ -241,72 +254,96 @@ const sendVerificationEmail = async (email) => {
     "Shan Automobile and Hybrid Workshop, Email Verification",
     `
     <!DOCTYPE html>
-    <html>
-    <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Email Verification</title>
-      <style>
-        body {
-          font-family: 'Arial', sans-serif;
-          line-height: 1.6;
-          color:rgb(33, 33, 33);
-          max-width: 600px;
-          margin: 0 auto;
-          padding: 20px;
-        }
-        h1 {
-          color:rgb(133, 0, 0);
-          margin-bottom: 20px;
-          font-size: 24px;
-          text-align: center;
-        }
-        p {
-          margin-bottom: 25px;
-          font-size: 16px;
-        }
-        .btn {
-          background-color:rgb(140, 0, 0);
-          text-decoration: none; 
-          color: white;
-          padding: 12px 24px;
-          text-decoration: none;
-          border-radius: 4px;
-          font-weight: bold;
-          display: inline-block;
-        }
-        .btn:hover {
-          background-color:rgb(118, 0, 0);
-        }
-        .container {
-          background-color: #f9f9f9;
-          border: 1px solid #dddddd;
-          border-radius: 5px;
-          padding: 30px;
-        }
-        .footer {
-          margin-top: 30px;
-          font-size: 12px;
-          color: #777777;
-          text-align: center;
-        }
-      </style>
-    </head>
-    <body>
-      <div class="container">
-        <h1>Shan Automobile and Hybrid Workshop Online. Email Verification</h1>
-        <p>Thank you for registering with Shan Automobile and Hybrid Workshop. To complete your registration and activate your account, please verify your email address by clicking the button below:</p>
-        <div style="text-align: center;">
-          <a href="${process.env.CLIENT_URL}/signup/emailactivation?token=${token}" class="btn">Click here to verify</a>
+      <html>
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Email Verification</title>
+        <style>
+          body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+            color: #333333;
+          }
+          .header {
+            background-color: rgb(140, 0, 0);
+            padding: 30px 20px;
+            text-align: center;
+          }
+          .header h1 {
+            color: #ffffff;
+            margin: 0;
+            font-size: 24px;
+          }
+          .content {
+            background-color: #ffffff;
+            padding: 40px 20px;
+            max-width: 100%;
+          }
+          .content p {
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 25px;
+            color: #555555;
+          }
+          .btn {
+            background-color: rgb(140, 0, 0);
+            color: #ffffff !important;
+            padding: 14px 28px;
+            text-decoration: none !important;
+            border-radius: 5px;
+            font-weight: bold;
+            font-size: 16px;
+            display: inline-block;
+            margin-top: 15px;
+          }
+          .btn:hover {
+            background-color: rgb(118, 0, 0);
+          }
+          .link {
+            font-size: 14px;
+            word-break: break-all;
+            color: rgb(140, 0, 0);
+          }
+          .footer {
+            background-color: #f4f4f4;
+            padding: 20px;
+            text-align: center;
+            font-size: 12px;
+            color: #777777;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h1>Email Verification</h1>
         </div>
-        <p style="margin-top: 25px;">If the button doesn't work, you can also copy and paste the following link into your browser:</p>
-        <p style="font-size: 14px;">${process.env.CLIENT_URL}/signup/emailactivation?token=${token}</p>
-      </div>
-      <div class="footer">
-        <p>This email was sent by Shan Automobile and Hybrid Workshop. If you didn't create an account, you can safely ignore this email.</p>
-      </div>
-    </body>
-    </html>
+
+        <div class="content">
+          <p>Dear Customer,</p>
+          <p>
+            Thank you for registering with <strong>Shan Automobile and Hybrid Workshop</strong>.  
+            To complete your registration and activate your account, please verify your email address by clicking the button below:
+          </p>
+
+          <p style="text-align: center;">
+            <a href="${process.env.CLIENT_URL}/signup/emailactivation?token=${token}" class="btn">Verify My Email</a>
+          </p>
+
+          <p>If the button above doesn't work, copy and paste this link into your browser:</p>
+          <p class="link">${process.env.CLIENT_URL}/signup/emailactivation?token=${token}</p>
+        </div>
+
+        <div class="footer">
+          <p>
+            This email was sent by Shan Automobile and Hybrid Workshop.  
+            If you didn’t create an account, you can safely ignore this email.
+          </p>
+        </div>
+      </body>
+      </html>
     `
   );
 };
@@ -322,15 +359,36 @@ export const otpVerify = async (req, res) => {
     if (checkMobile.rows.length === 0) {
       return res.status(400).send("Invalid Mobile Number");
     }
+
     const mobileData = checkMobile.rows[0];
     const otpMatch = await bcrypt.compare(otp, mobileData.otp);
+
     if (!otpMatch) {
       return res.status(400).send({ message: "Invalid OTP" });
     }
+    if (mobileData.isotpverified === "1") {
+      return res.status(200).send({ message: "OTP already verified" });
+    }
+
+    if (mobileData.otp_datetime) {
+      const otpDateTime = new Date(mobileData.otp_datetime);
+      const currentDateTime = new Date();
+      const timeDifference = currentDateTime - otpDateTime;
+      const otpValidityDuration = 5 * 60 * 1000; // 5 minutes in milliseconds
+      if (timeDifference > otpValidityDuration) {
+        return res
+          .status(400)
+          .send({
+            message: "OTP expired. Generate a new OTP and verify again.",
+          });
+      }
+    }
+
     const updateMobile = await pool.query(
       "UPDATE mobile_number SET isotpverified = $1 WHERE mobile_id=$2 AND mobile_no = $3",
       ["1", mobileData.mobile_id, mobile]
     );
+
     res.status(200).send({ message: "Success" });
   } catch (error) {
     console.log(error);
@@ -958,13 +1016,14 @@ export const createReservation = async (req, res) => {
 
     // Count overlapping reservations for the same service type in the requested date/time range
     const existingReservations = await pool.query(
-      `SELECT COUNT(*) AS count FROM reservations WHERE service_type_id = $1
-      AND reservation_status = $2
-      AND (
-      (reserve_date + start_time::interval) < TIMESTAMP $3 
-      AND
-      (end_date + end_time::interval) > TIMESTAMP $4      
-      )`,
+      `SELECT COUNT(*) AS count FROM reservations 
+        WHERE service_type_id = $1
+        AND reservation_status = $2
+        AND (
+        (reserve_date + start_time::interval) < $3::timestamp
+        AND
+        (end_date + end_time::interval) > $4::timestamp
+        )`,
       [
         serviceType,
         "1",
@@ -982,10 +1041,10 @@ export const createReservation = async (req, res) => {
     }
 
     // Add reservation
-    await pool.query(
+    const reservationInsertResult = await pool.query(
       `INSERT INTO reservations 
         (vehicle_id, service_type_id, reserve_date, end_date, start_time, end_time, notes, reservation_status)
-       VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING reservation_id`,
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING reservation_id`,
       [
         vehicleID,
         serviceType,
@@ -997,12 +1056,162 @@ export const createReservation = async (req, res) => {
         "1",
       ]
     );
+    const reservationID = reservationInsertResult.rows[0].reservation_id;
 
+    await sendReservationCreationEmail(checkUser.rows[0].email, {
+      reservationID: reservationID, // Assuming vehicleID is used as reservation ID
+      vehicleID,
+      serviceType: service_type.service_name,
+      serviceDate,
+      serviceStartTime,
+    });
     return res.status(200).send({ message: "Reservation created" });
   } catch (error) {
     console.error(error);
     return res.status(500).send("Internal Server Error");
   }
+};
+
+const sendReservationCreationEmail = async (email, reservationDetails) => {
+  const {
+    reservationID,
+    vehicleID,
+    serviceType,
+    serviceDate,
+    serviceStartTime,
+  } = reservationDetails;
+  const token = tokenGen({ email });
+  sendEmail(
+    email,
+    "Shan Automobile and Hybrid Workshop, Reservation Confirmation",
+    `
+    <!DOCTYPE html>
+  <html>
+  <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reservation Confirmation</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background-color: #f4f4f4;
+      margin: 0;
+      padding: 0;
+      color: #333333;
+    }
+    .email-wrapper {
+      max-width: 600px;
+      margin: 0 auto;
+      background-color: #ffffff;
+      border-radius: 6px;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+    .header {
+      background-color: rgb(140, 0, 0);
+      padding: 20px;
+      text-align: center;
+    }
+    .header h1 {
+      color: #ffffff;
+      margin: 0;
+      font-size: 22px;
+    }
+    .content {
+      padding: 30px 25px;
+    }
+    .content p {
+      font-size: 15px;
+      margin-bottom: 20px;
+      color: #555555;
+    }
+    .details {
+      background-color: #f9f9f9;
+      padding: 15px 20px;
+      border: 1px solid #dddddd;
+      border-radius: 4px;
+      margin-bottom: 25px;
+    }
+    .details ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .details li {
+      font-size: 15px;
+      padding: 8px 0;
+      border-bottom: 1px solid #eeeeee;
+    }
+    .details li:last-child {
+      border-bottom: none;
+    }
+    .details strong {
+      color: rgb(140, 0, 0);
+    }
+    .btn {
+      background-color: rgb(140, 0, 0);
+      color: #ffffff;
+      padding: 12px 24px;
+      text-decoration: none;
+      border-radius: 4px;
+      font-weight: bold;
+      display: inline-block;
+      font-size: 15px;
+    }
+    .btn:hover {
+      background-color: rgb(118, 0, 0);
+    }
+    .footer {
+      background-color: #f4f4f4;
+      padding: 15px;
+      font-size: 12px;
+      color: #777777;
+      text-align: center;
+    }
+    @media screen and (max-width: 600px) {
+      .content {
+        padding: 20px;
+      }
+    }
+  </style>
+  </head>
+  <body>
+  <div class="email-wrapper">
+    <div class="header">
+      <h1>Reservation Confirmation</h1>
+    </div>
+    <div class="content">
+      <p>Dear Customer,</p>
+      <p>Your reservation has been successfully created with the following details:</p>
+      
+      <div class="details">
+        <ul>
+          <li><strong>Reservation ID:</strong> ${reservationID}</li>
+          <li><strong>Vehicle ID:</strong> ${vehicleID}</li>
+          <li><strong>Service Type:</strong> ${serviceType}</li>
+          <li><strong>Service Date:</strong> ${serviceDate}</li>
+          <li><strong>Service Start Time:</strong> ${serviceStartTime}</li>
+        </ul>
+      </div>
+      <p>Please be there at your reserved time.</p>
+      <p style="text-align: center;">
+        <a href="${process.env.CLIENT_URL}/myaccount/reservations" class="btn">View My Reservation</a>
+      </p>
+
+      <p>If the button above doesn't work, copy and paste this link into your browser:</p>
+      <p style="font-size: 14px; color: rgb(140, 0, 0);">
+        ${process.env.CLIENT_URL}/myaccount/reservations
+      </p>
+    </div>
+    <div class="footer">
+      <p>This email was sent by Shan Automobile and Hybrid Workshop. If you did not make this reservation, please ignore this email.</p>
+    </div>
+    </div>
+    </body>
+    </html>
+
+  `
+  );
 };
 
 export const loadAllUserReservations = async (req, res) => {
@@ -1058,7 +1267,8 @@ export const cancelReservation = async (req, res) => {
   }
 };
 
-// Fetch vehicle data for the user for vehicle info page
+// Fetch vehicle data for the user for vehicle info page with its all service records
+// This function retrieves the vehicle data and service records for a specific vehicle owned by the user
 export const fetchVehicleData = async (req, res) => {
   try {
     const vehicleID = req.query.licensePlate;
@@ -1083,10 +1293,58 @@ export const fetchVehicleData = async (req, res) => {
       [vehicleID, userID]
     );
 
+    // const serviceRecords = await pool.query(
+    //   `SELECT sr.reservation_id, sr.service_description, sr.service_cost, sr.final_amount, st.service_name, r.reserve_date, r.start_time, r.end_date, r.end_time, sr.is_paid
+    //   FROM service_records AS sr
+    //   INNER JOIN reservations AS r ON sr.reservation_id = r.reservation_id
+    //   INNER JOIN service_type AS st ON r.service_type_id = st.service_type_id
+    //   WHERE sr.vehicle_id = $1
+    //   ORDER BY sr.created_datetime DESC`,
+    //   [vehicleID]
+    // );
+
+    const serviceRecords = await pool.query(
+      `SELECT sr.reservation_id, 
+          sr.service_description, 
+          sr.service_cost, 
+          sr.discount,
+          sr.final_amount, 
+          st.service_name, 
+          r.reserve_date, 
+          r.start_time, 
+          r.end_date, 
+          r.end_time, 
+          sr.is_paid,
+          COALESCE(
+            json_agg(
+              json_build_object(
+                'id', pi.id,
+                'description', pi.description,
+                'price', pi.price
+              )
+            ) FILTER (WHERE pi.id IS NOT NULL), 
+            '[]'
+          ) AS payment_items
+            FROM service_records AS sr
+            INNER JOIN reservations AS r 
+            ON sr.reservation_id = r.reservation_id
+            INNER JOIN service_type AS st 
+            ON r.service_type_id = st.service_type_id
+            LEFT JOIN payment_item AS pi 
+            ON sr.reservation_id = pi.reservation_id
+            WHERE sr.vehicle_id = $1
+            GROUP BY sr.reservation_id, sr.service_description, sr.service_cost, sr.discount, sr.final_amount,
+            st.service_name, r.reserve_date, r.start_time, r.end_date, r.end_time, sr.is_paid`,
+      [vehicleID]
+    );
+
     if (vehicleData.rows.length === 0) {
       return res.status(400).send({ message: "Vehicle not found" });
     }
-    return res.status(200).send(vehicleData.rows[0]);
+    return res.status(200).send({
+      vehicleData: vehicleData.rows[0],
+      serviceRecords: serviceRecords.rows,
+    });
   } catch (error) {
     console.log(error);
     res.status(500).send("Internal Server Error");
@@ -1102,7 +1360,7 @@ export const loadServiceRecordPayment = async (req, res) => {
       return res.status(401).send({ message: "Unauthorized" });
     }
     const paymentData = await pool.query(
-      `SELECT r.reservation_id, r.vehicle_id, r.reserve_date, r.start_time,r.end_date, r.end_time, st,service_name,sr.final_amount
+      `SELECT r.reservation_id, r.vehicle_id, r.reserve_date, r.start_time, r.end_date, r.end_time, st.service_name, sr.final_amount
       FROM reservations AS r
       INNER JOIN service_records AS sr ON sr.reservation_id = r.reservation_id
       INNER JOIN service_type AS st ON r.service_type_id = st.service_type_id
@@ -1194,12 +1452,21 @@ export const fetchReservationData = async (req, res) => {
       WHERE r.reservation_id = $1 AND v.user_id = $2`,
       [resid, userID]
     );
+
+    const reservationMessages = await pool.query(
+      `SELECT * FROM reservation_messages WHERE reservation_id = $1 ORDER BY created_at DESC`,
+      [resid]
+    );
+
     if (reservationData.rows.length === 0) {
       return res
         .status(404)
         .send({ message: "Reservation not found for this user" });
     }
-    return res.status(200).send(reservationData.rows[0]);
+    return res.status(200).send({
+      reservationData: reservationData.rows[0],
+      messages: reservationMessages.rows,
+    });
   } catch (error) {
     console.log(error);
     res.status(500).send("Internal Server Error");
@@ -1232,4 +1499,31 @@ export const generatePayHash = async (req, res) => {
     .toUpperCase();
 
   res.json({ hash: finalHash });
+};
+
+export const getReservationMessages = async (req, res) => {
+  try {
+    const { resid } = req.query;
+    const { token } = req.cookies;
+    const userID = getUserIDFromToken(token, res);
+    if (!userID) {
+      return res.status(401).send({ message: "Unauthorized" });
+    }
+    if (!resid) {
+      return res.status(400).send({ message: "Reservation ID is required" });
+    }
+    const messages = await pool.query(
+      `SELECT * FROM reservation_messages WHERE reservation_id = $1 ORDER BY created_at DESC`,
+      [resid]
+    );
+    if (messages.rows.length === 0) {
+      return res
+        .status(404)
+        .send({ message: "No messages found for this reservation" });
+    }
+    return res.status(200).send(messages.rows);
+  } catch (error) {
+    console.log(error);
+    res.status(500).send("Internal Server Error");
+  }
 };

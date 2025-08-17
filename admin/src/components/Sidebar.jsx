@@ -1,6 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
 import images from "./../assets/assets";
 import { useState } from "react";
+import { BASE_URL } from "../config.js";
 
 const Sidebar = () => {
   const location = useLocation();
@@ -12,7 +13,7 @@ const Sidebar = () => {
     e.preventDefault();
     try {
       const response = await fetch(
-        "http://localhost:4000/api/v1/admin/logout",
+        `${BASE_URL}/logout`,
         {
           method: "GET",
           headers: {

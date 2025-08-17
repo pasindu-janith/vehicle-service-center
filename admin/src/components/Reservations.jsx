@@ -11,6 +11,8 @@ import "react-datetime-picker/dist/DateTimePicker.css";
 import "react-calendar/dist/Calendar.css";
 import "react-clock/dist/Clock.css"; // Required for the clock UI
 import "./styles/datetime.css";
+import toastr from "toastr";
+import { BASE_URL } from "../config.js";
 
 const Reservations = () => {
   const [startDateTimeFilter, setStartDateTimeFilter] = useState(new Date());
@@ -33,11 +35,14 @@ const Reservations = () => {
   const [serviceCost, setServiceCost] = useState("");
   const [serviceDiscount, setServiceDiscount] = useState("0.00");
   const [finalAmount, setFinalAmount] = useState("");
+  const [serviceRecordsModal, setServiceRecordsModal] = useState(false);
+  const [serviceRecords, setServiceRecords] = useState([]);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
         const response = await fetch(
-          "http://localhost:4000/api/v1/admin/loadAllReservations"
+          `${BASE_URL}/loadAllReservations`
         );
         if (response.ok) {
           const jsonData = await response.json();
@@ -77,7 +82,7 @@ const Reservations = () => {
     const loadServiceTypes = async () => {
       try {
         const response = await fetch(
-          "http://localhost:4000/api/v1/user/loadServiceTypes",
+          `${BASE_URL}/loadServiceTypes`,
           {
             method: "GET",
           }
@@ -99,7 +104,9 @@ const Reservations = () => {
     // setLoading(true);
     try {
       const response = await fetch(
-        `http://localhost:4000/api/v1/admin/filterReservationData?serviceType=${serviceType}&vehicleNumber=${vehicleNumber}&startDateTime=${startDateTimeFilter.toLocaleString()}&endDateTime=${endDateTimeFilter.toLocaleString()}`,
+        `${BASE_URL}/filterReservationData?serviceType=${serviceType}&
+        vehicleNumber=${vehicleNumber}&startDateTime=${startDateTimeFilter.toLocaleString()}&
+        endDateTime=${endDateTimeFilter.toLocaleString()}`,
         {
           method: "GET",
         }
@@ -107,10 +114,31 @@ const Reservations = () => {
       if (response.ok) {
         const data = await response.json();
         setTableData(data);
-        // setLoading(false);
       }
     } catch (error) {
       console.error("Error loading filtered data:", error);
+    }
+  };
+
+  const loadServiceRecords = async () => {
+    if (!selectedReservation) return;
+    try {
+      const response = await fetch(
+        `${BASE_URL}/getServiceRecords?reservationId=${selectedReservation.reservation_id}`,
+        {
+          method: "GET",
+        }
+      );
+      if (response.ok) {
+        const data = await response.json();
+        setServiceRecords(data);
+        setServiceRecordsModal(true);
+      } else {
+        const errorData = await response.json();
+        console.error("Error fetching service records:", errorData);
+      }
+    } catch (error) {
+      console.error("Error fetching service records:", error);
     }
   };
 
@@ -120,7 +148,7 @@ const Reservations = () => {
     const endTime = endDateTime ? endDateTime.toISOString() : null;
     try {
       const response = await fetch(
-        `http://localhost:4000/api/v1/admin/startReservation?reservationId=${
+        `${BASE_URL}/startReservation?reservationId=${
           selectedReservation.reservation_id
         }&startDateTime=${startTime.toLocaleString()}&endDateTime=${endTime.toLocaleString()}`,
         {
@@ -155,7 +183,7 @@ const Reservations = () => {
     if (!selectedReservation) return;
     try {
       const response = await fetch(
-        `http://localhost:4000/api/v1/admin/endReservation`,
+        `${BASE_URL}/endReservation`,
         {
           method: "POST",
           headers: {
@@ -199,7 +227,7 @@ const Reservations = () => {
     const endTime = endDateTime ? endDateTime.toISOString() : null;
     try {
       const response = await fetch(
-        `http://localhost:4000/api/v1/admin/editReservation?reservationId=${
+        `${BASE_URL}/editReservation?reservationId=${
           selectedReservation.reservation_id
         }&startDateTime=${startTime.toLocaleString()}&endDateTime=${endTime.toLocaleString()}`,
         {
@@ -234,12 +262,17 @@ const Reservations = () => {
     if (!selectedReservation) return;
     try {
       const response = await fetch(
-        `http://localhost:4000/api/v1/admin/cancelReservation?reservationId=${selectedReservation.reservation_id}`,
+        `${BASE_URL}/cancelReservation`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
+          body: JSON.stringify({
+            cancelReason: document.getElementById("cancelReason").value || "",
+            reservationID: selectedReservation.reservation_id,
+            vehicleNumber: selectedReservation.vehicle_id,
+          }),
         }
       );
       if (response.ok) {
@@ -457,6 +490,7 @@ const Reservations = () => {
                                   className="btn btn-primary btn-sm"
                                   onClick={() => {
                                     setSelectedReservation(row);
+                                    loadServiceRecords();
                                   }}
                                 >
                                   Info
@@ -851,6 +885,80 @@ const Reservations = () => {
           </div>
         </div>
       )}
+
+      {cancelReservationConfirmation && selectedReservation && (
+        <div
+          className="modal fade show"
+          id="cancelReservationConfirmation"
+          tabIndex="-1"
+          role="dialog"
+          aria-labelledby="cancelReservationConfirmationLabel"
+          aria-hidden="true"
+          style={{ display: "block" }} // Only needed if you want to show the modal immediately
+        >
+          <div className="modal-dialog modal-dialog-centered" role="document">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5
+                  className="modal-title"
+                  id="cancelReservationConfirmationLabel"
+                >
+                  Cancel Reservation
+                </h5>
+                <button
+                  type="button"
+                  className="close"
+                  data-dismiss="modal"
+                  aria-label="Close"
+                  onClick={() => {
+                    setCancelReservationConfirmation(false);
+                    setSelectedReservation(null);
+                  }}
+                >
+                  <span aria-hidden="true">&times;</span>
+                </button>
+              </div>
+              <div className="modal-body">
+                Are you sure you want to cancel this reservation?
+                <label htmlFor="cancelReason">Cancellation message</label>
+                <input
+                  type="text"
+                  className="form-control mt-2"
+                  placeholder="Enter cancellation reason (optional)"
+                  id="cancelReason"
+                  required
+                />
+              </div>
+              <div className="modal-footer">
+                <button
+                  type="button"
+                  className="btn btn-danger"
+                  onClick={() => {
+                    cancelReservation();
+                    setCancelReservationConfirmation(false);
+                    setSelectedReservation(null);
+                  }}
+                >
+                  Yes, Cancel
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  data-dismiss="modal"
+                  onClick={() => {
+                    setCancelReservationConfirmation(false);
+                  }}
+                >
+                  No, Go Back
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      
+      
     </section>
   );
 };

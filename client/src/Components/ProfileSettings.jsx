@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { data } from "react-router-dom";
 import toastr from "toastr";
 import "toastr/build/toastr.min.css";
+import BASE_URL from "../config.js";
 
 const ProfileSettings = () => {
   const [formProfileData, setProfileFormData] = useState({
@@ -14,6 +15,8 @@ const ProfileSettings = () => {
     addressLane: "",
     addressCity: "",
   });
+  const [isResetPasswordLoading, setIsResetPasswordLoading] = useState(false);
+  const [isProfileLoading, setIsProfileLoading] = useState(false);
 
   const handleChange = (e) => {
     const { id, value } = e.target;
@@ -27,7 +30,7 @@ const ProfileSettings = () => {
     const fetchUserData = async () => {
       try {
         const response = await fetch(
-          "http://localhost:4000/api/v1/user/getUserData",
+          `${BASE_URL}/getUserData`,
           {
             method: "GET",
             credentials: "include",
@@ -58,9 +61,10 @@ const ProfileSettings = () => {
 
   const handleProfileSubmit = async (e) => {
     e.preventDefault();
+    setIsProfileLoading(true);
     try {
       const response = await fetch(
-        "http://localhost:4000/api/v1/user/updateUserProfileData",
+        `${BASE_URL}/updateUserProfileData`,
         {
           method: "POST",
           headers: {
@@ -78,11 +82,14 @@ const ProfileSettings = () => {
       }
     } catch (error) {
       console.error("Error:", error);
+    } finally {
+      setIsProfileLoading(false);
     }
   };
 
   const handleAccountSubmit = async (e) => {
     e.preventDefault();
+    setIsResetPasswordLoading(true);
     const oldPassword = document.getElementById("currentPassword").value;
     const newPassword = document.getElementById("newPassword").value;
     const confirmPassword = document.getElementById("confirmPassword").value;
@@ -94,7 +101,7 @@ const ProfileSettings = () => {
 
     try {
       const response = await fetch(
-        "http://localhost:4000/api/v1/user/resetUserPassword",
+        `${BASE_URL}/resetUserPassword`,
         {
           method: "POST",
           headers: {
@@ -109,21 +116,25 @@ const ProfileSettings = () => {
       );
       if (response.ok) {
         toastr.success("Password updated successfully!");
+        document.getElementById("currentPassword").value = "";
+        document.getElementById("newPassword").value = "";
+        document.getElementById("confirmPassword").value = "";
       } else {
         console.error("Error updating password:", response.statusText);
         toastr.error(data.message || "Failed to update password.");
       }
     } catch (error) {
       console.error("Error:", error);
+    } finally {
+      setIsResetPasswordLoading(false);
     }
-  }
+  };
 
   return (
     <div className="container">
-      <div className="card mt-5 shadow-sm">
-        <div className="card-header">
-          <h4>User Profile Data</h4>
-        </div>
+      <h2 className="text-darkblue mb-2 mt-5 fw-bold">User Profile Data</h2>
+
+      <div className="card shadow-sm">
         <div className="card-body">
           <form onSubmit={handleProfileSubmit}>
             <div className="row g-3">
@@ -242,17 +253,22 @@ const ProfileSettings = () => {
                 />
               </div>
             </div>
-            <button type="submit" className="btn btn-danger mt-3">Update Profile</button>
+            <button
+              type="submit"
+              className="btn btn-primary mt-3"
+              disabled={isProfileLoading}
+            >
+              Update Profile
+            </button>
           </form>
         </div>
       </div>
 
-      <div className="card mt-5 shadow-sm">
-        <div className="card-header">
-          <h4>Acccount Settings</h4>
-        </div>
+      <h2 className="text-darkblue mt-4 mb-2 fw-bold">Account Settings</h2>
+
+      <div className="card shadow-sm">
         <div className="card-body">
-          <p>Reset your account password</p>
+          <p className="fw-bold">Reset your account password</p>
           <form onSubmit={handleAccountSubmit}>
             <div className="mb-3">
               <label htmlFor="currentPassword" className="form-label">
@@ -290,7 +306,11 @@ const ProfileSettings = () => {
                 required
               />
             </div>
-            <button type="submit" className="btn btn-danger mt-1">
+            <button
+              type="submit"
+              className="btn btn-primary mt-1"
+              disabled={isResetPasswordLoading}
+            >
               Reset Password
             </button>
           </form>

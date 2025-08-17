@@ -6,18 +6,20 @@ import "datatables.net-buttons-dt";
 import "datatables.net-dt/css/dataTables.dataTables.css";
 import "datatables.net-responsive-dt/css/responsive.dataTables.css";
 import "datatables.net-buttons-dt/css/buttons.dataTables.css";
+import { BASE_URL } from "../config.js";
 
 const ServicesCompleted = () => {
   const [tableData, setTableData] = useState([]);
   const [loading, setLoading] = useState(true);
   const tableRef = useRef(null);
   const dtInstance = useRef(null); // To store the DataTable instance
-
+  const [serviceRecordsModal, setServiceRecordsModal] = useState(false);
+  const [selectedReservation, setSelectedReservation] = useState(null);
   useEffect(() => {
     const fetchData = async () => {
       try {
         const response = await fetch(
-          "http://localhost:4000/api/v1/admin/loadCompletedServices"
+          `${BASE_URL}/loadCompletedServices`
           , {
             method: "GET",
             headers: {
@@ -113,6 +115,7 @@ const ServicesCompleted = () => {
           </div>
         </div>
       </div>
+
     </section>
   );
 };

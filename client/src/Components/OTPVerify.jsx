@@ -5,12 +5,13 @@ import "./styles/forms.css";
 import "toastr/build/toastr.min.css";
 import toastr from "toastr";
 import images from "../assets/assets";
+import BASE_URL from "../config.js";
 
 const OTPVerify = () => {
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [timer, setTimer] = useState(60);
   const [isResending, setIsResending] = useState(false);
-  
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   if (!location.state) {
@@ -30,6 +31,33 @@ const OTPVerify = () => {
       return () => clearInterval(countdown);
     }
   }, [timer]);
+
+  // useEffect(() => {
+  //   const checkOtpVerified = async () => {
+  //     try {
+  //       const response = await fetch(`${BASE_URL}/checkotp`, {
+  //         method: "POST",
+  //         headers: {
+  //           "Content-Type": "application/json",
+  //         },
+  //         body: JSON.stringify({ mobile }),
+  //       });
+  //       const data = await response.json();
+  //       if (response.ok && data.message === "OTP already verified") {
+  //         toastr.success("Mobile number already verified!");
+  //         navigate("/signup/email-verify", {
+  //           state: { email },
+  //         });
+  //       } else if (!response.ok) {
+  //         toastr.error(data.message || "Failed to check OTP verification");
+  //       }
+  //     } catch (error) {
+  //       console.error("Error checking OTP verification:", error);
+  //       toastr.error("Something went wrong. Please try again.");
+  //     }
+  //   };
+  //   checkOtpVerified();
+  // }, [mobile, email, navigate]);
 
   const handleChange = (index, e) => {
     const value = e.target.value;
@@ -78,7 +106,11 @@ const OTPVerify = () => {
   };
 
   // Handle OTP verification
-  const verifyOtp = async () => {
+  const verifyOtp = async (e) => {
+    e.preventDefault();
+    
+    if (isSubmitting) return; // Prevent multiple submissions
+    setIsSubmitting(true);
     const otpValue = otp.join("");
 
     // Validate OTP
@@ -89,7 +121,7 @@ const OTPVerify = () => {
 
     try {
       const response = await fetch(
-        "http://localhost:4000/api/v1/user/otpverify",
+        `${BASE_URL}/otpverify`,
         {
           method: "POST",
           headers: {
@@ -123,6 +155,16 @@ const OTPVerify = () => {
     if (timer > 0) return;
     setIsResending(true);
     try {
+      const response = await fetch(
+        `${BASE_URL}/resendotp`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ mobile }),
+        }
+      );
       //resend otp function
       const data = await response.json();
 
@@ -174,7 +216,11 @@ const OTPVerify = () => {
           </div>
 
           <div className="d-grid gap-2">
-            <button className="btn btn-danger" onClick={verifyOtp}>
+            <button
+              className="btn btn-danger"
+              onClick={verifyOtp}
+              disabled={isSubmitting}
+            >
               Verify OTP
             </button>
           </div>

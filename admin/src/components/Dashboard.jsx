@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import Chart from "chart.js/auto";
+import { BASE_URL } from "../config.js";
 
 const Dashboard = () => {
   const [pendingReservationsToday, setPendingReservationsToday] = useState(0);
@@ -57,6 +58,32 @@ const Dashboard = () => {
 
     const canvas2 = document.getElementById("donutChart");
     const donutChartCanvas = canvas2.getContext("2d");
+
+    // Donut chart data
+    try
+    {
+      const loadPendingServicesCounts = async () => {
+        const response = await fetch(
+          `${BASE_URL}/loadPendingServicesCounts`
+        );
+        if (response.ok) {
+          const jsonData = await response.json();
+          if (jsonData) {
+            return jsonData;
+          } else {
+            console.error("No data received for pending services");
+            return null;
+          }
+        } else {
+          console.error("Failed to fetch pending services counts");
+          return null;
+        }
+      }
+    }
+    catch (error) {
+      console.error("Error initializing donut chart:", error);
+      return;
+    }
 
     const donutData = {
       labels: [
@@ -136,7 +163,7 @@ const Dashboard = () => {
     const fetchData = async () => {
       try {
         const response = await fetch(
-          "http://localhost:4000/api/v1/admin/loadDashboardCounts"
+          `${BASE_URL}/loadDashboardCounts`
         );
         if (response.ok) {
           const jsonData = await response.json();
@@ -307,7 +334,7 @@ const Dashboard = () => {
               {/* DONUT CHART */}
               <div className="card card-primary">
                 <div className="card-header">
-                  <h3 className="card-title">Donut Chart</h3>
+                  <h3 className="card-title">Pending Services</h3>
                   <div className="card-tools">
                     <button
                       type="button"

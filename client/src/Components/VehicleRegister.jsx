@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import toastr from "toastr";
 import "toastr/build/toastr.min.css";
+import "./styles/Dashboard.css";
+import BASE_URL from "../config.js";
 
 const VehicleRegister = () => {
   const [preview, setPreview] = useState(null);
@@ -21,21 +23,18 @@ const VehicleRegister = () => {
     fuelType: "",
     vehicleImage: null,
   });
-
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
     const loadTypes = async () => {
       try {
-        const response = await fetch(
-          "http://localhost:4000/api/v1/user/loadVehicleTypes",
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-            },
-          }
-        );
+        const response = await fetch(`${BASE_URL}/loadVehicleTypes`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
         if (response.ok) {
           const data = await response.json();
           setVehicleTypes(data);
@@ -51,15 +50,12 @@ const VehicleRegister = () => {
 
     const loadBrands = async () => {
       try {
-        const response = await fetch(
-          "http://localhost:4000/api/v1/user/loadVehicleBrands",
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-            },
-          }
-        );
+        const response = await fetch(`${BASE_URL}/loadVehicleBrands`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
         if (response.ok) {
           const data = await response.json();
           setVehicleBrands(data);
@@ -75,15 +71,12 @@ const VehicleRegister = () => {
 
     const loadFuelTypes = async () => {
       try {
-        const response = await fetch(
-          "http://localhost:4000/api/v1/user/loadFuelTypes",
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-            },
-          }
-        );
+        const response = await fetch(`${BASE_URL}/loadFuelTypes`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
         if (response.ok) {
           const data = await response.json();
           setFuelTypes(data);
@@ -98,15 +91,12 @@ const VehicleRegister = () => {
 
     const loadTransmissionTypes = async () => {
       try {
-        const response = await fetch(
-          "http://localhost:4000/api/v1/user/loadTransmissionTypes",
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-            },
-          }
-        );
+        const response = await fetch(`${BASE_URL}/loadTransmissionTypes`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
         if (response.ok) {
           const data = await response.json();
           setTransmissionTypes(data);
@@ -128,13 +118,10 @@ const VehicleRegister = () => {
   useEffect(() => {
     const checkProfileStatus = async () => {
       try {
-        const response = await fetch(
-          "http://localhost:4000/api/v1/user/profileUpdated",
-          {
-            method: "GET",
-            credentials: "include", // Include cookies in the request
-          }
-        );
+        const response = await fetch(`${BASE_URL}/profileUpdated`, {
+          method: "GET",
+          credentials: "include", // Include cookies in the request
+        });
         if (response.ok) {
           setProfileUpdated(true);
         } else {
@@ -158,7 +145,7 @@ const VehicleRegister = () => {
 
   const handleSelectChange = (e) => {
     const { id, value } = e.target;
-    
+
     setFormData((prev) => ({
       ...prev,
       [id]: value,
@@ -181,7 +168,8 @@ const VehicleRegister = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+    if (isSubmitting) return; // Prevent multiple submissions
+    setIsSubmitting(true);
     // Prepare data for sending (e.g., to backend)
     const submissionData = new FormData();
     Object.keys(formData).forEach((key) => {
@@ -191,14 +179,11 @@ const VehicleRegister = () => {
     // Just for demo: show values in console
     console.log("Form submitted:");
     try {
-      const response = await fetch(
-        "http://localhost:4000/api/v1/user/register-vehicle",
-        {
-          method: "POST",
-          body: submissionData,
-          credentials: "include",
-        }
-      );
+      const response = await fetch(`${BASE_URL}/register-vehicle`, {
+        method: "POST",
+        body: submissionData,
+        credentials: "include",
+      });
 
       if (response.ok) {
         const result = await response.json();
@@ -220,7 +205,7 @@ const VehicleRegister = () => {
   return (
     <div className="container pt-3">
       <div>
-        <h2 className="mb-4">Vehicle Information Form</h2>
+        <h2 className="mb-4 text-darkblue">Vehicle Information Form</h2>
 
         {!profileUpdated && (
           <div className="alert alert-danger" role="alert">
@@ -411,7 +396,7 @@ const VehicleRegister = () => {
               <button
                 type="submit"
                 className="btn btn-primary me-2"
-                disabled={!profileUpdated}
+                disabled={!profileUpdated || isSubmitting}
               >
                 Submit
               </button>

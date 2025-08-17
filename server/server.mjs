@@ -8,6 +8,7 @@ import cookieParser from "cookie-parser";
 import path from "path";
 import { fileURLToPath } from "url";
 const app = express();
+dotenv.config();
 
 const PORT = process.env.PORT || 5000;
 
@@ -28,7 +29,7 @@ app.use(
 
 app.use(express.json()); // Parse JSON bodies
 app.use(express.urlencoded({ extended: true })); // Parse URL-encoded form data
-app.use(cookieParser()); 
+app.use(cookieParser());
 
 // Load environment variables
 const uploadDir = "./uploads/";
@@ -42,9 +43,8 @@ if (!fs.existsSync(uploadDir)) {
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 app.use("/api/v1/user/", userRouter);
 app.use("/api/v1/admin/", adminRouter);
-app.listen(4000, () => console.log("Server is running on port 4000"));
+app.listen(PORT, () => console.log("Server is running on port " + PORT));

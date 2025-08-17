@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { CiCircleInfo } from "react-icons/ci";
 import "./styles/Dashboard.css";
+import BASE_URL from "../config.js";
 
 const Reservations = () => {
   const [reservations, setReservations] = useState([]);
@@ -14,7 +15,7 @@ const Reservations = () => {
     const loadReservations = async () => {
       try {
         const response = await fetch(
-          "http://localhost:4000/api/v1/user/loadAllUserReservations",
+          `${BASE_URL}/loadAllUserReservations`,
           {
             method: "GET",
             credentials: "include",
@@ -24,6 +25,7 @@ const Reservations = () => {
           const data = await response.json();
           if (data && data.length > 0) {
             setReservations(data);
+            console.log("Reservations loaded successfully:", data);
             setIsLoading(false);
           } else {
             setIsLoading(false);
@@ -39,7 +41,7 @@ const Reservations = () => {
   const deleteReservation = async () => {
     try {
       const response = await fetch(
-        `http://localhost:4000/api/v1/user/cancelReservation?rid=${selectedReservation.reservation_id}`,
+        `${BASE_URL}/cancelReservation?rid=${selectedReservation.reservation_id}`,
         {
           method: "PUT",
           headers: {
@@ -78,7 +80,7 @@ const Reservations = () => {
             </Link>
           </div>
           <div className="table-responsive">
-            <table className="table table-striped">
+            <table className="table table-striped table-bordered">
               <thead>
                 <tr>
                   <th>Res ID</th>
@@ -93,7 +95,7 @@ const Reservations = () => {
               <tbody>
                 {isLoading ? (
                   <tr>
-                    <td colSpan="6" className="text-center">
+                    <td colSpan="7" className="text-center">
                       <div
                         className="spinner-border text-primary mt-4"
                         role="status"
@@ -170,7 +172,7 @@ const Reservations = () => {
                             <button
                               className="btn btn-sm btn-success"
                               onClick={() => {
-                                window.location.href = `/proceed-payment/${reservation.reservation_id}`;
+                                window.location.href = `/myaccount/proceed-payment?resid=${reservation.reservation_id}`;
                               }}
                             >
                               Payment
@@ -180,14 +182,14 @@ const Reservations = () => {
                           ""
                         )}
                         <button
-                          className="btn p-0 btn-outline-primary border-0 no-hover-bg bg-transparent ms-2 text-primary"
+                          className="btn btn-sm btn-info ms-1 text-white"
                           onClick={() =>
                             navigate(
                               `/myaccount/reservation-info/${reservation.reservation_id}`
                             )
                           }
                         >
-                          <CiCircleInfo size={25}></CiCircleInfo>info
+                          <CiCircleInfo size={20} strokeWidth={1}></CiCircleInfo>
                         </button>
                       </td>
                     </tr>

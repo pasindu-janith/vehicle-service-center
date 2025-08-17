@@ -50,7 +50,6 @@ const SignUp = () => {
               <Route path="/otpverify" element={<OTPVerify />} />
               <Route path="/email-verify" element={<EmailVerify />} />
               <Route path="/emailactivation" element={<EmailVerified />} />
-
             </Routes>
           </div>
         </div>

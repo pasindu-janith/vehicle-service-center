@@ -7,12 +7,17 @@ import "datatables.net-dt/css/dataTables.dataTables.css";
 import "datatables.net-responsive-dt/css/responsive.dataTables.css";
 import "datatables.net-buttons-dt/css/buttons.dataTables.css";
 import images from "../assets/assets";
+import { BASE_IMAGES_URL, BASE_URL } from "../config.js";
+
 const Vehicle = () => {
   const [tableData, setTableData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedVehicle, setSelectedVehicle] = useState(null);
   const [vehicleOwner, setVehicleOwner] = useState(null);
   const [serviceRecords, setServiceRecords] = useState([]);
+  const [selectedRecordModal, setSelectedRecordModal] = useState(false);
+  const [selectedRecord, setSelectedRecord] = useState(false);
+
   const tableRef = useRef(null);
   const dtInstance = useRef(null); // To store the DataTable instance
 
@@ -20,7 +25,7 @@ const Vehicle = () => {
     const fetchData = async () => {
       try {
         const response = await fetch(
-          "http://localhost:4000/api/v1/admin/loadAllVehicles",
+          `${BASE_URL}/loadAllVehicles`,
           {
             method: "GET",
             headers: {
@@ -44,7 +49,7 @@ const Vehicle = () => {
   const loadVehicleData = async (vehicleID) => {
     try {
       const response = await fetch(
-        "http://localhost:4000/api/v1/admin/loadVehicleInfo?vehicleNumber=" +
+        `${BASE_URL}/loadVehicleInfo?vehicleNumber=` +
           vehicleID
       );
       if (response.ok) {
@@ -82,7 +87,7 @@ const Vehicle = () => {
   }, [tableData, loading]); // Re-run only when data is updated
 
   return (
-    <div className="content">
+    <section className="content">
       <div className="container-fluid pt-3">
         <h3>Vehicle</h3>
         <div className="row">
@@ -171,7 +176,7 @@ const Vehicle = () => {
                   <div className="row">
                     <div className="col-md-7 col-12">
                       <img
-                        src={`http://localhost:4000${
+                        src={`${BASE_IMAGES_URL}${
                           selectedVehicle ? selectedVehicle.imgpath : images.car
                         }`}
                         style={{
@@ -349,6 +354,7 @@ const Vehicle = () => {
                       <th>Description</th>
                       <th>Amount</th>
                       <th>Payment</th>
+                      <th></th>
                     </tr>
                   </thead>
                   <tbody>
@@ -371,16 +377,25 @@ const Vehicle = () => {
                             {"  "}
                             {record.end_time.substring(0, 5)}
                           </td>
-                          <td>{record.description}</td>
+                          <td>{record.service_description}</td>
                           <td>{record.final_amount}</td>
                           <td>
                             {record.is_paid ? (
-                              <span className="badge bg-success">
-                                Paid
-                              </span>
+                              <span className="badge bg-success">Paid</span>
                             ) : (
                               <span className="badge bg-danger">Pending</span>
                             )}
+                          </td>
+                          <td>
+                            <button
+                              className="btn btn-info btn-sm"
+                              onClick={() => {
+                                setSelectedRecord(record);
+                                setSelectedRecordModal(true);
+                              }}
+                            >
+                              View
+                            </button>
                           </td>
                         </tr>
                       ))
@@ -398,7 +413,117 @@ const Vehicle = () => {
           </div>
         </div>
       </div>
-    </div>
+      {/* Modal for Service Record Details */}
+      {selectedRecordModal && (
+        <div
+          className="modal fade show"
+          style={{ display: "block" }}
+          tabIndex="-1"
+          role="dialog"
+        >
+          <div
+            className="modal-dialog modal-lg modal-dialog-scrollable"
+            role="document"
+          >
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">Service Record Details</h5>
+                <button
+                  type="button"
+                  className="close"
+                  onClick={() => setSelectedRecordModal(false)}
+                >
+                  <span>&times;</span>
+                </button>
+              </div>
+              <div className="modal-body">
+                <p>
+                  <strong>Reservation ID:</strong>{" "}
+                  {selectedRecord.reservation_id}
+                </p>
+                <p>
+                  <strong>Vehicle:</strong>{" "}
+                  {selectedVehicle.license_plate} {selectedVehicle.vehicle_brand}{" "}
+                  {" "}
+                  {selectedVehicle.model}{" "}{selectedVehicle.vehicle_type}
+                </p>
+                <p>
+                  <strong>Service Name:</strong> {selectedRecord.service_name}
+                </p>
+                <p>
+                  <strong>From:</strong>{" "}
+                  {new Date(selectedRecord.reserve_date).toLocaleDateString(
+                    "en-CA"
+                  )}{" "}
+                  {selectedRecord.start_time?.substring(0, 5)}
+                </p>
+                <p>
+                  <strong>To:</strong>{" "}
+                  {new Date(selectedRecord.end_date).toLocaleDateString(
+                    "en-CA"
+                  )}{" "}
+                  {selectedRecord.end_time?.substring(0, 5)}
+                </p>
+                <p>
+                  <strong>Description:</strong>{" "}
+                  {selectedRecord.service_description}
+                </p>
+                <p>
+                  <strong>Payment Status:</strong>{" "}
+                  {selectedRecord.is_paid ? (
+                    <span className="badge bg-success">Paid</span>
+                  ) : (
+                    <span className="badge bg-danger">Pending</span>
+                  )}
+                </p>
+
+                {selectedRecord.payment_items?.length > 0 && (
+                  <table className="table table-bordered mt-3">
+                    <thead>
+                      <tr>
+                        <th>Service Name</th>
+                        <th>Price</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {selectedRecord.payment_items.map((service) => (
+                        <tr key={service.id}>
+                          <td>{service.description}</td>
+                          <td>{service.price}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+
+                <p>
+                  <strong>Service Cost:</strong>
+                  {" Rs."} {selectedRecord.service_cost}
+                </p>
+
+                <p>
+                  <strong>Discount:</strong> {" Rs."} {selectedRecord.discount}
+                </p>
+
+                <p>
+                  <strong>Net Amount:</strong> {" Rs."}{" "}
+                  {selectedRecord.final_amount}
+                </p>
+              </div>
+              <div className="modal-footer">
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => setSelectedRecordModal(false)}
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </section>
   );
 };
 

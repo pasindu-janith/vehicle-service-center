@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { FaCreditCard } from "react-icons/fa";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { useSearchParams } from "react-router-dom";
+import BASE_URL from "../config.js";
 
 const MERCHANT_ID = "1230724"; // Replace with your real merchant ID
 
@@ -11,7 +12,7 @@ const PaymentProceed = () => {
   const [userData, setUserData] = useState(null);
   const [reservationData, setReservationData] = useState(null);
   const [paymentItems, setPaymentItems] = useState(null);
-
+  const [isLoading, setIsLoading] = useState(true);
   useEffect(() => {
     // Register your callbacks
     window.payhere.onCompleted = function (orderId) {
@@ -37,7 +38,7 @@ const PaymentProceed = () => {
       }
       try {
         const response = await fetch(
-          `http://localhost:4000/api/v1/user/loadPaymentPageData?resid=${resid}`,
+          `${BASE_URL}/loadPaymentPageData?resid=${resid}`,
           {
             method: "GET",
             headers: {
@@ -56,6 +57,8 @@ const PaymentProceed = () => {
         // Assuming you want to set the fetched data to the form
       } catch (error) {
         console.error("Error fetching vehicle data:", error);
+      } finally {
+        setIsLoading(false);
       }
     };
     loadPaymentPage();
@@ -68,7 +71,7 @@ const PaymentProceed = () => {
       return;
     }
     const amount = parseFloat(reservationData.final_amount).toFixed(2);
-    const response = await fetch("http://localhost:4000/api/v1/user/pay-hash", {
+    const response = await fetch(`${BASE_URL}/pay-hash`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -126,102 +129,118 @@ const PaymentProceed = () => {
               <h4 className="mb-0">Payment Summary</h4>
             </div>
             <div className="card-body">
-              {/* Reservation & Service Details */}
-              <h5 className="text-secondary mb-3">Reservation Information</h5>
-              <table className="table table-bordered align-middle">
-                <tbody>
-                  <tr>
-                    <th style={{ width: "30%" }}>Reservation ID</th>
-                    <td>
-                      {reservationData ? reservationData.reservation_id : ""}
-                    </td>
-                  </tr>
-                  <tr>
-                    <th>User ID</th>
-                    <td>{userData ? userData.user_id : ""}</td>
-                  </tr>
-                  <tr>
-                    <th>User Name</th>
-                    <td>
-                      {userData
-                        ? userData.first_name + " " + userData.last_name
-                        : "No name"}
-                    </td>
-                  </tr>
-                  <tr>
-                    <th>Date & Time</th>
-                    <td>{formattedDate}</td>
-                  </tr>
-                  <tr>
-                    <th>Service Description</th>
-                    <td>
-                      {reservationData
-                        ? reservationData.service_description
-                        : ""}
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-
-              {/* Payment Item Breakdown */}
-              {paymentItems?.length > 0 && (
+              {!isLoading ? (
                 <>
-                  <h5 className="text-secondary mt-4 mb-3">Itemized Charges</h5>
-                  <table className="table table-striped table-bordered align-middle">
-                    <thead className="table-light">
-                      <tr>
-                        <th style={{ width: "60%" }}>Description</th>
-                        <th style={{ width: "40%" }}>Price (Rs.)</th>
-                      </tr>
-                    </thead>
+                  <h5 className="text-secondary mb-3">
+                    Reservation Information
+                  </h5>
+                  <table className="table table-bordered align-middle">
                     <tbody>
-                      {paymentItems.map((item, index) => (
-                        <tr key={index}>
-                          <td>{item.description}</td>
-                          <td>Rs. {parseFloat(item.price).toFixed(2)}</td>
-                        </tr>
-                      ))}
+                      <tr>
+                        <th style={{ width: "30%" }}>Reservation ID</th>
+                        <td>
+                          {reservationData
+                            ? reservationData.reservation_id
+                            : ""}
+                        </td>
+                      </tr>
+                      <tr>
+                        <th>User ID</th>
+                        <td>{userData ? userData.user_id : ""}</td>
+                      </tr>
+                      <tr>
+                        <th>User Name</th>
+                        <td>
+                          {userData
+                            ? userData.first_name + " " + userData.last_name
+                            : "No name"}
+                        </td>
+                      </tr>
+                      <tr>
+                        <th>Date & Time</th>
+                        <td>{formattedDate}</td>
+                      </tr>
+                      <tr>
+                        <th>Service Description</th>
+                        <td>
+                          {reservationData
+                            ? reservationData.service_description
+                            : ""}
+                        </td>
+                      </tr>
                     </tbody>
                   </table>
-                </>
-              )}
 
-              {/* Totals */}
-              <div className="row mt-4">
-                <div className="col-md-6 offset-md-6">
-                  <table className="table table-borderless text-end">
-                    <tbody>
-                      <tr>
-                        <th>Service Cost:</th>
-                        <td>
-                          Rs.{" "}
-                          {reservationData
-                            ? reservationData.service_cost.toFixed(2)
-                            : "0.00"}
-                        </td>
-                      </tr>
-                      <tr>
-                        <th>Discount:</th>
-                        <td>
-                          Rs.{" "}
-                          {reservationData
-                            ? reservationData.discount.toFixed(2)
-                            : "0.0"}
-                        </td>
-                      </tr>
-                      <tr className="table-success">
-                        <th className="fs-5">Final Amount:</th>
-                        <td className="fs-4 fw-bold text-success">
-                          Rs.{" "}
-                          {reservationData
-                            ? reservationData.final_amount.toFixed(2)
-                            : "0.00"}
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
+                  {/* Payment Item Breakdown */}
+                  {paymentItems?.length > 0 && (
+                    <>
+                      <h5 className="text-secondary mt-4 mb-3">
+                        Itemized Charges
+                      </h5>
+                      <table className="table table-striped table-bordered align-middle">
+                        <thead className="table-light">
+                          <tr>
+                            <th style={{ width: "60%" }}>Description</th>
+                            <th style={{ width: "40%" }}>Price (Rs.)</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {paymentItems.map((item, index) => (
+                            <tr key={index}>
+                              <td>{item.description}</td>
+                              <td>Rs. {parseFloat(item.price).toFixed(2)}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </>
+                  )}
+
+                  {/* Totals */}
+                  <div className="row mt-4">
+                    <div className="col-md-6 offset-md-6">
+                      <table className="table table-borderless text-end">
+                        <tbody>
+                          <tr>
+                            <th>Service Cost:</th>
+                            <td>
+                              Rs.{" "}
+                              {reservationData
+                                ? reservationData.service_cost.toFixed(2)
+                                : "0.00"}
+                            </td>
+                          </tr>
+                          <tr>
+                            <th>Discount:</th>
+                            <td>
+                              Rs.{" "}
+                              {reservationData
+                                ? reservationData.discount.toFixed(2)
+                                : "0.0"}
+                            </td>
+                          </tr>
+                          <tr className="table-success">
+                            <th className="fs-5">Final Amount:</th>
+                            <td className="fs-4 fw-bold text-success">
+                              Rs.{" "}
+                              {reservationData
+                                ? reservationData.final_amount.toFixed(2)
+                                : "0.00"}
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <div className="text-center">
+                  <div className="spinner-border text-primary" role="status" style={{ width: "4rem", height: "4rem" }}>
+                    <span className="visually-hidden">Loading...</span>
+                  </div>
                 </div>
-              </div>
+              )}
+              
             </div>
           </div>
         </div>

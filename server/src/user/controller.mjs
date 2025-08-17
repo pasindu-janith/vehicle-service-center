@@ -3,6 +3,8 @@ import pool from "../../db.mjs";
 import { decodeToken, tokenGen, tokenGenLogin } from "../utils/jwt.mjs";
 import { verifyToken } from "../utils/jwt.mjs";
 import { sendEmail } from "../utils/email.mjs";
+import { sendSMS } from "../utils/sms.mjs";
+
 import dotenv from "dotenv";
 import crypto from "crypto";
 
@@ -34,7 +36,11 @@ export const registerUser = async (req, res) => {
       return res.status(400).send("Mobile number already exists");
     }
 
-    const hashedOTP = await bcrypt.hash("123456", 10);
+    const otpGenerated = String(
+      Math.floor(100000 + Math.random() * 900000)
+    ).padStart(6, "0");
+
+    const hashedOTP = await bcrypt.hash(otpGenerated, 10);
 
     const now = new Date();
     const currentDateTime = now.toISOString().slice(0, 19).replace("T", " ");
@@ -78,14 +84,18 @@ export const registerUser = async (req, res) => {
         addressID,
       ]
     );
+    const messageText = `Your OTP for Shan Automobile and Hybrid Workshop registration is ${otpGenerated}. Please do not share this OTP with anyone.`;
+    const smsResponse = await sendSMS(mobile, messageText);
+    if (!smsResponse.success) {
+      return res.status(500).send({ message: "Failed to send OTP via SMS" });
+    }
 
-    const otp = String(Math.floor(100000 + Math.random() * 900000)).padStart(
-      6,
-      "0"
-    );
-
-    sendVerificationEmail(email);
-
+    const emailResponse = await sendVerificationEmail(email);
+    if (!emailResponse.success) {
+      return res
+        .status(500)
+        .send({ message: "Failed to send verification email" });
+    }
     res.status(201).send({ message: "Success" });
   } catch (error) {
     console.log(error);
@@ -244,72 +254,96 @@ const sendVerificationEmail = async (email) => {
     "Shan Automobile and Hybrid Workshop, Email Verification",
     `
     <!DOCTYPE html>
-    <html>
-    <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Email Verification</title>
-      <style>
-        body {
-          font-family: 'Arial', sans-serif;
-          line-height: 1.6;
-          color:rgb(33, 33, 33);
-          max-width: 600px;
-          margin: 0 auto;
-          padding: 20px;
-        }
-        h1 {
-          color:rgb(133, 0, 0);
-          margin-bottom: 20px;
-          font-size: 24px;
-          text-align: center;
-        }
-        p {
-          margin-bottom: 25px;
-          font-size: 16px;
-        }
-        .btn {
-          background-color:rgb(140, 0, 0);
-          text-decoration: none; 
-          color: white;
-          padding: 12px 24px;
-          text-decoration: none;
-          border-radius: 4px;
-          font-weight: bold;
-          display: inline-block;
-        }
-        .btn:hover {
-          background-color:rgb(118, 0, 0);
-        }
-        .container {
-          background-color: #f9f9f9;
-          border: 1px solid #dddddd;
-          border-radius: 5px;
-          padding: 30px;
-        }
-        .footer {
-          margin-top: 30px;
-          font-size: 12px;
-          color: #777777;
-          text-align: center;
-        }
-      </style>
-    </head>
-    <body>
-      <div class="container">
-        <h1>Shan Automobile and Hybrid Workshop Online. Email Verification</h1>
-        <p>Thank you for registering with Shan Automobile and Hybrid Workshop. To complete your registration and activate your account, please verify your email address by clicking the button below:</p>
-        <div style="text-align: center;">
-          <a href="${process.env.CLIENT_URL}/signup/emailactivation?token=${token}" class="btn">Click here to verify</a>
+      <html>
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Email Verification</title>
+        <style>
+          body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+            color: #333333;
+          }
+          .header {
+            background-color: rgb(140, 0, 0);
+            padding: 30px 20px;
+            text-align: center;
+          }
+          .header h1 {
+            color: #ffffff;
+            margin: 0;
+            font-size: 24px;
+          }
+          .content {
+            background-color: #ffffff;
+            padding: 40px 20px;
+            max-width: 100%;
+          }
+          .content p {
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 25px;
+            color: #555555;
+          }
+          .btn {
+            background-color: rgb(140, 0, 0);
+            color: #ffffff !important;
+            padding: 14px 28px;
+            text-decoration: none !important;
+            border-radius: 5px;
+            font-weight: bold;
+            font-size: 16px;
+            display: inline-block;
+            margin-top: 15px;
+          }
+          .btn:hover {
+            background-color: rgb(118, 0, 0);
+          }
+          .link {
+            font-size: 14px;
+            word-break: break-all;
+            color: rgb(140, 0, 0);
+          }
+          .footer {
+            background-color: #f4f4f4;
+            padding: 20px;
+            text-align: center;
+            font-size: 12px;
+            color: #777777;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h1>Email Verification</h1>
         </div>
-        <p style="margin-top: 25px;">If the button doesn't work, you can also copy and paste the following link into your browser:</p>
-        <p style="font-size: 14px;">${process.env.CLIENT_URL}/signup/emailactivation?token=${token}</p>
-      </div>
-      <div class="footer">
-        <p>This email was sent by Shan Automobile and Hybrid Workshop. If you didn't create an account, you can safely ignore this email.</p>
-      </div>
-    </body>
-    </html>
+
+        <div class="content">
+          <p>Dear Customer,</p>
+          <p>
+            Thank you for registering with <strong>Shan Automobile and Hybrid Workshop</strong>.  
+            To complete your registration and activate your account, please verify your email address by clicking the button below:
+          </p>
+
+          <p style="text-align: center;">
+            <a href="${process.env.CLIENT_URL}/signup/emailactivation?token=${token}" class="btn">Verify My Email</a>
+          </p>
+
+          <p>If the button above doesn't work, copy and paste this link into your browser:</p>
+          <p class="link">${process.env.CLIENT_URL}/signup/emailactivation?token=${token}</p>
+        </div>
+
+        <div class="footer">
+          <p>
+            This email was sent by Shan Automobile and Hybrid Workshop.  
+            If you didn’t create an account, you can safely ignore this email.
+          </p>
+        </div>
+      </body>
+      </html>
     `
   );
 };
@@ -325,12 +359,29 @@ export const otpVerify = async (req, res) => {
     if (checkMobile.rows.length === 0) {
       return res.status(400).send("Invalid Mobile Number");
     }
-    
+
     const mobileData = checkMobile.rows[0];
     const otpMatch = await bcrypt.compare(otp, mobileData.otp);
 
     if (!otpMatch) {
       return res.status(400).send({ message: "Invalid OTP" });
+    }
+    if (mobileData.isotpverified === "1") {
+      return res.status(200).send({ message: "OTP already verified" });
+    }
+
+    if (mobileData.otp_datetime) {
+      const otpDateTime = new Date(mobileData.otp_datetime);
+      const currentDateTime = new Date();
+      const timeDifference = currentDateTime - otpDateTime;
+      const otpValidityDuration = 5 * 60 * 1000; // 5 minutes in milliseconds
+      if (timeDifference > otpValidityDuration) {
+        return res
+          .status(400)
+          .send({
+            message: "OTP expired. Generate a new OTP and verify again.",
+          });
+      }
     }
 
     const updateMobile = await pool.query(
@@ -343,9 +394,7 @@ export const otpVerify = async (req, res) => {
     console.log(error);
     res.status(500).send({ message: "Internal server error" });
   }
-
 };
-
 
 //When user forgets password he will enter email and then this function will be called
 export const forgotPassword = async (req, res) => {
@@ -1408,7 +1457,7 @@ export const fetchReservationData = async (req, res) => {
       `SELECT * FROM reservation_messages WHERE reservation_id = $1 ORDER BY created_at DESC`,
       [resid]
     );
-  
+
     if (reservationData.rows.length === 0) {
       return res
         .status(404)
@@ -1468,11 +1517,13 @@ export const getReservationMessages = async (req, res) => {
       [resid]
     );
     if (messages.rows.length === 0) {
-      return res.status(404).send({ message: "No messages found for this reservation" });
+      return res
+        .status(404)
+        .send({ message: "No messages found for this reservation" });
     }
     return res.status(200).send(messages.rows);
   } catch (error) {
     console.log(error);
     res.status(500).send("Internal Server Error");
   }
-}
+};

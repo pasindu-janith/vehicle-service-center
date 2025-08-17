@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import "./styles/Dashboard.css";
+import BASE_URL, { BASE_IMAGES_URL } from "../config.js";
 
 const VehicleInfo = () => {
   const { id } = useParams();
@@ -13,7 +14,7 @@ const VehicleInfo = () => {
     const fetchVehicleData = async () => {
       try {
         const response = await fetch(
-          `http://localhost:4000/api/v1/user/fetchVehicleData?licensePlate=${id}`,
+          `${BASE_URL}/fetchVehicleData?licensePlate=${id}`,
           {
             method: "GET",
             headers: {
@@ -59,7 +60,7 @@ const VehicleInfo = () => {
                 <div className="row">
                   <div className="col-md-4 d-flex justify-content-center">
                     <img
-                      src={`http://localhost:4000${vehicleData.imgpath}`}
+                      src={`${BASE_IMAGES_URL}${vehicleData.imgpath}`}
                       style={{
                         height: "250px",
                         width: "auto",

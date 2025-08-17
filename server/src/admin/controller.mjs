@@ -168,7 +168,37 @@ export const loadOngoingServices = async (req, res) => {
 export const loadCompletedServices = async (req, res) => {
   try {
     const completedServices = await pool.query(
-      "SELECT * FROM reservations INNER JOIN service_type ON reservations.service_type_id=service_type.service_type_id WHERE reservation_status=(SELECT reservation_status_id FROM reservation_status WHERE status_name=$1) LIMIT 100",
+      `SELECT sr.reservation_id, 
+          sr.service_description, 
+          sr.service_cost, 
+          sr.discount,
+          sr.final_amount, 
+          st.service_name, 
+          r.reserve_date, 
+          r.start_time, 
+          r.end_date, 
+          r.end_time, 
+          sr.is_paid,
+          COALESCE(
+            json_agg(
+              json_build_object(
+                'id', pi.id,
+                'description', pi.description,
+                'price', pi.price
+              )
+            ) FILTER (WHERE pi.id IS NOT NULL), 
+            '[]'
+          ) AS payment_items
+            FROM service_records AS sr
+            INNER JOIN reservations AS r 
+            ON sr.reservation_id = r.reservation_id
+            INNER JOIN service_type AS st 
+            ON r.service_type_id = st.service_type_id
+            LEFT JOIN payment_item AS pi 
+            ON sr.reservation_id = pi.reservation_id
+            WHERE r.reservation_status = (SELECT reservation_status_id FROM reservation_status WHERE status_name = $1)
+            GROUP BY sr.reservation_id, sr.service_description, sr.service_cost, sr.discount, sr.final_amount,
+            st.service_name, r.reserve_date, r.start_time, r.end_date, r.end_time, sr.is_paid`,
       ["Completed"]
     );
     res.status(200).send(completedServices.rows);
@@ -443,9 +473,9 @@ export const startReservation = async (req, res) => {
         }
         .btn {
           background-color: rgb(140, 0, 0);
-          color: #ffffff;
+          color: #ffffff !important;
           padding: 12px 24px;
-          text-decoration: none;
+          text-decoration: none !important;
           border-radius: 4px;
           font-weight: bold;
           display: inline-block;

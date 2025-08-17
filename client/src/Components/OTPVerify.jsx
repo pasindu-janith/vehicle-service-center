@@ -32,6 +32,33 @@ const OTPVerify = () => {
     }
   }, [timer]);
 
+  // useEffect(() => {
+  //   const checkOtpVerified = async () => {
+  //     try {
+  //       const response = await fetch(`${BASE_URL}/checkotp`, {
+  //         method: "POST",
+  //         headers: {
+  //           "Content-Type": "application/json",
+  //         },
+  //         body: JSON.stringify({ mobile }),
+  //       });
+  //       const data = await response.json();
+  //       if (response.ok && data.message === "OTP already verified") {
+  //         toastr.success("Mobile number already verified!");
+  //         navigate("/signup/email-verify", {
+  //           state: { email },
+  //         });
+  //       } else if (!response.ok) {
+  //         toastr.error(data.message || "Failed to check OTP verification");
+  //       }
+  //     } catch (error) {
+  //       console.error("Error checking OTP verification:", error);
+  //       toastr.error("Something went wrong. Please try again.");
+  //     }
+  //   };
+  //   checkOtpVerified();
+  // }, [mobile, email, navigate]);
+
   const handleChange = (index, e) => {
     const value = e.target.value;
 

@@ -13,7 +13,8 @@ const ServicesCompleted = () => {
   const [loading, setLoading] = useState(true);
   const tableRef = useRef(null);
   const dtInstance = useRef(null); // To store the DataTable instance
-
+  const [serviceRecordsModal, setServiceRecordsModal] = useState(false);
+  const [selectedReservation, setSelectedReservation] = useState(null);
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -114,6 +115,7 @@ const ServicesCompleted = () => {
           </div>
         </div>
       </div>
+
     </section>
   );
 };

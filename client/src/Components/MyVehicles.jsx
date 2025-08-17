@@ -5,7 +5,7 @@ import { MdDelete } from "react-icons/md";
 import { IoMdInformationCircleOutline } from "react-icons/io";
 import { useEffect } from "react";
 import "./styles/Dashboard.css";
-import { BASE_URL, BASE_IMAGES_URL } from "../config.js";
+import BASE_URL, { BASE_IMAGES_URL } from "../config";
 
 const MyVehicle = () => {
   // Example vehicle data (later you can fetch from database)
@@ -87,7 +87,7 @@ const MyVehicle = () => {
       <div className="row">
         {isLoading ? (
           <div className="col-md-12 pt-4 text-center">
-            <div className="spinner-border text-primary mt-4" role="status">
+            <div className="spinner-border text-primary mt-4" role="status" style={{ width: "4rem", height: "4rem" }}>
               <span className="visually-hidden">Loading...</span>
             </div>
           </div>

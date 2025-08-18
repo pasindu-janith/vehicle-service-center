@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { CiCircleInfo } from "react-icons/ci";
 import "./styles/Dashboard.css";
 import BASE_URL from "../config.js";
+import { BiLoaderAlt } from "react-icons/bi";
 
 const Reservations = () => {
   const [reservations, setReservations] = useState([]);
@@ -96,12 +97,25 @@ const Reservations = () => {
                 {isLoading ? (
                   <tr>
                     <td colSpan="7" className="text-center">
+                      <div className="col-12">
                       <div
-                        className="spinner-border text-primary mt-4"
-                        role="status"
+                        className="d-flex justify-content-center align-items-center"
+                        style={{ minHeight: "400px" }}
                       >
-                        <span className="visually-hidden">Loading...</span>
+                        <div className="text-center">
+                          <BiLoaderAlt
+                            className="text-primary mb-3 spinning"
+                            size={60}
+                          />
+                          <h4 className="text-muted">
+                            Loading your reservations...
+                          </h4>
+                          <p className="text-muted">
+                            Please wait while we fetch your data
+                          </p>
+                        </div>
                       </div>
+                    </div>
                     </td>
                   </tr>
                 ) : reservations.length === 0 ? (

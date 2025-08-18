@@ -85,7 +85,7 @@ export const registerUser = async (req, res) => {
       ]
     );
     const messageText = `Your OTP for Shan Automobile and Hybrid Workshop registration is ${otpGenerated}. Please do not share this OTP with anyone.`;
-    const smsResponse = await sendSMS(mobile, messageText);
+    const smsResponse = await sendSMS("+94" + mobile, messageText);
     if (!smsResponse.success) {
       return res.status(500).send({ message: "Failed to send OTP via SMS" });
     }
@@ -376,11 +376,9 @@ export const otpVerify = async (req, res) => {
       const timeDifference = currentDateTime - otpDateTime;
       const otpValidityDuration = 5 * 60 * 1000; // 5 minutes in milliseconds
       if (timeDifference > otpValidityDuration) {
-        return res
-          .status(400)
-          .send({
-            message: "OTP expired. Generate a new OTP and verify again.",
-          });
+        return res.status(400).send({
+          message: "OTP expired. Generate a new OTP and verify again.",
+        });
       }
     }
 

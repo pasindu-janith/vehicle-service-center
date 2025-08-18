@@ -1,18 +1,19 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import images from "../Assets/assets";
-import { MdDelete } from "react-icons/md";
-import { IoMdInformationCircleOutline } from "react-icons/io";
+import { MdDelete, MdDirectionsCar, MdCalendarToday, MdBrandingWatermark } from "react-icons/md";
+import { IoMdInformationCircleOutline, IoMdClose } from "react-icons/io";
+import { FaPlus, FaCar, FaExclamationTriangle } from "react-icons/fa";
+import { BiLoaderAlt } from "react-icons/bi";
 import { useEffect } from "react";
 import "./styles/Dashboard.css";
 import BASE_URL, { BASE_IMAGES_URL } from "../config";
 
 const MyVehicle = () => {
-  // Example vehicle data (later you can fetch from database)
-
   const [vehicles, setVehicles] = useState([]);
-
   const [isLoading, setIsLoading] = useState(true);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [selectedVehicle, setSelectedVehicle] = useState(null);
 
   useEffect(() => {
     const loadAllUserVehicles = async () => {
@@ -30,13 +31,11 @@ const MyVehicle = () => {
         }
       } catch (error) {
         console.log(error);
+        setIsLoading(false);
       }
     };
     loadAllUserVehicles();
   }, []);
-
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [selectedVehicle, setSelectedVehicle] = useState(null);
 
   const handleOpenDeleteModal = (vehicle) => {
     setSelectedVehicle(vehicle);
@@ -76,109 +75,204 @@ const MyVehicle = () => {
   };
 
   return (
-    <div
-      className="container pt-3 bg-transparent"
-      style={{ minHeight: "100vh" }}
-    >
-      <h2 className="text-darkblue mb-3 fw-bold" style={{ fontSize: "40px" }}>
-        My vehicles
-      </h2>
+    <div className="container px-4 py-4 bg-transparent" style={{ minHeight: "100vh" }}>
+      {/* Header Section */}
+      <div className="row mb-4">
+        <div className="col-12">
+          <div className="d-flex align-items-center justify-content-between">
+            <div className="d-flex align-items-center">
+              <MdDirectionsCar className="text-primary me-3" size={48} />
+              <div>
+                <h1 className="text-dark mb-1 fw-bold" style={{ fontSize: "2.5rem" }}>
+                  My Vehicles
+                </h1>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
-      <div className="row">
+      {/* Content Section */}
+      <div className="row g-4">
         {isLoading ? (
-          <div className="col-md-12 pt-4 text-center">
-            <div className="spinner-border text-primary mt-4" role="status" style={{ width: "4rem", height: "4rem" }}>
-              <span className="visually-hidden">Loading...</span>
+          <div className="col-12">
+            <div className="d-flex justify-content-center align-items-center" style={{ minHeight: "400px" }}>
+              <div className="text-center">
+                <BiLoaderAlt className="text-primary mb-3 spinning" size={60} />
+                <h4 className="text-muted">Loading your vehicles...</h4>
+                <p className="text-muted">Please wait while we fetch your data</p>
+              </div>
             </div>
           </div>
         ) : (
           <>
+            {/* Vehicle Cards */}
             {vehicles.map((vehicle) => (
-              <div className="col-md-3" key={vehicle.license_plate}>
-                <div className="card mb-3 shadow-lg vehicle-card">
-                  <img
-                    src={`${BASE_IMAGES_URL}${vehicle.imgpath}`}
-                    style={{ height: "300px", objectFit: "contain" }}
-                    className="card-img-top"
-                    alt="..."
-                  />
-                  <div className="card-body">
-                    <h3 className="card-title">{vehicle.license_plate}</h3>
-                    <p>
-                      {vehicle.vehicle_brand} {vehicle.model}{" "}
-                      {vehicle.make_year}
-                      {" | "}
-                      {vehicle.vehicle_type}
-                    </p>
-                    <button
-                      onClick={() =>
-                        (window.location.href = `/myaccount/vehicle-info/${vehicle.license_plate}`)
-                      }
-                      className="btn btn-primary mt-1 me-1"
-                    >
-                      <IoMdInformationCircleOutline size={20} /> More info
-                    </button>
-                    <button
-                      onClick={() => handleOpenDeleteModal(vehicle)}
-                      className="btn btn-danger mt-1 me-1"
-                    >
-                      <MdDelete size={20} /> Delete
-                    </button>
+              <div className="col-xl-3 col-lg-4 col-md-6" key={vehicle.license_plate}>
+                <div className="card h-100 shadow-sm border-0 vehicle-card-hover">
+                  {/* Vehicle Image */}
+                  <div className="position-relative overflow-hidden" style={{ height: "220px" }}>
+                    <img
+                      src={`${BASE_IMAGES_URL}${vehicle.imgpath}`}
+                      className="card-img-top w-100 h-100"
+                      style={{ objectFit: "cover" }}
+                      alt={`${vehicle.vehicle_brand} ${vehicle.model}`}
+                    />
+                    <div className="position-absolute top-0 end-0 p-2">
+                      <span className="badge bg-primary px-3 py-2">
+                        {vehicle.vehicle_type}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  {/* Card Body */}
+                  <div className="card-body d-flex flex-column">
+                    {/* License Plate */}
+                    <div className="text-center mb-3">
+                      <h4 className="card-title text-primary fw-bold mb-0">
+                        {vehicle.license_plate}
+                      </h4>
+                    </div>
+                    
+                    {/* Vehicle Details */}
+                    <div className="flex-grow-1">
+                      <div className="d-flex align-items-center mb-2">
+                        <MdBrandingWatermark className="text-muted me-2" size={18} />
+                        <span className="text-dark fw-medium">
+                          {vehicle.vehicle_brand}
+                        </span>
+                      </div>
+                      
+                      <div className="d-flex align-items-center mb-2">
+                        <FaCar className="text-muted me-2" size={16} />
+                        <span className="text-muted">
+                          {vehicle.model}
+                        </span>
+                      </div>
+                      
+                      <div className="d-flex align-items-center mb-3">
+                        <MdCalendarToday className="text-muted me-2" size={16} />
+                        <span className="text-muted">
+                          {vehicle.make_year}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    {/* Action Buttons */}
+                    <div className="d-grid gap-2">
+                      <button
+                        onClick={() =>
+                          (window.location.href = `/myaccount/vehicle-info/${vehicle.license_plate}`)
+                        }
+                        className="btn btn-outline-primary"
+                      >
+                        <IoMdInformationCircleOutline className="me-2" size={18} />
+                        View Details
+                      </button>
+                      <button
+                        onClick={() => handleOpenDeleteModal(vehicle)}
+                        className="btn btn-outline-danger"
+                      >
+                        <MdDelete className="me-2" size={18} />
+                        Remove Vehicle
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
             ))}
 
-            {/* Add vehicle card */}
-            <div className="col-md-3 pb-3">
-              <div className="card h-100" style={{ border: "1px dashed grey" }}>
-                {vehicles.length === 0 && (
-                  <p className="text-center mt-4 mb-3">No vehicles added yet</p>
-                )}
-                <div className="card-body d-flex justify-content-center align-items-center">
-                  <Link
-                    to="/myaccount/add-vehicle"
-                    className="text-decoration-none"
-                  >
-                    <h1 className="text-center">+</h1>
-                    <p className="text-center">Add Vehicle</p>
+            {/* Add Vehicle Card */}
+            <div className="col-xl-3 col-lg-4 col-md-6">
+              <Link to="/myaccount/add-vehicle" className="text-decoration-none">
+                <div className="card h-100 border-2 border-dashed text-center vehicle-add-card">
+                  <div className="card-body d-flex flex-column justify-content-center align-items-center" style={{ minHeight: "400px" }}>
+                    <div className="mb-4">
+                      <div className="bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center mb-3" style={{ width: "80px", height: "80px" }}>
+                        <FaPlus className="text-primary" size={32} />
+                      </div>
+                    </div>
+                    <h4 className="text-primary mb-2">Add New Vehicle</h4>
+                    <p className="text-muted mb-0">
+                      Register a new vehicle to your account
+                    </p>
+                  </div>
+                </div>
+              </Link>
+            </div>
+
+            {/* Empty State */}
+            {vehicles.length === 0 && (
+              <div className="col-12">
+                <div className="text-center py-5">
+                  <div className="mb-4">
+                    <FaCar className="text-muted" size={80} />
+                  </div>
+                  <h3 className="text-muted mb-3">No vehicles registered yet</h3>
+                  <p className="text-muted mb-4">
+                    Start by adding your first vehicle to get started
+                  </p>
+                  <Link to="/myaccount/add-vehicle" className="btn btn-primary btn-lg">
+                    <FaPlus className="me-2" />
+                    Add Your First Vehicle
                   </Link>
                 </div>
               </div>
-            </div>
+            )}
           </>
         )}
       </div>
 
-      {/* Delete Confirmation Modal */}
+      {/* Enhanced Delete Confirmation Modal */}
       {selectedVehicle && showDeleteModal && (
-        <div
-          className="modal d-block"
-          tabIndex="-1"
-          style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
-        >
-          <div className="modal-dialog">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">Confirm Delete</h5>
+        <div className="modal fade show d-block" tabIndex="-1" style={{ backgroundColor: "rgba(0,0,0,0.6)" }}>
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content border-0 shadow-lg">
+              <div className="modal-header border-0 pb-0">
+                <div className="d-flex align-items-center">
+                  <div className="bg-danger bg-opacity-10 rounded-circle p-2 me-3">
+                    <FaExclamationTriangle className="text-danger" size={24} />
+                  </div>
+                  <h5 className="modal-title fw-bold text-dark">Confirm Vehicle Removal</h5>
+                </div>
                 <button
                   type="button"
                   className="btn-close"
-                  onClick={() => handleCloseDeleteModal()}
+                  onClick={handleCloseDeleteModal}
                 ></button>
               </div>
-              <div className="modal-body">
-                <p>
-                  Are you sure you want to delete the vehicle{" "}
-                  <strong>{selectedVehicle.license_plate}</strong>?
+              
+              <div className="modal-body pt-2">
+                <p className="text-muted mb-3">
+                  Are you sure you want to remove this vehicle from your account?
                 </p>
+                
+                <div className="bg-light rounded p-3 mb-3">
+                  <div className="d-flex align-items-center">
+                    <FaCar className="text-primary me-3" size={24} />
+                    <div>
+                      <h6 className="mb-1 fw-bold">{selectedVehicle.license_plate}</h6>
+                      <p className="mb-0 text-muted small">
+                        {selectedVehicle.vehicle_brand} {selectedVehicle.model} ({selectedVehicle.make_year})
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="alert alert-warning border-0 bg-warning bg-opacity-10">
+                  <small className="text-danger">
+                    <strong>Warning:</strong> This action cannot be undone. All data associated with this vehicle will be permanently removed.
+                  </small>
+                </div>
               </div>
-              <div className="modal-footer">
+              
+              <div className="modal-footer border-0 pt-0">
                 <button
                   type="button"
                   className="btn btn-secondary"
-                  onClick={() => handleCloseDeleteModal()}
+                  onClick={handleCloseDeleteModal}
                 >
+                  <IoMdClose className="me-2" />
                   Cancel
                 </button>
                 <button
@@ -188,20 +282,55 @@ const MyVehicle = () => {
                     setVehicles((prevVehicles) =>
                       prevVehicles.filter(
                         (vehicle) =>
-                          vehicle.license_plate !==
-                          selectedVehicle.license_plate
+                          vehicle.license_plate !== selectedVehicle.license_plate
                       )
                     );
                     deleteVehicle(selectedVehicle.license_plate);
                   }}
                 >
-                  Delete
+                  <MdDelete className="me-2" />
+                  Remove Vehicle
                 </button>
               </div>
             </div>
           </div>
         </div>
       )}
+
+      <style jsx>{`
+        .vehicle-card-hover {
+          transition: all 0.3s ease;
+        }
+        
+        .vehicle-card-hover:hover {
+          transform: translateY(-5px);
+          box-shadow: 0 10px 25px rgba(0,0,0,0.15) !important;
+        }
+        
+        .vehicle-add-card {
+          transition: all 0.3s ease;
+          border-color: #dee2e6;
+        }
+        
+        .vehicle-add-card:hover {
+          border-color: #0d6efd;
+          background-color: #f8f9ff;
+          transform: translateY(-2px);
+        }
+        
+        .spinning {
+          animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+        
+        .bg-opacity-10 {
+          background-color: rgba(13, 110, 253, 0.1) !important;
+        }
+      `}</style>
     </div>
   );
 };

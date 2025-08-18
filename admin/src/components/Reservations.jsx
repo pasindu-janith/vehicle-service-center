@@ -35,8 +35,6 @@ const Reservations = () => {
   const [serviceCost, setServiceCost] = useState("");
   const [serviceDiscount, setServiceDiscount] = useState("0.00");
   const [finalAmount, setFinalAmount] = useState("");
-  const [serviceRecordsModal, setServiceRecordsModal] = useState(false);
-  const [serviceRecords, setServiceRecords] = useState([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -956,8 +954,6 @@ const Reservations = () => {
           </div>
         </div>
       )}
-
-      
       
     </section>
   );

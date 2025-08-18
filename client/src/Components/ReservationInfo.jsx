@@ -1,6 +1,17 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { CiCircleInfo } from "react-icons/ci";
+import { 
+  FiClock, 
+  FiCalendar, 
+  FiTruck, 
+  FiSettings, 
+  FiUser, 
+  FiMessageCircle,
+  FiCheckCircle,
+  FiAlertCircle,
+  FiPlayCircle
+} from "react-icons/fi";
 import BASE_URL from "../config.js";
 
 const ReservationInfo = () => {
@@ -32,7 +43,6 @@ const ReservationInfo = () => {
           setMessages(data.messages || []);
           console.log("Reservation data:", data.messages);
 
-          // Fix: Access properties through data.reservationData
           const reservationData = data.reservationData;
           if (reservationData && reservationData.reserve_date && reservationData.start_time && 
               reservationData.end_date && reservationData.end_time) {
@@ -53,11 +63,11 @@ const ReservationInfo = () => {
             setDuration(end - start);
           }
         } else {
-          navigate("/myaccount/reservations"); // Redirect to reservations page on error
+          navigate("/myaccount/reservations");
         }
       } catch (error) {
         console.error("Error fetching reservation data:", error);
-        navigate("/myaccount/reservations"); // Redirect to reservations page on error
+        navigate("/myaccount/reservations");
       } finally {
         setIsLoading(false);
       }
@@ -67,7 +77,6 @@ const ReservationInfo = () => {
 
   const formatTime12Hour = (timeStr) => {
     if (!timeStr) return "";
-    // Accepts "HH:mm" or "HH:mm:ss"
     const [hour, minute] = timeStr.split(":");
     const date = new Date();
     date.setHours(Number(hour), Number(minute), 0, 0);
@@ -109,9 +118,9 @@ const ReservationInfo = () => {
       const minutes = totalMinutes % 60;
 
       const parts = [];
-      if (days > 0) parts.push(`${days} day(s)`);
-      if (hours > 0) parts.push(`${hours} hour(s)`);
-      if (minutes > 0) parts.push(`${minutes} minute(s)`);
+      if (days > 0) parts.push(`${days} day${days > 1 ? 's' : ''}`);
+      if (hours > 0) parts.push(`${hours} hour${hours > 1 ? 's' : ''}`);
+      if (minutes > 0) parts.push(`${minutes} minute${minutes > 1 ? 's' : ''}`);
 
       return parts.length > 0
         ? `${parts.join(" ")}`
@@ -148,249 +157,336 @@ const ReservationInfo = () => {
       const minutes = totalMinutes % 60;
 
       return (
-        <>
-          {`${days} day(s) ${hours} hour(s)`}
-          <br />
-          {`${minutes} minute(s)`}
-        </>
+        <div className="text-center">
+          <div className="fw-bold">{days} day{days !== 1 ? 's' : ''} {hours} hour{hours !== 1 ? 's' : ''}</div>
+          <small className="text-muted">{minutes} minute{minutes !== 1 ? 's' : ''}</small>
+        </div>
       );
     }
     return "";
   };
 
-  // Fix: Calculate progress percentage properly
   const getProgressPercentage = () => {
     if (remainingTime <= 0) return 100;
     if (duration <= 0) return 0;
     return Math.max(0, Math.min(100, 100 - Math.floor((remainingTime / duration) * 100)));
   };
 
+  const getStatusColor = (status) => {
+    switch (status) {
+      case "Completed": return { bg: "bg-success", text: "text-success", icon: FiCheckCircle };
+      case "Ongoing": return { bg: "bg-primary", text: "text-primary", icon: FiPlayCircle };
+      case "Pending": return { bg: "bg-warning", text: "text-warning", icon: FiAlertCircle };
+      default: return { bg: "bg-secondary", text: "text-secondary", icon: FiAlertCircle };
+    }
+  };
+
+  const getProgressBarColor = (percentage) => {
+    if (percentage >= 100) return "bg-success";
+    if (percentage >= 75) return "bg-warning";
+    return "bg-primary";
+  };
+
+  if (isLoading) {
+    return (
+      <div className="container mt-5 mb-5">
+        <div className="text-center">
+          <div className="spinner-border text-primary" role="status">
+            <span className="visually-hidden">Loading...</span>
+          </div>
+          <p className="mt-3 text-muted">Loading reservation information...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const statusConfig = activeReservation ? getStatusColor(activeReservation.status_name) : getStatusColor("Unknown");
+  const StatusIcon = statusConfig.icon;
+
   return (
-    <div className="container mt-5 mb-5">
-      <h2 className="text-darkblue mb-4 fw-bold" style={{ fontSize: "40px" }}>
-        Reservation Information
-      </h2>
-      <div className="card shadow-sm border-0 p-2 mb-3">
-        <div className="card-body">
-          <div className="row text-center fs-5 fw-semibold">
-            <div
-              className="col-md-3 col-12 mb-3 mb-md-0"
-              style={{
-                borderRight: "1px solid grey",
-              }}
-            >
-              <div className="text-muted">Reservation ID</div>
-              <div className="fs-2 mt-2">
-                {activeReservation
-                  ? activeReservation.reservation_id
-                  : "Loading.."}
+    <div className="container mt-4 mb-5">
+      {/* Header Section */}
+      <div className="row mb-4">
+        <div className="col-12">
+          <div className="d-flex align-items-center mb-3">
+            
+            <div>
+              <h1 className="mb-1" style={{ 
+                fontSize: "2.5rem", 
+                fontWeight: "700",
+                background: "linear-gradient(135deg, #071551ff 0%, #764ba2 100%)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                backgroundClip: "text"
+              }}>
+                Service Overview
+              </h1>
+              <p className="text-muted mb-0 fs-5">Track your reservation status and progress</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Stats Cards */}
+      <div className="row g-3 mb-4">
+        <div className="col-lg-3 col-md-6">
+          <div className="card border-0 shadow-sm h-100" style={{ backgroundColor: '#6366f1' }}>
+            <div className="card-body text-white text-center py-4">
+             
+              <div className="text-white-50 small text-uppercase">Reservation ID</div>
+              <div className="fs-2 fw-bold">
+                {activeReservation ? activeReservation.reservation_id : "---"}
               </div>
             </div>
-            <div
-              className="col-md-3 col-12 mb-3 mb-md-0"
-              style={{
-                borderRight: "1px solid grey",
-              }}
-            >
-              <div className="text-muted small">Start Time</div>
-              <div className="fs-3 mt-2">
-                {activeReservation
-                  ? new Date(activeReservation.reserve_date).toLocaleDateString(
-                      "en-CA"
-                    ) +
-                    " " +
-                    formatTime12Hour(activeReservation.start_time)
-                  : ""}
+          </div>
+        </div>
+
+        <div className="col-lg-3 col-md-6">
+          <div className="card border-0 shadow-sm h-100" style={{ backgroundColor: '#ec4899' }}>
+            <div className="card-body text-white text-center py-4">
+              
+              <div className="text-white-50 small text-uppercase">Start Time</div>
+              <div className="fs-5 fw-bold">
+                {activeReservation ? (
+                  <>
+                    <div>{new Date(activeReservation.reserve_date).toLocaleDateString("en-CA")}</div>
+                    <small className="opacity-75">{formatTime12Hour(activeReservation.start_time)}</small>
+                  </>
+                ) : "---"}
               </div>
             </div>
-            <div
-              className="col-md-3 col-12"
-              style={{
-                borderRight: "1px solid grey",
-              }}
-            >
-              <div className="text-muted small">End Time</div>
-              <div className="fs-3 mt-2">
-                {activeReservation
-                  ? new Date(activeReservation.end_date).toLocaleDateString(
-                      "en-CA"
-                    ) +
-                    " " +
-                    formatTime12Hour(activeReservation.end_time)
-                  : ""}
+          </div>
+        </div>
+
+        <div className="col-lg-3 col-md-6">
+          <div className="card border-0 shadow-sm h-100" style={{ backgroundColor: '#06b6d4' }}>
+            <div className="card-body text-white text-center py-4">
+              
+              <div className="text-white-50 small text-uppercase">End Time</div>
+              <div className="fs-5 fw-bold">
+                {activeReservation ? (
+                  <>
+                    <div>{new Date(activeReservation.end_date).toLocaleDateString("en-CA")}</div>
+                    <small className="opacity-75">{formatTime12Hour(activeReservation.end_time)}</small>
+                  </>
+                ) : "---"}
               </div>
             </div>
-            <div className="col-md-3 col-12">
-              <div className="text-muted small">Duration</div>
-              <div className="fs-4 mt-2">
-                {getDuration() !== "" ? getDuration() : "--"}
+          </div>
+        </div>
+
+        <div className="col-lg-3 col-md-6">
+          <div className="card border-0 shadow-sm h-100" style={{ backgroundColor: '#f59e0b' }}>
+            <div className="card-body text-white text-center py-4">
+              
+              <div className="text-white-50 small text-uppercase">Total Duration</div>
+              <div className="fs-6 fw-bold">
+                {getDuration() !== "" ? getDuration() : "---"}
               </div>
             </div>
           </div>
         </div>
       </div>
+
       <div className="row g-4">
-        {/* Reservation Info */}
+        {/* Main Reservation Details */}
         <div className="col-lg-8">
-          <div className="card shadow p-4">
-            <table className="table table-borderless mb-0">
-              <tbody>
-                <tr style={{ borderBottom: "2px solid #dee2e6" }}>
-                  <th style={{ width: "30%" }}>Status</th>
-                  <td>
-                    {activeReservation ? (
-                      <span
-                        className={`badge ${
-                          activeReservation.status_name === "Completed"
-                            ? "bg-success"
-                            : activeReservation.status_name === "Pending"
-                            ? "bg-warning"
-                            : activeReservation.status_name === "Ongoing"
-                            ? "bg-primary"
-                            : "bg-secondary"
-                        }`}
-                      >
-                        {activeReservation.status_name}
-                      </span>
-                    ) : (
-                      <span className="badge bg-secondary">Loading...</span>
-                    )}
-                  </td>
-                </tr>
-                <tr style={{ borderBottom: "2px solid #dee2e6" }}>
-                  <th>Vehicle</th>
-                  <td>
-                    {activeReservation ? (
-                      <>
-                        {activeReservation.vehicle_id}
-                        <button
-                          className="btn p-0 btn-outline-primary border-0 no-hover-bg bg-transparent ms-2 text-primary"
-                          onClick={() =>
-                            navigate(
-                              `/myaccount/vehicle-info/${activeReservation.vehicle_id}`
-                            )
-                          }
-                        >
-                          <CiCircleInfo size={25}></CiCircleInfo>
-                        </button>
-                      </>
-                    ) : (
-                      "--"
-                    )}
-                  </td>
-                </tr>
-                <tr style={{ borderBottom: "2px solid #dee2e6" }}>
-                  <th>Service Type</th>
-                  <td>
-                    {activeReservation ? activeReservation.service_name : "--"}
-                  </td>
-                </tr>
-                <tr style={{ borderBottom: "2px solid #dee2e6" }}>
-                  <th>Notes</th>
-                  <td>
-                    {activeReservation?.notes ? activeReservation.notes : "--"}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-
-            {/* Progress Bar */}
-            <div className="mt-4">
-              <h5 className="mb-2">Service Progress</h5>
-
-              <strong>Remaining time</strong>
-              <div className="text-muted mb-3">
-                {activeReservation
-                  ? activeReservation.status_name === "Ongoing"
-                    ? getRemainingTime()
-                    : activeReservation.status_name === "Completed"
-                    ? "Service completed. "
-                    : activeReservation.status_name === "Pending"
-                    ? "Service has not started yet."
-                    : "Service is cancelled by user or admin."
-                  : "Loading..."}
+          <div className="card border-0 shadow-sm">
+            <div className="card-header bg-white border-0 py-4">
+              <div className="d-flex align-items-center">
+                <div className="me-3">
+                  <StatusIcon size={28} className={statusConfig.text} />
+                </div>
+                <div>
+                  <h4 className="mb-1 fw-bold">Service Details</h4>
+                  <p className="text-muted mb-0">Complete information about your reservation</p>
+                </div>
               </div>
+            </div>
 
-              {activeReservation ? (
-                activeReservation.status_name === "Ongoing" ? (
-                  <div className="progress" style={{ height: "30px" }}>
-                    <div
-                      className="progress-bar bg-primary progress-bar-striped progress-bar-animated"
-                      role="progressbar"
-                      style={{
-                        width: `${getProgressPercentage()}%`,
-                      }}
-                      aria-valuemin="0"
-                      aria-valuemax="100"
-                    >
-                      {getProgressPercentage()}%
+            <div className="card-body p-4">
+              {/* Status and Vehicle Info */}
+              <div className="row g-4 mb-4">
+                <div className="col-md-6">
+                  <div className="d-flex align-items-center p-3 rounded-3" style={{ backgroundColor: '#f8f9fa' }}>
+                    <div className="me-3">
+                      <StatusIcon size={24} className={statusConfig.text} />
                     </div>
-                  </div>
-                ) : activeReservation.status_name === "Completed" ? (
-                  <>
-                    <div className="progress" style={{ height: "30px" }}>
-                      <div
-                        className="progress-bar bg-success progress-bar-striped progress-bar-animated"
-                        role="progressbar"
-                        style={{
-                          width: `100%`,
-                        }}
-                        aria-valuemin="0"
-                        aria-valuemax="100"
-                      >
-                        100% - Completed
+                    <div>
+                      <small className="text-muted text-uppercase fw-semibold">Current Status</small>
+                      <div>
+                        <span className={`badge ${statusConfig.bg} fs-6 px-3 py-2`}>
+                          {activeReservation ? activeReservation.status_name : "Loading..."}
+                        </span>
                       </div>
                     </div>
-                  </>
-                ) : (
-                  ""
-                )
-              ) : (
-                <div className="text-muted">Loading progress...</div>
-              )}
+                  </div>
+                </div>
+
+                <div className="col-md-6">
+                  <div className="d-flex align-items-center p-3 rounded-3" style={{ backgroundColor: '#f8f9fa' }}>
+                    <div className="me-3">
+                      <FiTruck size={24} className="text-primary" />
+                    </div>
+                    <div className="flex-grow-1">
+                      <small className="text-muted text-uppercase fw-semibold">Vehicle</small>
+                      <div className="d-flex align-items-center">
+                        <span className="fw-bold fs-5 me-2">
+                          {activeReservation ? activeReservation.vehicle_id : "--"}
+                        </span>
+                        {activeReservation && (
+                          <button
+                            className="btn btn-outline-primary btn-sm border-0 p-1"
+                            onClick={() =>
+                              navigate(`/myaccount/vehicle-info/${activeReservation.vehicle_id}`)
+                            }
+                            title="View vehicle details"
+                          >
+                            <CiCircleInfo size={20} />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Service Type and Notes */}
+              <div className="row g-4 mb-4">
+                <div className="col-12">
+                  <div className="p-3 rounded-3" style={{ backgroundColor: '#f8f9fa' }}>
+                    <div className="row">
+                      <div className="col-md-6">
+                        <small className="text-muted text-uppercase fw-semibold">Service Type</small>
+                        <div className="fw-bold fs-5 text-dark">
+                          {activeReservation ? activeReservation.service_name : "--"}
+                        </div>
+                      </div>
+                      <div className="col-md-6">
+                        <small className="text-muted text-uppercase fw-semibold">Additional Notes</small>
+                        <div className="text-dark">
+                          {activeReservation?.notes || "No additional notes"}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Progress Section */}
+              <div className="mt-4">
+                <div className="d-flex align-items-center mb-3">
+                  <FiClock size={20} className="text-primary me-2" />
+                  <h5 className="mb-0 fw-bold">Service Progress</h5>
+                </div>
+
+                <div className="mb-3">
+                  <div className="d-flex justify-content-between align-items-center mb-2">
+                    <span className="fw-semibold">Remaining Time</span>
+                    {activeReservation?.status_name === "Ongoing" && (
+                      <span className="badge bg-light text-dark">{getProgressPercentage()}% Complete</span>
+                    )}
+                  </div>
+                  
+                  <div className="alert alert-light border-0 mb-3" style={{ backgroundColor: '#f8f9fa' }}>
+                    {activeReservation ? (
+                      activeReservation.status_name === "Ongoing" ? (
+                        <div className="text-dark fw-medium">{getRemainingTime()}</div>
+                      ) : activeReservation.status_name === "Completed" ? (
+                        <div className="text-success fw-medium">✅ Service completed successfully</div>
+                      ) : activeReservation.status_name === "Pending" ? (
+                        <div className="text-warning fw-medium">⏳ Service has not started yet</div>
+                      ) : (
+                        <div className="text-danger fw-medium">❌ Service was cancelled</div>
+                      )
+                    ) : (
+                      "Loading status..."
+                    )}
+                  </div>
+
+                  {activeReservation && (
+                    activeReservation.status_name === "Ongoing" ? (
+                      <div className="progress" style={{ height: "12px" }}>
+                        <div
+                          className={`progress-bar progress-bar-striped progress-bar-animated ${getProgressBarColor(getProgressPercentage())}`}
+                          role="progressbar"
+                          style={{ width: `${getProgressPercentage()}%` }}
+                          aria-valuemin="0"
+                          aria-valuemax="100"
+                        />
+                      </div>
+                    ) : activeReservation.status_name === "Completed" && (
+                      <div className="progress" style={{ height: "12px" }}>
+                        <div
+                          className="progress-bar bg-success"
+                          role="progressbar"
+                          style={{ width: "100%" }}
+                          aria-valuemin="0"
+                          aria-valuemax="100"
+                        />
+                      </div>
+                    )
+                  )}
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Admin Chat Box */}
+        {/* Messages Section */}
         <div className="col-lg-4">
-          <div
-            className="card shadow p-3 d-flex flex-column"
-            style={{ height: "100%", maxHeight: "500px" }}
-          >
-            <h4 className="fw-bold mb-3">Admin Messages</h4>
-            <div
-              className="border rounded p-3 flex-grow-1 overflow-auto bg-light"
-              style={{ whiteSpace: "pre-wrap" }}
-            >
-              {messages.length > 0 ? (
-                messages.map((msg) =>
-                  msg.role == "1" && msg.message ? (
+          <div className="card border-0 shadow-sm h-100">
+            <div className="card-header bg-white border-0 py-4">
+              <div className="d-flex align-items-center">
+                <div className="me-3">
+                  <FiMessageCircle size={24} className="text-primary" />
+                </div>
+                <div>
+                  <h4 className="mb-1 fw-bold">Admin Messages</h4>
+                  <p className="text-muted mb-0 small">Communication updates</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="card-body p-0" style={{ maxHeight: "400px" }}>
+              <div className="overflow-auto h-100 px-4 pb-4">
+                {messages.length > 0 ? (
+                  messages.map((msg) => (
                     <div
                       key={msg.id}
-                      className="bg-white border rounded shadow-sm p-2 mb-3"
+                      className={`p-3 mb-3 rounded-3 shadow-sm ${
+                        msg.role === "1" 
+                          ? "bg-white border border-primary border-opacity-25" 
+                          : "border"
+                      }`}
+                      style={msg.role !== "1" ? { backgroundColor: "#e3f2fd" } : {}}
                     >
-                      <div className="text-muted small mb-1">
-                        {new Date(msg.created_at).toLocaleString()}
+                      <div className="d-flex align-items-center mb-2">
+                        <div className="me-2">
+                          <div 
+                            className={`rounded-circle d-flex align-items-center justify-content-center ${
+                              msg.role === "1" ? "bg-primary" : "bg-info"
+                            }`}
+                            style={{ width: '24px', height: '24px' }}
+                          >
+                            <FiUser size={12} className="text-white" />
+                          </div>
+                        </div>
+                        <small className="text-muted">
+                          {new Date(msg.created_at).toLocaleString()}
+                        </small>
                       </div>
                       <div className="text-dark">{msg.message}</div>
                     </div>
-                  ) : (
-                    <div
-                      key={msg.id}
-                      className="border rounded shadow-sm p-2 mb-3"
-                      style={{ backgroundColor: "#b0f3ffff" }}
-                    >
-                      <div className="text-muted small mb-1">
-                        {new Date(msg.created_at).toLocaleString()}
-                      </div>
-                      <div className="text-dark">{msg.message}</div>
-                    </div>
-                  )
-                )
-              ) : (
-                <div className="text-muted">No messages from admin yet.</div>
-              )}
+                  ))
+                ) : (
+                  <div className="text-center py-5">
+                    <FiMessageCircle size={48} className="text-muted mb-3" />
+                    <p className="text-muted mb-0">No messages from admin yet</p>
+                    <small className="text-muted">Updates will appear here when available</small>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>

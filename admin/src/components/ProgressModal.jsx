@@ -1,10 +1,6 @@
 import React, { useEffect, useState } from "react";
 
-const ProgressModal = ({ 
-  isOpen, 
-  selectedReservation, 
-  onClose 
-}) => {
+const ProgressModal = ({ isOpen, selectedReservation, onClose }) => {
   const [progressData, setProgressData] = useState({
     duration: "0h 0m",
     remaining: "0h 0m",
@@ -12,16 +8,43 @@ const ProgressModal = ({
   });
 
   // Calculate progress based on reservation times
-  const calculateProgress = (startDateTime, endDateTime) => {
-    const now = new Date().toLocaleString();
-    const startTime = new Date(startDateTime).toLocaleString();
-    const endTime = new Date(endDateTime).toLocaleString();
+  const calculateProgress = () => {
+    const now = new Date();
+    const startTime = new Date(
+      `${new Date(selectedReservation.reserve_date).toLocaleDateString(
+        "en-CA"
+      )}T${selectedReservation.start_time}`
+    ); // force UTC
+    const endTime = new Date(
+      `${new Date(selectedReservation.end_date).toLocaleDateString("en-CA")}T${
+        selectedReservation.end_time
+      }`
+    );
 
-    console.log("Start Time:", startTime, "End Time:", endTime, "Now:", now);
+    // For display only (to check timezone)
+    console.log(
+      "Start Time:",
+      startTime.toLocaleString(),
+      "End Time:",
+      endTime.toLocaleString(),
+      "Now:",
+      now.toLocaleString()
+    );
+
+    // Time calculations (in ms)
     const totalMs = endTime - startTime;
     const passedMs = now - startTime;
     const remainingMs = endTime - now;
-    
+
+    console.log(
+      "Total (ms):",
+      totalMs,
+      "Passed (ms):",
+      passedMs,
+      "Remaining (ms):",
+      remainingMs
+    );
+
     // Calculate percentage
     let percentage = 0;
     if (totalMs > 0) {
@@ -38,7 +61,7 @@ const ProgressModal = ({
 
     // Calculate total duration
     const duration = formatTime(totalMs);
-    
+
     // Calculate remaining time
     const remaining = remainingMs > 0 ? formatTime(remainingMs) : "0h 0m";
 
@@ -53,17 +76,23 @@ const ProgressModal = ({
   useEffect(() => {
     if (isOpen && selectedReservation) {
       // Combine date and time for start
-      const startDateTime = `${selectedReservation.reserve_date.split('T')[0]} ${selectedReservation.start_time}`;
+      const startDateTime = `${
+        selectedReservation.reserve_date.split("T")[0]
+      } ${selectedReservation.start_time}`;
       // Combine date and time for end
-      const endDateTime = `${selectedReservation.end_date.split('T')[0]} ${selectedReservation.end_time}`;
-      
+      const endDateTime = `${selectedReservation.end_date.split("T")[0]} ${
+        selectedReservation.end_time
+      }`;
 
       const newProgressData = calculateProgress(startDateTime, endDateTime);
       setProgressData(newProgressData);
 
       // Set up interval to update progress every minute
       const interval = setInterval(() => {
-        const updatedProgressData = calculateProgress(startDateTime, endDateTime);
+        const updatedProgressData = calculateProgress(
+          startDateTime,
+          endDateTime
+        );
         setProgressData(updatedProgressData);
       }, 60000); // Update every minute
 
@@ -83,7 +112,8 @@ const ProgressModal = ({
   };
 
   // Determine if service is overdue
-  const isOverdue = progressData.percentage >= 100 && progressData.remaining === "0h 0m";
+  const isOverdue =
+    progressData.percentage >= 100 && progressData.remaining === "0h 0m";
 
   return (
     <div
@@ -94,17 +124,15 @@ const ProgressModal = ({
       <div className="modal-dialog modal-dialog-centered">
         <div className="modal-content rounded-3 shadow-lg">
           <div className="modal-header bg-primary text-white">
-            <h4 className="modal-title fw-bold fs-3">
-              Service Progress
-            </h4>
-            
+            <h4 className="modal-title fw-bold fs-3">Service Progress</h4>
           </div>
 
           <div className="modal-body p-4">
             {/* Reservation Details */}
             <div className="mb-3">
               <h5 className="text-center mb-3">
-                {selectedReservation.service_name} - {selectedReservation.vehicle_id}
+                {selectedReservation.service_name} -{" "}
+                {selectedReservation.vehicle_id}
               </h5>
               <p className="text-center text-muted mb-3">
                 Reservation ID: {selectedReservation.reservation_id}
@@ -119,13 +147,21 @@ const ProgressModal = ({
               </div>
               <div className="col border-end">
                 <p className="text-muted mb-1">Remaining</p>
-                <p className={`fs-4 ${isOverdue ? 'text-danger' : 'text-dark'}`}>
-                  {isOverdue ? 'Overdue!' : progressData.remaining}
+                <p
+                  className={`fs-4 ${isOverdue ? "text-danger" : "text-dark"}`}
+                >
+                  {isOverdue ? "Overdue!" : progressData.remaining}
                 </p>
               </div>
               <div className="col">
                 <p className="text-muted mb-1">Progress</p>
-                <p className={`fs-4 ${progressData.percentage >= 100 ? 'text-danger' : 'text-success'}`}>
+                <p
+                  className={`fs-4 ${
+                    progressData.percentage >= 100
+                      ? "text-danger"
+                      : "text-success"
+                  }`}
+                >
                   {progressData.percentage.toFixed(1)}%
                 </p>
               </div>
@@ -134,7 +170,9 @@ const ProgressModal = ({
             {/* Progress Bar */}
             <div className="progress mt-3" style={{ height: "20px" }}>
               <div
-                className={`progress-bar progress-bar-striped progress-bar-animated ${getProgressBarColor(progressData.percentage)}`}
+                className={`progress-bar progress-bar-striped progress-bar-animated ${getProgressBarColor(
+                  progressData.percentage
+                )}`}
                 role="progressbar"
                 style={{ width: `${Math.min(100, progressData.percentage)}%` }}
                 aria-valuenow={progressData.percentage}
@@ -149,13 +187,19 @@ const ProgressModal = ({
                 <div className="col-6">
                   <small className="text-muted">Start Time:</small>
                   <p className="mb-1">
-                    {new Date(selectedReservation.reserve_date).toLocaleDateString('en-CA')} {selectedReservation.start_time.substring(0, 5)}
+                    {new Date(
+                      selectedReservation.reserve_date
+                    ).toLocaleDateString("en-CA")}{" "}
+                    {selectedReservation.start_time.substring(0, 5)}
                   </p>
                 </div>
                 <div className="col-6">
                   <small className="text-muted">End Time:</small>
                   <p className="mb-1">
-                    {new Date(selectedReservation.end_date).toLocaleDateString('en-CA')} {selectedReservation.end_time.substring(0, 5)}
+                    {new Date(selectedReservation.end_date).toLocaleDateString(
+                      "en-CA"
+                    )}{" "}
+                    {selectedReservation.end_time.substring(0, 5)}
                   </p>
                 </div>
               </div>

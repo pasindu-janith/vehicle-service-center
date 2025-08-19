@@ -15,6 +15,7 @@ const EndReservationModal = ({
   const [serviceCost, setServiceCost] = useState("");
   const [serviceDiscount, setServiceDiscount] = useState("0.00");
   const [finalAmount, setFinalAmount] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleAddExtraItem = () => {
     const price = parseFloat(extraItem.price);
@@ -55,6 +56,8 @@ const EndReservationModal = ({
   };
 
   const handleEndReservation = () => {
+    if (isSubmitting) return; // Prevent multiple submissions
+    setIsSubmitting(true);
     const formData = {
       reservationId: selectedReservation.reservation_id,
       vehicleNumber: selectedReservation.vehicle_id,

@@ -46,6 +46,6 @@ adminRouter.get("/loadCustomerVehicles", loadCustomerVehicles);
 adminRouter.get("/loadAllVehicles", loadAllVehicles);
 adminRouter.get("/loadVehicleInfo", loadVehicleInfo);
 adminRouter.post("/reset-password", resetAdminPassword);
-adminRouter.post("/proceedCashPayment", proceedCashPayment)
+adminRouter.post("/proceedCashPayment", proceedCashPayment);
 
 export default adminRouter;

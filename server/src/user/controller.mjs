@@ -1062,6 +1062,7 @@ export const createReservation = async (req, res) => {
       serviceType: service_type.service_name,
       serviceDate,
       serviceStartTime,
+      notes: note,
     });
     return res.status(200).send({ message: "Reservation created" });
   } catch (error) {
@@ -1077,6 +1078,7 @@ const sendReservationCreationEmail = async (email, reservationDetails) => {
     serviceType,
     serviceDate,
     serviceStartTime,
+    notes,
   } = reservationDetails;
   const token = tokenGen({ email });
   sendEmail(
@@ -1148,9 +1150,9 @@ const sendReservationCreationEmail = async (email, reservationDetails) => {
     }
     .btn {
       background-color: rgb(140, 0, 0);
-      color: #ffffff;
+      color: #ffffff !important;
       padding: 12px 24px;
-      text-decoration: none;
+      text-decoration: none !important;
       border-radius: 4px;
       font-weight: bold;
       display: inline-block;
@@ -1188,7 +1190,8 @@ const sendReservationCreationEmail = async (email, reservationDetails) => {
           <li><strong>Vehicle ID:</strong> ${vehicleID}</li>
           <li><strong>Service Type:</strong> ${serviceType}</li>
           <li><strong>Service Date:</strong> ${serviceDate}</li>
-          <li><strong>Service Start Time:</strong> ${serviceStartTime}</li>
+          <li><strong>Reserved Time:</strong> ${serviceStartTime}</li>
+          <li><strong>Your notes:</strong> ${notes}</li>
         </ul>
       </div>
       <p>Please be there at your reserved time.</p>
@@ -1376,7 +1379,7 @@ export const loadServiceRecordPayment = async (req, res) => {
   }
 };
 
-//once user go to proceed payment page, this function will be called
+// once user go to proceed payment page, this function will be called
 // It retrieves the payment data for a specific reservation and user
 export const loadPaymentPageData = async (req, res) => {
   try {

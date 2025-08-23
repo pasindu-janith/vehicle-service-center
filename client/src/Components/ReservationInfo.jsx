@@ -1,17 +1,17 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { CiCircleInfo } from "react-icons/ci";
-import { 
-  FiClock, 
-  FiCalendar, 
-  FiTruck, 
-  FiSettings, 
-  FiUser, 
+import {
+  FiClock,
+  FiUser,
   FiMessageCircle,
   FiCheckCircle,
   FiAlertCircle,
-  FiPlayCircle
+  FiPlayCircle,
 } from "react-icons/fi";
+import { FaBarsProgress } from "react-icons/fa6";
+import { FaCarAlt } from "react-icons/fa";
+import { MdNotes } from "react-icons/md";
 import BASE_URL from "../config.js";
 
 const ReservationInfo = () => {
@@ -22,7 +22,7 @@ const ReservationInfo = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [remainingTime, setRemainingTime] = useState(0);
   const [duration, setDuration] = useState(0);
-  
+
   useEffect(() => {
     const loadReservationInfo = async () => {
       try {
@@ -44,21 +44,25 @@ const ReservationInfo = () => {
           console.log("Reservation data:", data.messages);
 
           const reservationData = data.reservationData;
-          if (reservationData && reservationData.reserve_date && reservationData.start_time && 
-              reservationData.end_date && reservationData.end_time) {
-            
+          if (
+            reservationData &&
+            reservationData.reserve_date &&
+            reservationData.start_time &&
+            reservationData.end_date &&
+            reservationData.end_time
+          ) {
             const start = new Date(
-              `${new Date(reservationData.reserve_date).toLocaleDateString("en-CA")}T${
-                reservationData.start_time
-              }`
+              `${new Date(reservationData.reserve_date).toLocaleDateString(
+                "en-CA"
+              )}T${reservationData.start_time}`
             );
             const end = new Date(
-              `${new Date(reservationData.end_date).toLocaleDateString("en-CA")}T${
-                reservationData.end_time
-              }`
+              `${new Date(reservationData.end_date).toLocaleDateString(
+                "en-CA"
+              )}T${reservationData.end_time}`
             );
             const now = new Date();
-            
+
             setRemainingTime(end - now);
             setDuration(end - start);
           }
@@ -118,9 +122,9 @@ const ReservationInfo = () => {
       const minutes = totalMinutes % 60;
 
       const parts = [];
-      if (days > 0) parts.push(`${days} day${days > 1 ? 's' : ''}`);
-      if (hours > 0) parts.push(`${hours} hour${hours > 1 ? 's' : ''}`);
-      if (minutes > 0) parts.push(`${minutes} minute${minutes > 1 ? 's' : ''}`);
+      if (days > 0) parts.push(`${days} day${days > 1 ? "s" : ""}`);
+      if (hours > 0) parts.push(`${hours} hour${hours > 1 ? "s" : ""}`);
+      if (minutes > 0) parts.push(`${minutes} minute${minutes > 1 ? "s" : ""}`);
 
       return parts.length > 0
         ? `${parts.join(" ")}`
@@ -158,8 +162,13 @@ const ReservationInfo = () => {
 
       return (
         <div className="text-center">
-          <div className="fw-bold">{days} day{days !== 1 ? 's' : ''} {hours} hour{hours !== 1 ? 's' : ''}</div>
-          <small className="text-muted">{minutes} minute{minutes !== 1 ? 's' : ''}</small>
+          <div className="fw-bold">
+            {days} day{days !== 1 ? "s" : ""} {hours} hour
+            {hours !== 1 ? "s" : ""}
+          </div>
+          <small className="text-muted">
+            {minutes} minute{minutes !== 1 ? "s" : ""}
+          </small>
         </div>
       );
     }
@@ -169,15 +178,26 @@ const ReservationInfo = () => {
   const getProgressPercentage = () => {
     if (remainingTime <= 0) return 100;
     if (duration <= 0) return 0;
-    return Math.max(0, Math.min(100, 100 - Math.floor((remainingTime / duration) * 100)));
+    return Math.max(
+      0,
+      Math.min(100, 100 - Math.floor((remainingTime / duration) * 100))
+    );
   };
 
   const getStatusColor = (status) => {
     switch (status) {
-      case "Completed": return { bg: "bg-success", text: "text-success", icon: FiCheckCircle };
-      case "Ongoing": return { bg: "bg-primary", text: "text-primary", icon: FiPlayCircle };
-      case "Pending": return { bg: "bg-warning", text: "text-warning", icon: FiAlertCircle };
-      default: return { bg: "bg-secondary", text: "text-secondary", icon: FiAlertCircle };
+      case "Completed":
+        return { bg: "bg-success", text: "text-success", icon: FiCheckCircle };
+      case "Ongoing":
+        return { bg: "bg-primary", text: "text-primary", icon: FiPlayCircle };
+      case "Pending":
+        return { bg: "bg-warning", text: "text-warning", icon: FiAlertCircle };
+      default:
+        return {
+          bg: "bg-secondary",
+          text: "text-secondary",
+          icon: FiAlertCircle,
+        };
     }
   };
 
@@ -189,18 +209,20 @@ const ReservationInfo = () => {
 
   if (isLoading) {
     return (
-      <div className="container mt-5 mb-5">
+      <div className="container mt-5 mb-5 vh-100 d-flex align-items-center justify-content-center">
         <div className="text-center">
-          <div className="spinner-border text-primary" role="status">
+          <div className="spinner-border text-primary" role="status" style={{ width: "4rem", height: "4rem" }}>
             <span className="visually-hidden">Loading...</span>
           </div>
-          <p className="mt-3 text-muted">Loading reservation information...</p>
+          <h5 className="mt-3 text-muted">Loading reservation information...</h5>
         </div>
       </div>
     );
   }
 
-  const statusConfig = activeReservation ? getStatusColor(activeReservation.status_name) : getStatusColor("Unknown");
+  const statusConfig = activeReservation
+    ? getStatusColor(activeReservation.status_name)
+    : getStatusColor("Unknown");
   const StatusIcon = statusConfig.icon;
 
   return (
@@ -209,19 +231,18 @@ const ReservationInfo = () => {
       <div className="row mb-4">
         <div className="col-12">
           <div className="d-flex align-items-center mb-3">
-            
             <div>
-              <h1 className="mb-1" style={{ 
-                fontSize: "2.5rem", 
-                fontWeight: "700",
-                background: "linear-gradient(135deg, #071551ff 0%, #764ba2 100%)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-                backgroundClip: "text"
-              }}>
+              <h1
+                className="mb-1 main-title fw-bold"
+                style={{
+                  
+                }}
+              >
                 Service Overview
               </h1>
-              <p className="text-muted mb-0 fs-5">Track your reservation status and progress</p>
+              <p className="text-muted mb-0 fs-6">
+                Track your reservation status and progress
+              </p>
             </div>
           </div>
         </div>
@@ -230,11 +251,15 @@ const ReservationInfo = () => {
       {/* Stats Cards */}
       <div className="row g-3 mb-4">
         <div className="col-lg-3 col-md-6">
-          <div className="card border-0 shadow-sm h-100" style={{ backgroundColor: '#6366f1' }}>
-            <div className="card-body text-white text-center py-4">
-             
-              <div className="text-white-50 small text-uppercase">Reservation ID</div>
-              <div className="fs-2 fw-bold">
+          <div
+            className="card border-0 shadow-sm h-100"
+            style={{ backgroundColor: "#eeeeeeff" }}
+          >
+            <div className="card-body text-dark text-center py-4">
+              <div className="text-dark small text-uppercase">
+                Reservation ID
+              </div>
+              <div className="fs-2 fw-bold text-primary">
                 {activeReservation ? activeReservation.reservation_id : "---"}
               </div>
             </div>
@@ -242,45 +267,68 @@ const ReservationInfo = () => {
         </div>
 
         <div className="col-lg-3 col-md-6">
-          <div className="card border-0 shadow-sm h-100" style={{ backgroundColor: '#ec4899' }}>
-            <div className="card-body text-white text-center py-4">
-              
-              <div className="text-white-50 small text-uppercase">Start Time</div>
+          <div
+            className="card border-0 shadow-sm h-100"
+            style={{ backgroundColor: "#c2ffe4ff" }}
+          >
+            <div className="card-body text-dark text-center py-4">
+              <div className="text-dark small text-uppercase">
+                <FiClock size={16} className="me-1" />Start Time</div>
               <div className="fs-5 fw-bold">
                 {activeReservation ? (
                   <>
-                    <div>{new Date(activeReservation.reserve_date).toLocaleDateString("en-CA")}</div>
-                    <small className="opacity-75">{formatTime12Hour(activeReservation.start_time)}</small>
+                    <div>
+                      {new Date(
+                        activeReservation.reserve_date
+                      ).toLocaleDateString("en-CA")}
+                    </div>
+                    <small className="opacity-75">
+                      {formatTime12Hour(activeReservation.start_time)}
+                    </small>
                   </>
-                ) : "---"}
+                ) : (
+                  "---"
+                )}
               </div>
             </div>
           </div>
         </div>
 
         <div className="col-lg-3 col-md-6">
-          <div className="card border-0 shadow-sm h-100" style={{ backgroundColor: '#06b6d4' }}>
-            <div className="card-body text-white text-center py-4">
-              
-              <div className="text-white-50 small text-uppercase">End Time</div>
+          <div className="card border-0 shadow-sm h-100">
+            <div
+              className="card-body text-dark text-center py-4"
+              style={{ backgroundColor: "#bee4ffff" }}
+            >
+              <div className="text-dark small text-uppercase"><FiClock size={16} className="me-1" />End Time</div>
               <div className="fs-5 fw-bold">
                 {activeReservation ? (
                   <>
-                    <div>{new Date(activeReservation.end_date).toLocaleDateString("en-CA")}</div>
-                    <small className="opacity-75">{formatTime12Hour(activeReservation.end_time)}</small>
+                    <div>
+                      {new Date(activeReservation.end_date).toLocaleDateString(
+                        "en-CA"
+                      )}
+                    </div>
+                    <small className="opacity-75">
+                      {formatTime12Hour(activeReservation.end_time)}
+                    </small>
                   </>
-                ) : "---"}
+                ) : (
+                  "---"
+                )}
               </div>
             </div>
           </div>
         </div>
 
         <div className="col-lg-3 col-md-6">
-          <div className="card border-0 shadow-sm h-100" style={{ backgroundColor: '#f59e0b' }}>
-            <div className="card-body text-white text-center py-4">
-              
-              <div className="text-white-50 small text-uppercase">Total Duration</div>
-              <div className="fs-6 fw-bold">
+          <div
+            className="card shadow-sm border-0 h-100"
+            style={{ backgroundColor: "#ffb9b9ff" }}
+          >
+            <div className="card-body text-dark text-center py-4">
+              <div className="small text-uppercase">Total Duration</div>
+              <div className="fs-5 fw-bold">
                 {getDuration() !== "" ? getDuration() : "---"}
               </div>
             </div>
@@ -292,14 +340,13 @@ const ReservationInfo = () => {
         {/* Main Reservation Details */}
         <div className="col-lg-8">
           <div className="card border-0 shadow-sm">
-            <div className="card-header bg-white border-0 py-4">
+            <div className="card-header bg-white border-bottom py-4">
               <div className="d-flex align-items-center">
                 <div className="me-3">
-                  <StatusIcon size={28} className={statusConfig.text} />
+                  <MdNotes size={28} />
                 </div>
                 <div>
                   <h4 className="mb-1 fw-bold">Service Details</h4>
-                  <p className="text-muted mb-0">Complete information about your reservation</p>
                 </div>
               </div>
             </div>
@@ -308,15 +355,24 @@ const ReservationInfo = () => {
               {/* Status and Vehicle Info */}
               <div className="row g-4 mb-4">
                 <div className="col-md-6">
-                  <div className="d-flex align-items-center p-3 rounded-3" style={{ backgroundColor: '#f8f9fa' }}>
+                  <div
+                    className="d-flex align-items-center p-3 rounded-3"
+                    style={{ backgroundColor: "#f8f9fa" }}
+                  >
                     <div className="me-3">
                       <StatusIcon size={24} className={statusConfig.text} />
                     </div>
                     <div>
-                      <small className="text-muted text-uppercase fw-semibold">Current Status</small>
+                      <small className="text-muted text-uppercase fw-semibold">
+                        Current Status
+                      </small>
                       <div>
-                        <span className={`badge ${statusConfig.bg} fs-6 px-3 py-2`}>
-                          {activeReservation ? activeReservation.status_name : "Loading..."}
+                        <span
+                          className={`badge ${statusConfig.bg} fs-6 px-3 py-2`}
+                        >
+                          {activeReservation
+                            ? activeReservation.status_name
+                            : "Loading..."}
                         </span>
                       </div>
                     </div>
@@ -324,21 +380,30 @@ const ReservationInfo = () => {
                 </div>
 
                 <div className="col-md-6">
-                  <div className="d-flex align-items-center p-3 rounded-3" style={{ backgroundColor: '#f8f9fa' }}>
+                  <div
+                    className="d-flex align-items-center p-3 rounded-3"
+                    style={{ backgroundColor: "#f8f9fa" }}
+                  >
                     <div className="me-3">
-                      <FiTruck size={24} className="text-primary" />
+                      <FaCarAlt size={24} className="text-dark" />
                     </div>
                     <div className="flex-grow-1">
-                      <small className="text-muted text-uppercase fw-semibold">Vehicle</small>
+                      <small className="text-muted text-uppercase fw-semibold">
+                        Vehicle
+                      </small>
                       <div className="d-flex align-items-center">
                         <span className="fw-bold fs-5 me-2">
-                          {activeReservation ? activeReservation.vehicle_id : "--"}
+                          {activeReservation
+                            ? activeReservation.vehicle_id
+                            : "--"}
                         </span>
                         {activeReservation && (
                           <button
                             className="btn btn-outline-primary btn-sm border-0 p-1"
                             onClick={() =>
-                              navigate(`/myaccount/vehicle-info/${activeReservation.vehicle_id}`)
+                              navigate(
+                                `/myaccount/vehicle-info/${activeReservation.vehicle_id}`
+                              )
                             }
                             title="View vehicle details"
                           >
@@ -354,16 +419,25 @@ const ReservationInfo = () => {
               {/* Service Type and Notes */}
               <div className="row g-4 mb-4">
                 <div className="col-12">
-                  <div className="p-3 rounded-3" style={{ backgroundColor: '#f8f9fa' }}>
+                  <div
+                    className="p-3 rounded-3"
+                    style={{ backgroundColor: "#f8f9fa" }}
+                  >
                     <div className="row">
                       <div className="col-md-6">
-                        <small className="text-muted text-uppercase fw-semibold">Service Type</small>
+                        <small className="text-muted text-uppercase fw-semibold">
+                          Service Type
+                        </small>
                         <div className="fw-bold fs-5 text-dark">
-                          {activeReservation ? activeReservation.service_name : "--"}
+                          {activeReservation
+                            ? activeReservation.service_name
+                            : "--"}
                         </div>
                       </div>
                       <div className="col-md-6">
-                        <small className="text-muted text-uppercase fw-semibold">Additional Notes</small>
+                        <small className="text-muted text-uppercase fw-semibold">
+                          Additional Notes
+                        </small>
                         <div className="text-dark">
                           {activeReservation?.notes || "No additional notes"}
                         </div>
@@ -376,7 +450,7 @@ const ReservationInfo = () => {
               {/* Progress Section */}
               <div className="mt-4">
                 <div className="d-flex align-items-center mb-3">
-                  <FiClock size={20} className="text-primary me-2" />
+                  <FaBarsProgress size={20} className="text-dark me-2" />
                   <h5 className="mb-0 fw-bold">Service Progress</h5>
                 </div>
 
@@ -384,49 +458,65 @@ const ReservationInfo = () => {
                   <div className="d-flex justify-content-between align-items-center mb-2">
                     <span className="fw-semibold">Remaining Time</span>
                     {activeReservation?.status_name === "Ongoing" && (
-                      <span className="badge bg-light text-dark">{getProgressPercentage()}% Complete</span>
+                      <span className="badge bg-light text-dark">
+                        {getProgressPercentage()}% Complete
+                      </span>
                     )}
                   </div>
-                  
-                  <div className="alert alert-light border-0 mb-3" style={{ backgroundColor: '#f8f9fa' }}>
+
+                  <div
+                    className="alert alert-light border-0 mb-3"
+                    style={{ backgroundColor: "#f8f9fa" }}
+                  >
                     {activeReservation ? (
                       activeReservation.status_name === "Ongoing" ? (
-                        <div className="text-dark fw-medium">{getRemainingTime()}</div>
+                        <div className="text-dark fw-medium">
+                          {getRemainingTime()}
+                        </div>
                       ) : activeReservation.status_name === "Completed" ? (
-                        <div className="text-success fw-medium">✅ Service completed successfully</div>
+                        <div className="text-success fw-medium">
+                          ✅ Service completed successfully
+                        </div>
                       ) : activeReservation.status_name === "Pending" ? (
-                        <div className="text-warning fw-medium">⏳ Service has not started yet</div>
+                        <div className="text-warning fw-medium">
+                          ⏳ Service has not started yet
+                        </div>
                       ) : (
-                        <div className="text-danger fw-medium">❌ Service was cancelled</div>
+                        <div className="text-danger fw-medium">
+                          ❌ Service was cancelled
+                        </div>
                       )
                     ) : (
                       "Loading status..."
                     )}
                   </div>
 
-                  {activeReservation && (
-                    activeReservation.status_name === "Ongoing" ? (
+                  {activeReservation &&
+                    (activeReservation.status_name === "Ongoing" ? (
                       <div className="progress" style={{ height: "12px" }}>
                         <div
-                          className={`progress-bar progress-bar-striped progress-bar-animated ${getProgressBarColor(getProgressPercentage())}`}
+                          className={`progress-bar progress-bar-striped progress-bar-animated ${getProgressBarColor(
+                            getProgressPercentage()
+                          )}`}
                           role="progressbar"
                           style={{ width: `${getProgressPercentage()}%` }}
                           aria-valuemin="0"
                           aria-valuemax="100"
                         />
                       </div>
-                    ) : activeReservation.status_name === "Completed" && (
-                      <div className="progress" style={{ height: "12px" }}>
-                        <div
-                          className="progress-bar bg-success"
-                          role="progressbar"
-                          style={{ width: "100%" }}
-                          aria-valuemin="0"
-                          aria-valuemax="100"
-                        />
-                      </div>
-                    )
-                  )}
+                    ) : (
+                      activeReservation.status_name === "Completed" && (
+                        <div className="progress" style={{ height: "12px" }}>
+                          <div
+                            className="progress-bar bg-success"
+                            role="progressbar"
+                            style={{ width: "100%" }}
+                            aria-valuemin="0"
+                            aria-valuemax="100"
+                          />
+                        </div>
+                      )
+                    ))}
                 </div>
               </div>
             </div>
@@ -455,19 +545,21 @@ const ReservationInfo = () => {
                     <div
                       key={msg.id}
                       className={`p-3 mb-3 rounded-3 shadow-sm ${
-                        msg.role === "1" 
-                          ? "bg-white border border-primary border-opacity-25" 
+                        msg.role === "1"
+                          ? "bg-white border border-primary border-opacity-25"
                           : "border"
                       }`}
-                      style={msg.role !== "1" ? { backgroundColor: "#e3f2fd" } : {}}
+                      style={
+                        msg.role !== "1" ? { backgroundColor: "#e3f2fd" } : {}
+                      }
                     >
                       <div className="d-flex align-items-center mb-2">
                         <div className="me-2">
-                          <div 
+                          <div
                             className={`rounded-circle d-flex align-items-center justify-content-center ${
                               msg.role === "1" ? "bg-primary" : "bg-info"
                             }`}
-                            style={{ width: '24px', height: '24px' }}
+                            style={{ width: "24px", height: "24px" }}
                           >
                             <FiUser size={12} className="text-white" />
                           </div>
@@ -482,8 +574,12 @@ const ReservationInfo = () => {
                 ) : (
                   <div className="text-center py-5">
                     <FiMessageCircle size={48} className="text-muted mb-3" />
-                    <p className="text-muted mb-0">No messages from admin yet</p>
-                    <small className="text-muted">Updates will appear here when available</small>
+                    <p className="text-muted mb-0">
+                      No messages from admin yet
+                    </p>
+                    <small className="text-muted">
+                      Updates will appear here when available
+                    </small>
                   </div>
                 )}
               </div>

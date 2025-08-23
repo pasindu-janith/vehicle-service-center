@@ -13,6 +13,8 @@ import ServicesCompleted from "./../components/ServicesCompleted";
 import Reservations from "./../components/Reservations";
 import Vehicle from "./../components/Vehicle";
 import Messages from "./../components/Messages";
+import ServicesCancelled from "./../components/ServicesCancelled";
+import Notifications from "./../components/Notifications";
 import { BASE_URL } from "../config.js";
 
 const AdminPanel = () => {
@@ -55,6 +57,8 @@ const AdminPanel = () => {
           <Route path="/customers" element={<Customers />} />
           <Route path="/vehicles" element={<Vehicle />} />
           <Route path="/message" element={<Messages />} />
+          <Route path="/cancelled" element={<ServicesCancelled />} />
+          <Route path="/messages" element={<Notifications />} />
         </Routes>
       </div>
     </div>

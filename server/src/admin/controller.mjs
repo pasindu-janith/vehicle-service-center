@@ -266,7 +266,7 @@ export const proceedCashPayment = async (req, res) => {
     }
     res.status(200).send({
       success: true,
-      message: "Payment processed successfully"
+      message: "Payment processed successfully",
     });
   } catch (error) {
     console.error("Error processing cash payment:", error);
@@ -1165,6 +1165,40 @@ export const loadVehicleInfo = async (req, res) => {
     });
   } catch (error) {
     console.error("Error loading vehicle info:", error);
+    res.status(500).send("Internal Server Error");
+  }
+};
+
+export const loadNotificationTypes = async (req, res) => {
+  try {
+    const result = await pool.query(
+      "SELECT notification_type_id, type_name FROM notification_type"
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error("Error fetching notification types:", err);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+export const addNotification = async (req, res) => {
+  try {
+    const { type, message, from, to } = req.body;
+
+    if (!title || !message) {
+      return res
+        .status(400)
+        .send({ message: "Title and message are required" });
+    }
+
+    const newNotification = await pool.query(
+      "INSERT INTO notifications (title, message, link, created_at) VALUES ($1, $2, $3, $4) RETURNING *",
+      [title, message, link || null, toSQLDateTime(new Date())]
+    );
+
+    res.status(201).send(newNotification.rows[0]);
+  } catch (error) {
+    console.error("Error adding notification:", error);
     res.status(500).send("Internal Server Error");
   }
 };

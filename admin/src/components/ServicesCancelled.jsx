@@ -9,7 +9,7 @@ import "datatables.net-buttons-dt/css/buttons.dataTables.css";
 import DateTimePicker from "react-datetime-picker";
 import { BASE_URL } from "../config.js";
 
-const ServicesPending = () => {
+const ServicesCancelled = () => {
   const [tableData, setTableData] = useState([]);
   const [loading, setLoading] = useState(true);
   const tableRef = useRef(null);
@@ -128,6 +128,33 @@ const ServicesPending = () => {
     }
   };
 
+  const cancelReservation = async () => {
+    if (!selectedReservation) return;
+    try {
+      const response = await fetch(`${BASE_URL}/cancelReservation`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          cancelReason: document.getElementById("cancelReason").value || "",
+          reservationID: selectedReservation.reservation_id,
+          vehicleNumber: selectedReservation.vehicle_id,
+        }),
+      });
+      if (response.ok) {
+        selectedReservation.status_name = "Cancelled";
+        setSelectedReservation(null);
+        setEditReservationModal(false);
+      } else {
+        const errorData = await response.json();
+        console.error("Error canceling reservation:", errorData);
+      }
+    } catch (error) {
+      console.error("Error canceling reservation:", error);
+    }
+  };
+
   return (
     <section className="content pt-2">
       <div className="container-fluid">
@@ -209,6 +236,7 @@ const ServicesPending = () => {
           </div>
         </div>
       </div>
+
       {(startReservationModal || editReservationModal) &&
         selectedReservation && (
           <div
@@ -412,4 +440,4 @@ const ServicesPending = () => {
   );
 };
 
-export default ServicesPending;
+export default ServicesCancelled;

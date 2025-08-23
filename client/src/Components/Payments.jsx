@@ -8,14 +8,12 @@ import {
   FaClock,
   FaCar,
   FaCalendarAlt,
-  FaReceipt,
   FaSearch,
-  FaFilter,
   FaDownload,
   FaEye
 } from "react-icons/fa";
 import { MdPayment, MdHistory } from "react-icons/md";
-import { BiLoaderAlt, BiCalendar } from "react-icons/bi";
+import { BiCalendar } from "react-icons/bi";
 import "./styles/Dashboard.css";
 import BASE_URL from "../config.js";
 
@@ -78,10 +76,6 @@ export const Payments = () => {
     return paymentData.reduce((total, record) => total + parseFloat(record.final_amount || 0), 0);
   };
 
-  const calculateTotalCompleted = () => {
-    return completedPayments.reduce((total, record) => total + parseFloat(record.final_amount || 0), 0);
-  };
-
   const filteredPendingPayments = paymentData.filter(record =>
     record.vehicle_id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     record.service_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -108,9 +102,9 @@ export const Payments = () => {
         <div className="col-12">
           <div className="d-flex align-items-center justify-content-between">
             <div className="d-flex align-items-center">
-              <MdPayment className="text-primary me-3" size={40} />
+              <MdPayment className="text-darkblue me-3" size={40} />
               <div>
-                <h1 className="fw-bold text-dark mb-1" style={{ fontSize: '2.5rem' }}>
+                <h1 className="fw-bold main-title mb-1" style={{ fontSize: '2.5rem' }}>
                   Payments
                 </h1>
               </div>
@@ -190,9 +184,10 @@ export const Payments = () => {
             <div className="card-body p-0">
               {isLoading ? (
                 <div className="text-center py-5">
-                  <BiLoaderAlt className="text-primary mb-3 spinning" size={48} />
+                  <spinner className="spinner-border text-danger" role="status" style={{ width: "3.5rem", height: "3.5rem" }}>
+                    <span className="visually-hidden">Loading...</span>
+                  </spinner>
                   <h5 className="text-muted">Loading payment data...</h5>
-                  <p className="text-muted mb-0">Please wait while we fetch your information</p>
                 </div>
               ) : filteredPendingPayments.length > 0 ? (
                 <div className="table-responsive">
@@ -216,7 +211,6 @@ export const Payments = () => {
                           </td>
                           <td className="py-3">
                             <div className="d-flex align-items-center">
-                              <FaCar className="text-muted me-2" size={16} />
                               <span className="fw-medium">{record.vehicle_id}</span>
                             </div>
                           </td>
@@ -370,14 +364,7 @@ export const Payments = () => {
 
       {/* Custom Styles */}
       <style jsx>{`
-        .spinning {
-          animation: spin 1s linear infinite;
-        }
         
-        @keyframes spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
         
         .table-hover tbody tr:hover {
           background-color: rgba(13, 110, 253, 0.05);
@@ -396,13 +383,6 @@ export const Payments = () => {
           font-weight: 600;
         }
         
-        .btn {
-          transition: all 0.2s ease;
-        }
-        
-        .btn:hover {
-          transform: translateY(-1px);
-        }
         
         .form-control:focus {
           border-color: #0d6efd;

@@ -81,9 +81,9 @@ const MyVehicle = () => {
         <div className="col-12">
           <div className="d-flex align-items-center justify-content-between">
             <div className="d-flex align-items-center">
-              <MdDirectionsCar className="text-primary me-3" size={48} />
+              <MdDirectionsCar className="text-darkblue me-3" size={48} />
               <div>
-                <h1 className="text-dark mb-1 fw-bold" style={{ fontSize: "2.5rem" }}>
+                <h1 className="mb-1 main-title" style={{ fontSize: "2.5rem" }}>
                   My Vehicles
                 </h1>
               </div>
@@ -98,9 +98,10 @@ const MyVehicle = () => {
           <div className="col-12">
             <div className="d-flex justify-content-center align-items-center" style={{ minHeight: "400px" }}>
               <div className="text-center">
-                <BiLoaderAlt className="text-primary mb-3 spinning" size={60} />
-                <h4 className="text-muted">Loading your vehicles...</h4>
-                <p className="text-muted">Please wait while we fetch your data</p>
+                <spinner className="spinner-border text-primary" role="status" style={{ width: "3.5rem", height: "3.5rem" }}>
+                  <span className="visually-hidden">Loading...</span>
+                </spinner>
+                <h4 className="mt-3">Loading your vehicles...</h4>
               </div>
             </div>
           </div>

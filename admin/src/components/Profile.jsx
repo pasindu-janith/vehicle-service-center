@@ -27,17 +27,14 @@ const Profile = () => {
     }
 
     try {
-      const response = await fetch(
-        `${BASE_URL}/reset-password`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ oldPassword, newPassword }),
-          credentials: "include", // Include credentials for cross-origin requests
-        }
-      );
+      const response = await fetch(`${BASE_URL}/reset-password`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ oldPassword, newPassword }),
+        credentials: "include", // Include credentials for cross-origin requests
+      });
 
       if (!response.ok) {
         const data = await response.json();
@@ -120,6 +117,27 @@ const Profile = () => {
                 </div>
               </div>
             </form>
+          </div>
+        </div>
+
+        <div className="card mt-3">
+          <div className="card-header">SMS Gateway Details</div>
+          <div className="card-body">
+            <table className="table table-bordered mb-3">
+              <tbody>
+                <tr>
+                  <td>Remaining Amount:</td>
+                  <td></td>
+                </tr>
+                <tr>
+                  <td>Account Status:</td>
+                  <td></td>
+                </tr>
+              </tbody>
+            </table>
+            <button className="btn btn-info">
+              Load SMS Gateway Details
+            </button>
           </div>
         </div>
       </div>

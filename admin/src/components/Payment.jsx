@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import $ from "jquery";
 import "datatables.net-dt";
 import "datatables.net-responsive-dt";
@@ -8,30 +8,67 @@ import "datatables.net-responsive-dt/css/responsive.dataTables.css";
 import "datatables.net-buttons-dt/css/buttons.dataTables.css";
 
 const Payment = () => {
-  useEffect(() => {
-    const $table = $("#example2");
+  const [tableData, setTableData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const tableRef = useRef(null);
+  const dtInstance = useRef(null); // To store the DataTable instance
 
-    // Initialize the DataTable only if it's not already initialized
-    if (!$.fn.DataTable.isDataTable($table)) {
-      const table = $table.DataTable({
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await fetch(`${BASE_URL}/loadPendingServices`);
+        if (response.ok) {
+          const jsonData = await response.json();
+          setTableData(jsonData);
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  useEffect(() => {
+    // Only initialize or reinitialize DataTables if data is loaded
+    if (!loading && tableData.length > 0) {
+      const $table = $(tableRef.current);
+
+      // Destroy existing instance before reinitializing
+      if ($.fn.DataTable.isDataTable($table)) {
+        $table.DataTable().destroy();
+      }
+
+      dtInstance.current = $table.DataTable({
         paging: true,
         lengthChange: true,
         searching: true,
         ordering: true,
         info: true,
-        autoWidth: false,
+        autoWidth: true,
         responsive: true,
       });
     }
+  }, [tableData, loading]); // Re-run only when data is updated
 
-    // Cleanup: Destroy only the DataTable instance, not the table element
-    return () => {
-      if ($.fn.DataTable.isDataTable($table)) {
-        $table.DataTable().destroy();
+  useEffect(() => {
+    const loadPaymentData = async () => {
+      try {
+        const response = await fetch("/api/payments", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+        if (!response.ok) {
+          throw new Error("Network response was not ok");
+        }
+      } catch (error) {
+        console.error("Error fetching payment data:", error);
       }
     };
   }, []);
-
   return (
     <section className="content pt-2">
       <div className="container-fluid">
@@ -49,36 +86,17 @@ const Payment = () => {
                 >
                   <thead>
                     <tr>
-                      <th>Service ID</th>
+                      <th>Res ID</th>
                       <th>Vehicle No</th>
-                      <th>Service Name</th>
+                      <th>Service</th>
                       <th>Service Date</th>
                       <th>Amount</th>
-                      <th>Payment Status</th>
                       <th>Payment Method</th>
+                      <th>Status</th>
+                      <th>Action</th>
                     </tr>
                   </thead>
-                  <tbody>
-                    <tr>
-                      <td>1</td>
-                      <td>ABC123</td>
-                      <td>Oil Change</td>
-                      <td>2023-10-01</td>
-                      <td>$50.00</td>
-                      <td>Paid</td>
-                      <td>Credit Card</td>
-                    </tr>
-                    <tr>
-                      <td>2</td>
-                      <td>XYZ456</td>
-                      <td>Tire Rotation</td>
-                      <td>2023-10-02</td>
-                      <td>$30.00</td>
-                      <td>Pending</td>
-                      <td>Cash</td>
-                    </tr>
-                    {/* Add more rows as needed */}
-                  </tbody>
+                  <tbody></tbody>
                 </table>
               </div>
               {/* /.card-body */}

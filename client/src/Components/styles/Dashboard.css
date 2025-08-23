@@ -1,34 +1,76 @@
-/* Add a highlight for event dates */
-.react-calendar__tile.event-day {
-    background-color: #ffeb3b;
-    /* Yellow for event dates */
-    color: #000;
-    font-weight: bold;
-}
-
-.react-calendar__tile.event-day:hover {
-    background-color: #fbc02d;
-    /* Slightly darker yellow on hover */
+.custom-calendar-wrapper {
+  --calendar-primary: #000c74ff;
+  --calendar-hover: #f8f9fa;
 }
 
 .custom-calendar {
-    width: 100% !important;
-    /* Or set a fixed width like 350px */
-    max-width: 100%;
-    border: none;
+  border: none !important;
+  font-family: inherit;
 }
 
-.react-calendar__month-view__weekdays__weekday {
-    font-weight: bold;
-    font-size: 0.95rem;
-    color: #007bff;
-    /* Bootstrap primary color */
-    background-color: #f0f8ff;
-    text-align: center;
-    padding: 8px 0;
-    border-bottom: 1px solid #dee2e6;
-    text-decoration: none !important;
-    border: none !important;
+.custom-calendar .react-calendar__tile {
+  border: 1px solid #e9ecef;
+  background: white;
+  color: #495057;
+  padding: 12px 6px;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.custom-calendar .react-calendar__tile:hover {
+  background-color: var(--calendar-hover) !important;
+  color: var(--calendar-primary) !important;
+}
+
+.custom-calendar .react-calendar__tile--active {
+  background: var(--calendar-primary) !important;
+  color: white !important;
+}
+
+.custom-calendar .event-day {
+  background-color: #92d0ffff !important;
+  color: black !important;
+  font-weight: bold;
+}
+
+.custom-calendar .react-calendar__navigation button {
+  color: var(--calendar-primary);
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.custom-calendar .react-calendar__navigation button:hover {
+  background-color: var(--calendar-hover);
+}
+
+.notification-list {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.card-vehicle {
+  transition: all 0.3s ease;
+}
+
+.card-vehicle:hover {
+  transform: translateY(-2px);
+}
+
+.card {
+  transition: transform 0.3s ease;
+}
+
+.card:hover .icon {
+  transform: scale(1.3);
+  transition: transform 0.3s ease;
+}
+
+.table-hover tbody tr:hover {
+  background-color: rgba(13, 110, 253, 0.05);
+}
+
+.progress {
+  border-radius: 10px;
 }
 
 .hover-scale {
@@ -39,46 +81,37 @@
   transform: scale(1.2);
 }
 
-.data-card{
+.data-card {
   border-radius: 20px;
 }
 
-.text-darkblue {
-  color: #1e3a8a; /* Dark blue color */
-  font-family: "Roboto", sans-serif;
-}
 
 .bg-darkblue {
-  background-color: #1e3a8a; /* Dark blue color */
+  background-color: #1e3a8a;
+  /* Dark blue color */
   font-family: "Inter", sans-serif;
 }
 
 .bg-middleblue {
-  background-color: #2563eb; /* Middle blue color */
+  background-color: #2563eb;
+  /* Middle blue color */
   font-family: "Inter", sans-serif;
 }
 
 .bg-lightblue {
-  background-color: #4f92ff; /* Light blue color */
+  background-color: #4f92ff;
+  /* Light blue color */
   font-family: "Inter", sans-serif;
 }
 
-.vehicle-card{
-  border: 1.5px solid #fc514e; /* Red border */
+
+.table-striped>tbody>tr:nth-of-type(odd)>td,
+.table-striped>tbody>tr:nth-of-type(odd)>th {
+  background-color: rgba(184, 231, 255, 0.4);
+  /* Light blue with 0.5 opacity */
 }
 
-.vehicle-card:hover {
-  transform: scale(1.025);
-  border: 1.5px solid #ab120c; /* Light blue border on hover */
-  transition: transform 0.5s ease;
-}
-
-.table-striped > tbody > tr:nth-of-type(odd) > td,
-.table-striped > tbody > tr:nth-of-type(odd) > th {
-    background-color: rgba(184, 231, 255, 0.4); /* Light blue with 0.5 opacity */
-}
-
-.table-striped > tbody > tr:nth-of-type(even) > td,
-.table-striped > tbody > tr:nth-of-type(even) > th {
-    background-color: white;
+.table-striped>tbody>tr:nth-of-type(even)>td,
+.table-striped>tbody>tr:nth-of-type(even)>th {
+  background-color: white;
 }

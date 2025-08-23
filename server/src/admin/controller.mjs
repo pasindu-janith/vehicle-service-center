@@ -174,6 +174,10 @@ export const loadCompletedServices = async (req, res) => {
           sr.discount,
           sr.final_amount, 
           st.service_name, 
+          v.license_plate,
+          vt.vehicle_type,
+          vb.vehicle_brand,
+          v.model,
           r.reserve_date, 
           r.start_time, 
           r.end_date, 
@@ -194,16 +198,78 @@ export const loadCompletedServices = async (req, res) => {
             ON sr.reservation_id = r.reservation_id
             INNER JOIN service_type AS st 
             ON r.service_type_id = st.service_type_id
+            INNER JOIN vehicles AS v
+            ON r.vehicle_id = v.license_plate
+            INNER JOIN vehicle_type AS vt
+            ON v.vehicle_type_id = vt.vehicle_type_id
+            INNER JOIN vehicle_brand AS vb
+            ON v.vehicle_brand_id = vb.vehicle_brand_id
             LEFT JOIN payment_item AS pi 
             ON sr.reservation_id = pi.reservation_id
             WHERE r.reservation_status = (SELECT reservation_status_id FROM reservation_status WHERE status_name = $1)
             GROUP BY sr.reservation_id, sr.service_description, sr.service_cost, sr.discount, sr.final_amount,
-            st.service_name, r.reserve_date, r.start_time, r.end_date, r.end_time, sr.is_paid`,
+            st.service_name, r.reserve_date, r.start_time, r.end_date, r.end_time, sr.is_paid, v.license_plate, vt.vehicle_type, vb.vehicle_brand, v.model`,
       ["Completed"]
     );
     res.status(200).send(completedServices.rows);
   } catch (error) {
     console.error("Error loading completed services:", error);
+    res.status(500).send("Internal Server Error");
+  }
+};
+
+export const proceedCashPayment = async (req, res) => {
+  try {
+    const { reservationId, vehicleID, service_cost, discount, final_amount } =
+      req.body;
+
+    const updatePayment = await pool.query(
+      "UPDATE service_records SET is_paid = true WHERE reservation_id = $1 RETURNING *",
+      [reservationId]
+    );
+
+    if (updatePayment.rowCount === 0) {
+      return res.status(404).send({ message: "Reservation not found" });
+    }
+
+    const userID = await pool.query(
+      "SELECT user_id FROM vehicles WHERE license_plate = $1",
+      [vehicleID]
+    );
+
+    const createInvoice = await pool.query(
+      "INSERT INTO invoices (reservation_id, customer_id, service_cost, discount, final_amount, created_datetime) VALUES ($1, $2, $3, $4, $5, $6) RETURNING invoice_id",
+      [
+        reservationId,
+        userID.rows[0].user_id,
+        service_cost,
+        discount,
+        final_amount,
+        new Date(),
+      ]
+    );
+
+    const createPayment = await pool.query(
+      "INSERT INTO payments (invoice_id, payment_method, transact_amount, transaction_datetime, transaction_status) VALUES ($1, $2, $3, $4, $5)",
+      [
+        createInvoice.rows[0].invoice_id,
+        "CASH",
+        final_amount,
+        new Date(),
+        "SUCCESS",
+      ]
+    );
+    if (createInvoice.rowCount === 0 || createPayment.rowCount === 0) {
+      return res
+        .status(500)
+        .send({ message: "Failed to create payment record" });
+    }
+    res.status(200).send({
+      success: true,
+      message: "Payment processed successfully",
+    });
+  } catch (error) {
+    console.error("Error processing cash payment:", error);
     res.status(500).send("Internal Server Error");
   }
 };
@@ -1099,6 +1165,40 @@ export const loadVehicleInfo = async (req, res) => {
     });
   } catch (error) {
     console.error("Error loading vehicle info:", error);
+    res.status(500).send("Internal Server Error");
+  }
+};
+
+export const loadNotificationTypes = async (req, res) => {
+  try {
+    const result = await pool.query(
+      "SELECT notification_type_id, type_name FROM notification_type"
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error("Error fetching notification types:", err);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+export const addNotification = async (req, res) => {
+  try {
+    const { type, message, from, to } = req.body;
+
+    if (!title || !message) {
+      return res
+        .status(400)
+        .send({ message: "Title and message are required" });
+    }
+
+    const newNotification = await pool.query(
+      "INSERT INTO notifications (title, message, link, created_at) VALUES ($1, $2, $3, $4) RETURNING *",
+      [title, message, link || null, toSQLDateTime(new Date())]
+    );
+
+    res.status(201).send(newNotification.rows[0]);
+  } catch (error) {
+    console.error("Error adding notification:", error);
     res.status(500).send("Internal Server Error");
   }
 };

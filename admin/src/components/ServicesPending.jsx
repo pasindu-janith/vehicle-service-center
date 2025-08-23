@@ -16,27 +16,27 @@ const ServicesPending = () => {
   const dtInstance = useRef(null); // To store the DataTable instance
   const [startDateTime, setStartDateTime] = useState(new Date());
   const [endDateTime, setEndDateTime] = useState(null);
-
   const [selectedReservation, setSelectedReservation] = useState(null);
   const [startReservationModal, setStartReservationModal] = useState(false);
   const [editReservationModal, setEditReservationModal] = useState(false);
   const [cancelReservationConfirmation, setCancelReservationConfirmation] =
-    useEffect(() => {
-      const fetchData = async () => {
-        try {
-          const response = await fetch(`${BASE_URL}/loadPendingServices`);
-          if (response.ok) {
-            const jsonData = await response.json();
-            setTableData(jsonData);
-          }
-        } catch (error) {
-          console.error("Error fetching data:", error);
-        } finally {
-          setLoading(false);
+    useState(false);
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await fetch(`${BASE_URL}/loadPendingServices`);
+        if (response.ok) {
+          const jsonData = await response.json();
+          setTableData(jsonData);
         }
-      };
-      fetchData();
-    }, []);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
 
   useEffect(() => {
     // Only initialize or reinitialize DataTables if data is loaded
@@ -77,12 +77,9 @@ const ServicesPending = () => {
         }
       );
       if (response.ok) {
-        const updatedData = await response.json();
         setTableData((prevData) =>
-          prevData.map((row) =>
-            row.reservation_id === selectedReservation.reservation_id
-              ? { ...row, ...updatedData, reservation_id: row.reservation_id }
-              : row
+          prevData.filter(
+            (row) => row.reservation_id !== selectedReservation.reservation_id
           )
         );
         setStartReservationModal(false);
@@ -114,12 +111,9 @@ const ServicesPending = () => {
         }
       );
       if (response.ok) {
-        const updatedData = await response.json();
         setTableData((prevData) =>
-          prevData.map((row) =>
-            row.reservation_id === selectedReservation.reservation_id
-              ? { ...row, ...updatedData, reservation_id: row.reservation_id }
-              : row
+          prevData.filter(
+            (row) => row.reservation_id !== selectedReservation.reservation_id
           )
         );
         setEditReservationModal(false);
@@ -144,76 +138,72 @@ const ServicesPending = () => {
                 <h3 className="card-title">Pending Services</h3>
               </div>
               <div className="card-body">
-                <table
-                  ref={tableRef}
-                  id="example2"
-                  className="table table-bordered table-hover"
-                >
-                  <thead>
-                    <tr>
-                      <th>Res. ID</th>
-                      <th>Vehicle No</th>
-                      <th>Service Name</th>
-                      <th>Service Date</th>
-                      <th>Time start</th>
-                      <th>Time due</th>
-                      <th>Description</th>
-                      <th>Controls</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {tableData.length > 0 ? (
-                      tableData.map((row) => (
-                        <tr key={row.reservation_id}>
-                          <td>{row.reservation_id}</td>
-                          <td>{row.vehicle_id}</td>
-                          <td>{row.service_name}</td>
-                          <td>
-                            {new Date(row.reserve_date).toLocaleDateString(
-                              "en-CA"
-                            )}
-                          </td>
-                          <td>{row.start_time}</td>
-                          <td>{row.end_time}</td>
-                          <td>{row.notes}</td>
-                          <td>
-                            <button
-                              className="btn btn-success btn-sm me-2"
-                              onClick={() => {
-                                // Handle button click
-                                console.log(
-                                  "Button clicked for ID:",
-                                  row.reservation_id
-                                );
-                              }}
-                            >
-                              Start
-                            </button>
+                <div className="table-responsive">
+                  <table
+                    ref={tableRef}
+                    id="example2"
+                    className="table table-bordered table-hover"
+                  >
+                    <thead>
+                      <tr>
+                        <th>Res. ID</th>
+                        <th>Vehicle No</th>
+                        <th>Service Name</th>
+                        <th>Service Date</th>
+                        <th>Time start</th>
+                        <th>Time due</th>
+                        <th>Description</th>
+                        <th>Controls</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {tableData.length > 0 ? (
+                        tableData.map((row) => (
+                          <tr key={row.reservation_id}>
+                            <td>{row.reservation_id}</td>
+                            <td>{row.vehicle_id}</td>
+                            <td>{row.service_name}</td>
+                            <td>
+                              {new Date(row.reserve_date).toLocaleDateString(
+                                "en-CA"
+                              )}
+                            </td>
+                            <td>{row.start_time}</td>
+                            <td>{row.end_time}</td>
+                            <td>{row.notes}</td>
+                            <td>
+                              <button
+                                className="btn btn-success btn-sm me-2"
+                                onClick={() => {
+                                  setSelectedReservation(row);
+                                  setStartReservationModal(true);
+                                }}
+                              >
+                                Start
+                              </button>
 
-                            <button
-                              className="btn btn-primary btn-sm"
-                              onClick={() => {
-                                // Handle button click
-                                console.log(
-                                  "Button clicked for ID:",
-                                  row.reservation_id
-                                );
-                              }}
-                            >
-                              Customer
-                            </button>
+                              <button
+                                className="btn btn-primary btn-sm"
+                                onClick={() => {
+                                  setSelectedReservation(row);
+                                  setEditReservationModal(true);
+                                }}
+                              >
+                                Edit
+                              </button>
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan="8" className="text-center">
+                            No ongoing services found.
                           </td>
                         </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td colSpan="8" className="text-center">
-                          No ongoing services found.
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           </div>

@@ -3,6 +3,8 @@ import { Link, useNavigate } from "react-router-dom";
 import images from "../assets/assets";
 import "./css/styles.css";
 import toastr from "toastr";
+import BASE_URL from "../config.js";
+import { BiLoaderAlt } from "react-icons/bi";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -41,13 +43,10 @@ const Login = () => {
     const checkIsLogged = async () => {
       try {
         // This endpoint should verify the token in the cookie
-        const response = await fetch(
-          "http://localhost:4000/api/v1/user/authUser",
-          {
-            method: "GET",
-            credentials: "include",
-          }
-        );
+        const response = await fetch(`${BASE_URL}/authUser`, {
+          method: "GET",
+          credentials: "include",
+        });
         if (response.ok) {
           navigate("/myaccount/dashboard");
         } else {
@@ -82,7 +81,7 @@ const Login = () => {
       setIsSubmitting(true);
 
       // Send data to backend API
-      const response = await fetch("http://localhost:4000/api/v1/user/login", {
+      const response = await fetch(`${BASE_URL}/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -142,8 +141,15 @@ const Login = () => {
 
             {isLoading ? (
               <div className="d-flex justify-content-center align-items-center vh-100">
-                <div className="spinner-border text-danger" style={{width:"4rem", height: "4rem"}} role="status">
-                  <span className="visually-hidden">Loading...</span>
+                <div className="text-center">
+                  <spinner
+                    className="spinner-border text-danger"
+                    role="status"
+                    style={{ width: "4rem", height: "4rem" }}
+                  >
+                    <span className="visually-hidden">Loading...</span>
+                  </spinner>
+                  <h4 className="text-muted">Please Wait....</h4>
                 </div>
               </div>
             ) : (

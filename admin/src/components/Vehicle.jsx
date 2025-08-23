@@ -24,15 +24,12 @@ const Vehicle = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch(
-          `${BASE_URL}/loadAllVehicles`,
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-            },
-          }
-        );
+        const response = await fetch(`${BASE_URL}/loadAllVehicles`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
         if (response.ok) {
           const jsonData = await response.json();
           setTableData(jsonData);
@@ -49,8 +46,7 @@ const Vehicle = () => {
   const loadVehicleData = async (vehicleID) => {
     try {
       const response = await fetch(
-        `${BASE_URL}/loadVehicleInfo?vehicleNumber=` +
-          vehicleID
+        `${BASE_URL}/loadVehicleInfo?vehicleNumber=` + vehicleID
       );
       if (response.ok) {
         const jsonData = await response.json();
@@ -437,45 +433,66 @@ const Vehicle = () => {
                 </button>
               </div>
               <div className="modal-body">
-                <p>
-                  <strong>Reservation ID:</strong>{" "}
-                  {selectedRecord.reservation_id}
-                </p>
-                <p>
-                  <strong>Vehicle:</strong>{" "}
-                  {selectedVehicle.license_plate} {selectedVehicle.vehicle_brand}{" "}
-                  {" "}
-                  {selectedVehicle.model}{" "}{selectedVehicle.vehicle_type}
-                </p>
-                <p>
-                  <strong>Service Name:</strong> {selectedRecord.service_name}
-                </p>
-                <p>
-                  <strong>From:</strong>{" "}
-                  {new Date(selectedRecord.reserve_date).toLocaleDateString(
-                    "en-CA"
-                  )}{" "}
-                  {selectedRecord.start_time?.substring(0, 5)}
-                </p>
-                <p>
-                  <strong>To:</strong>{" "}
-                  {new Date(selectedRecord.end_date).toLocaleDateString(
-                    "en-CA"
-                  )}{" "}
-                  {selectedRecord.end_time?.substring(0, 5)}
-                </p>
-                <p>
-                  <strong>Description:</strong>{" "}
-                  {selectedRecord.service_description}
-                </p>
-                <p>
-                  <strong>Payment Status:</strong>{" "}
-                  {selectedRecord.is_paid ? (
-                    <span className="badge bg-success">Paid</span>
-                  ) : (
-                    <span className="badge bg-danger">Pending</span>
-                  )}
-                </p>
+                <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                  <tbody>
+                    <tr>
+                      <td>
+                        <strong>Reservation ID:</strong>
+                      </td>
+                      <td>{selectedRecord.reservation_id}</td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <strong>Vehicle:</strong>
+                      </td>
+                      <td>
+                        {selectedVehicle.license_plate}{" "}
+                        {selectedVehicle.vehicle_brand} {selectedVehicle.model}{" "}
+                        {selectedVehicle.vehicle_type}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <strong>Service Name:</strong>
+                      </td>
+                      <td>{selectedRecord.service_name}</td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <strong>From:</strong>
+                      </td>
+                      <td>
+                        {new Date(
+                          selectedRecord.reserve_date
+                        ).toLocaleDateString("en-CA")}{" "}
+                        {selectedRecord.start_time?.substring(0, 5)}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <strong>To:</strong>
+                      </td>
+                      <td>
+                        {new Date(selectedRecord.end_date).toLocaleDateString(
+                          "en-CA"
+                        )}{" "}
+                        {selectedRecord.end_time?.substring(0, 5)}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <strong>Description:</strong>
+                      </td>
+                      <td>{selectedRecord.service_description}</td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <strong>Payment Status:</strong>
+                      </td>
+                      <td>{selectedRecord.is_paid ? "Paid" : "Pending"}</td>
+                    </tr>
+                  </tbody>
+                </table>
 
                 {selectedRecord.payment_items?.length > 0 && (
                   <table className="table table-bordered mt-3">
@@ -496,19 +513,40 @@ const Vehicle = () => {
                   </table>
                 )}
 
-                <p>
-                  <strong>Service Cost:</strong>
-                  {" Rs."} {selectedRecord.service_cost}
-                </p>
-
-                <p>
-                  <strong>Discount:</strong> {" Rs."} {selectedRecord.discount}
-                </p>
-
-                <p>
-                  <strong>Net Amount:</strong> {" Rs."}{" "}
-                  {selectedRecord.final_amount}
-                </p>
+                <table
+                  style={{
+                    width: "100%",
+                    fontSize: "1.25rem",
+                    borderCollapse: "collapse",
+                  }}
+                >
+                  <tbody>
+                    <tr>
+                      <td style={{ textAlign: "left", padding: "4px 8px" }}>
+                        <strong>Service Cost:</strong>
+                      </td>
+                      <td style={{ textAlign: "right", padding: "4px 8px" }}>
+                        Rs. {selectedRecord.service_cost}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style={{ textAlign: "left", padding: "4px 8px" }}>
+                        <strong>Discount:</strong>
+                      </td>
+                      <td style={{ textAlign: "right", padding: "4px 8px" }}>
+                        Rs. {selectedRecord.discount}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style={{ textAlign: "left", padding: "4px 8px" }}>
+                        <strong>Net Amount:</strong>
+                      </td>
+                      <td style={{ textAlign: "right", padding: "4px 8px" }}>
+                        Rs. {selectedRecord.final_amount}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
               <div className="modal-footer">
                 <button

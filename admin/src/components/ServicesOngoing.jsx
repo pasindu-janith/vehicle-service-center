@@ -12,7 +12,7 @@ import "react-calendar/dist/Calendar.css";
 import "react-clock/dist/Clock.css"; // Required for the clock UI
 import "./styles/datetime.css";
 import { BASE_URL } from "../config.js";
-import EndReservationModal from "./EndReservationModal.jsx"; // Import the new component
+import EndReservationModal from "./EndReservationModal"; // Import the new component
 import ProgressModal from "./ProgressModal"; // Import the progress modal component
 
 const ServicesOngoing = () => {

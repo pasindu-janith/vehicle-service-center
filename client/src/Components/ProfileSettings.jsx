@@ -3,6 +3,7 @@ import { data } from "react-router-dom";
 import toastr from "toastr";
 import "toastr/build/toastr.min.css";
 import BASE_URL from "../config.js";
+import { MdManageAccounts } from "react-icons/md";
 
 const ProfileSettings = () => {
   const [formProfileData, setProfileFormData] = useState({
@@ -29,13 +30,10 @@ const ProfileSettings = () => {
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        const response = await fetch(
-          `${BASE_URL}/getUserData`,
-          {
-            method: "GET",
-            credentials: "include",
-          }
-        );
+        const response = await fetch(`${BASE_URL}/getUserData`, {
+          method: "GET",
+          credentials: "include",
+        });
         if (response.ok) {
           const data = await response.json();
           setProfileFormData((prev) => ({
@@ -63,17 +61,14 @@ const ProfileSettings = () => {
     e.preventDefault();
     setIsProfileLoading(true);
     try {
-      const response = await fetch(
-        `${BASE_URL}/updateUserProfileData`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(formProfileData),
-          credentials: "include",
-        }
-      );
+      const response = await fetch(`${BASE_URL}/updateUserProfileData`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formProfileData),
+        credentials: "include",
+      });
       if (response.ok) {
         toastr.success("Profile updated successfully!");
       } else {
@@ -100,20 +95,17 @@ const ProfileSettings = () => {
     }
 
     try {
-      const response = await fetch(
-        `${BASE_URL}/resetUserPassword`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            oldPassword,
-            newPassword,
-          }),
-          credentials: "include",
-        }
-      );
+      const response = await fetch(`${BASE_URL}/resetUserPassword`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          oldPassword,
+          newPassword,
+        }),
+        credentials: "include",
+      });
       if (response.ok) {
         toastr.success("Password updated successfully!");
         document.getElementById("currentPassword").value = "";
@@ -132,9 +124,14 @@ const ProfileSettings = () => {
 
   return (
     <div className="container">
-      <h2 className="text-darkblue mb-2 mt-5 fw-bold">User Profile Data</h2>
-
-      <div className="card shadow-sm">
+      <h2 className="main-title mb-4 mt-5 fw-bold">
+        <MdManageAccounts size={44} className="me-2 text-darkblue" />
+        User Profile Settings
+      </h2>
+      <div className="card shadow-sm mb-4">
+        <div className="card-header bg-white text-primary">
+          <h5 className="mb-0">Profile Information</h5>
+        </div>
         <div className="card-body">
           <form onSubmit={handleProfileSubmit}>
             <div className="row g-3">
@@ -264,9 +261,10 @@ const ProfileSettings = () => {
         </div>
       </div>
 
-      <h2 className="text-darkblue mt-4 mb-2 fw-bold">Account Settings</h2>
-
       <div className="card shadow-sm">
+        <div className="card-header bg-white text-primary">
+          <h5 className="mb-0">Account Settings</h5>
+        </div>
         <div className="card-body">
           <p className="fw-bold">Reset your account password</p>
           <form onSubmit={handleAccountSubmit}>

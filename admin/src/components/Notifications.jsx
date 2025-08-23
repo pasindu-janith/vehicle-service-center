@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+<<<<<<< HEAD
 import { BASE_URL } from "../config.js";
 
 const Notifications = () => {
@@ -134,6 +135,13 @@ const Notifications = () => {
         </div>
       </div>
     </section>
+=======
+
+const Notifications = () => {
+  
+  return (
+   <div></div>
+>>>>>>> 3a4beb09bf377ff440cbfef26f7c3a6f1518ee5b
   );
 };
 

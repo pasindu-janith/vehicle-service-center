@@ -18,6 +18,8 @@ const ServicesCompleted = () => {
   const [serviceRecordsModal, setServiceRecordsModal] = useState(false);
   const [selectedReservation, setSelectedReservation] = useState(null);
   const [paymentModal, setPaymentModal] = useState(false);
+
+  
   useEffect(() => {
     const fetchData = async () => {
       try {

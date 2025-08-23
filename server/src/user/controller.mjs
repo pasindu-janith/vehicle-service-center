@@ -85,7 +85,7 @@ export const registerUser = async (req, res) => {
       ]
     );
     const messageText = `Your OTP for Shan Automobile and Hybrid Workshop registration is ${otpGenerated}. Please do not share this OTP with anyone.`;
-    const smsResponse = await sendSMS(mobile, messageText);
+    const smsResponse = await sendSMS("+94" + mobile, messageText);
     if (!smsResponse.success) {
       return res.status(500).send({ message: "Failed to send OTP via SMS" });
     }
@@ -376,11 +376,9 @@ export const otpVerify = async (req, res) => {
       const timeDifference = currentDateTime - otpDateTime;
       const otpValidityDuration = 5 * 60 * 1000; // 5 minutes in milliseconds
       if (timeDifference > otpValidityDuration) {
-        return res
-          .status(400)
-          .send({
-            message: "OTP expired. Generate a new OTP and verify again.",
-          });
+        return res.status(400).send({
+          message: "OTP expired. Generate a new OTP and verify again.",
+        });
       }
     }
 
@@ -1064,6 +1062,7 @@ export const createReservation = async (req, res) => {
       serviceType: service_type.service_name,
       serviceDate,
       serviceStartTime,
+      notes: note,
     });
     return res.status(200).send({ message: "Reservation created" });
   } catch (error) {
@@ -1079,6 +1078,7 @@ const sendReservationCreationEmail = async (email, reservationDetails) => {
     serviceType,
     serviceDate,
     serviceStartTime,
+    notes,
   } = reservationDetails;
   const token = tokenGen({ email });
   sendEmail(
@@ -1150,9 +1150,9 @@ const sendReservationCreationEmail = async (email, reservationDetails) => {
     }
     .btn {
       background-color: rgb(140, 0, 0);
-      color: #ffffff;
+      color: #ffffff !important;
       padding: 12px 24px;
-      text-decoration: none;
+      text-decoration: none !important;
       border-radius: 4px;
       font-weight: bold;
       display: inline-block;
@@ -1190,7 +1190,8 @@ const sendReservationCreationEmail = async (email, reservationDetails) => {
           <li><strong>Vehicle ID:</strong> ${vehicleID}</li>
           <li><strong>Service Type:</strong> ${serviceType}</li>
           <li><strong>Service Date:</strong> ${serviceDate}</li>
-          <li><strong>Service Start Time:</strong> ${serviceStartTime}</li>
+          <li><strong>Reserved Time:</strong> ${serviceStartTime}</li>
+          <li><strong>Your notes:</strong> ${notes}</li>
         </ul>
       </div>
       <p>Please be there at your reserved time.</p>
@@ -1378,7 +1379,7 @@ export const loadServiceRecordPayment = async (req, res) => {
   }
 };
 
-//once user go to proceed payment page, this function will be called
+// once user go to proceed payment page, this function will be called
 // It retrieves the payment data for a specific reservation and user
 export const loadPaymentPageData = async (req, res) => {
   try {

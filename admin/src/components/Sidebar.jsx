@@ -5,23 +5,25 @@ import { BASE_URL } from "../config.js";
 
 const Sidebar = () => {
   const location = useLocation();
-  const serviceOrderPaths = ["/ongoing", "/pending", "/completed"];
+  const serviceOrderPaths = [
+    "/ongoing",
+    "/pending",
+    "/completed",
+    "/cancelled",
+  ];
   // Check if the current path is one of the service order paths
   const [isServiceOrderActive, setServiceOrderActive] = useState(false);
 
   const handleLogout = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch(
-        `${BASE_URL}/logout`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include", // Include credentials for cross-origin requests
-        }
-      );
+      const response = await fetch(`${BASE_URL}/logout`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include", // Include credentials for cross-origin requests
+      });
 
       if (!response.ok) {
         throw new Error("Logout failed");
@@ -125,6 +127,17 @@ const Sidebar = () => {
                     <p>Completed</p>
                   </Link>
                 </li>
+                <li className="nav-item">
+                  <Link
+                    to="/cancelled"
+                    className={`nav-link ${
+                      location.pathname === "/cancelled" ? "active" : ""
+                    }`}
+                  >
+                    <i className="far fa-circle nav-icon" />
+                    <p>Cancelled</p>
+                  </Link>
+                </li>
               </ul>
             </li>
             <li className="nav-item">
@@ -182,12 +195,12 @@ const Sidebar = () => {
                 <p>Vehicles</p>
               </Link>
             </li>
-            {/* <li className="nav-item">
-              <Link to="/message" className="nav-link">
+            <li className="nav-item">
+              <Link to="/messages" className="nav-link">
                 <i className="nav-icon fas fa-regular fa-comment" />
                 <p>Messages</p>
               </Link>
-            </li> */}
+            </li>
             {/* <li className="nav-item">
               <Link to="/login" className="nav-link">
                 <i className="nav-icon fas fa-chart-pie" />

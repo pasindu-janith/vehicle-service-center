@@ -149,11 +149,10 @@ const PaymentProceed = () => {
         style={{ minHeight: "100vh", backgroundColor: "#f8f9fa" }}
       >
         <div className="text-center">
-          <BiLoaderAlt className="text-primary mb-3 spinning" size={60} />
+          <spinner className="spinner-border text-primary mb-3" role="status" style={{ width: "4rem", height: "4rem" }}>
+            <span className="visually-hidden">Loading...</span>
+          </spinner>
           <h4 className="text-muted">Loading payment details...</h4>
-          <p className="text-muted">
-            Please wait while we prepare your payment information
-          </p>
         </div>
       </div>
     );
@@ -170,10 +169,10 @@ const PaymentProceed = () => {
           <div className="d-flex align-items-center justify-content-between">
             <div className="d-flex align-items-center">
               <div className="d-flex align-items-center">
-                <MdPayment className="text-primary me-3" size={40} />
+                <MdPayment className="text-darkblue me-3" size={40} />
                 <div>
                   <h1
-                    className="fw-bold text-dark mb-1"
+                    className="fw-bold text-dark mb-1 main-title"
                     style={{ fontSize: "2.5rem" }}
                   >
                     Payment Checkout
@@ -185,7 +184,7 @@ const PaymentProceed = () => {
             {/* Security Badge */}
             <div className="d-flex align-items-center">
               <span className="badge bg-success px-3 py-2">
-                <FaLock className="me-1" size={12} />
+                <FaShieldAlt className="me-1" size={12} />
                 Secure Payment
               </span>
             </div>
@@ -215,26 +214,38 @@ const PaymentProceed = () => {
                 </h5>
 
                 <div className="row g-3">
-                  <div className="col-md-6">
+                  <div className="col-md-4">
                     <div className="bg-light rounded p-3">
                       <div className="d-flex align-items-center mb-2">
-                        <FaReceipt className="text-primary me-2" size={16} />
+                        <FaReceipt className="text-muted me-2" size={16} />
                         <small className="text-muted fw-medium">
                           Reservation ID
                         </small>
                       </div>
-                      <span className="fw-bold text-primary fs-5">
+                      <span className="fw-bold text-dark fs-5">
                         #{reservationData?.reservation_id || "N/A"}
                       </span>
                     </div>
                   </div>
-
-                  <div className="col-md-6">
+                  <div className="col-md-4">
+                    <div className="bg-light rounded p-3">
+                      <div className="d-flex align-items-center mb-2">
+                        <FaReceipt className="text-muted me-2" size={16} />
+                        <small className="text-muted fw-medium">
+                          Vehicle
+                        </small>
+                      </div>
+                      <span className="fw-medium text-dark">
+                        {reservationData?.vehicle_id || "N/A"}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="col-md-4">
                     <div className="bg-light rounded p-3">
                       <div className="d-flex align-items-center mb-2">
                         <FaCalendarAlt className="text-muted me-2" size={16} />
                         <small className="text-muted fw-medium">
-                          Created Date
+                          Created at
                         </small>
                       </div>
                       <span className="fw-medium text-dark">
@@ -251,7 +262,7 @@ const PaymentProceed = () => {
                       </div>
                       <span className="fw-medium text-dark">
                         {userData
-                          ? `${userData.first_name} ${userData.last_name}`
+                          ? `${userData.first_name} ${userData.last_name} (${userData.user_id})`
                           : "No name"}
                       </span>
                     </div>
@@ -394,13 +405,11 @@ const PaymentProceed = () => {
         {/* Payment Actions Sidebar */}
         <div className="col-lg-4">
           {/* Payment Action Card */}
-          <div className="card border-0 shadow-sm mb-4">
+          <div className="card shadow-sm mb-4" style={{ borderColor: "#016ae2ff", borderRadius: "20px" }}>
             <div
-              className="card-header text-white"
-              style={{ backgroundColor: "#0d6efd" }}
+              className="card-header text-white bg-primary" style={{ borderTopLeftRadius: "20px", borderTopRightRadius: "20px" }}
             >
               <h5 className="fw-bold mb-0 d-flex align-items-center">
-                <FaCreditCard className="me-2" size={20} />
                 Complete Payment
               </h5>
             </div>
@@ -424,7 +433,7 @@ const PaymentProceed = () => {
 
               <div className="d-grid gap-3">
                 <button
-                  className="btn btn-primary btn-lg py-3"
+                  className="btn btn-primary btn-lg fs-6"
                   onClick={handlePayment}
                   disabled={isProcessing}
                 >
@@ -436,7 +445,7 @@ const PaymentProceed = () => {
                   ) : (
                     <>
                       <FaCreditCard className="me-2" size={18} />
-                      Pay Securely
+                      Proceed Payment
                     </>
                   )}
                 </button>
@@ -453,15 +462,11 @@ const PaymentProceed = () => {
 
               <div
                 className="alert alert-info border-0 mt-3"
-                style={{ backgroundColor: "#e3f2fd" }}
+                style={{ backgroundColor: "#e9ffe9ff" }}
               >
                 <div className="d-flex align-items-start">
-                  <IoMdInformationCircle
-                    className="text-primary me-2 mt-1"
-                    size={16}
-                  />
                   <div>
-                    <small className="text-primary fw-medium">
+                    <small className="text-success fw-medium">
                       Secure Payment
                     </small>
                     <p className="mb-0 small text-muted">
@@ -491,13 +496,6 @@ const PaymentProceed = () => {
           }
         }
 
-        .card {
-          transition: all 0.3s ease;
-        }
-
-        .card:hover {
-          transform: translateY(-2px);
-        }
 
         .table-hover tbody tr:hover {
           background-color: rgba(13, 110, 253, 0.05);

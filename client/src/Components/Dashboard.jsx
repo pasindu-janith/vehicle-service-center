@@ -163,13 +163,13 @@ const Dashboard = () => {
       style={{ minHeight: "100vh" }}
     >
       {/* Header */}
-      <div className="row mb-4">
+      <div className="row mb-2">
         <div className="col-12">
           <div className="d-flex align-items-center mb-3">
-            <MdDashboard className="text-primary me-3" size={40} />
+            <MdDashboard className="text-darkblue me-3" size={40} />
             <div>
               <h1
-                className="fw-bold text-dark mb-1"
+                className="fw-bold text-dark mb-1 main-title"
                 style={{ fontSize: "2.5rem" }}
               >
                 Dashboard
@@ -193,7 +193,7 @@ const Dashboard = () => {
             <div className="card-body text-white position-relative p-4">
               <FaUserCircle
                 size={50}
-                className="position-absolute top-0 end-0 m-3 opacity-75"
+                className="position-absolute top-0 end-0 m-3 opacity-75 icon"
               />
               <div className="mb-3">
                 <h5 className="card-title fw-bold mb-3">Account Information</h5>
@@ -226,7 +226,7 @@ const Dashboard = () => {
           >
             <div className="card-body text-white d-flex flex-column justify-content-center align-items-center text-center p-4">
               <div className="mb-3">
-                <FaTools size={40} className="mb-2" />
+                <FaTools size={40} className="icon mb-2" />
               </div>
               <h6 className="card-title mb-2">Ongoing Services</h6>
               <h2 className="display-5 fw-bold mb-0">{ongoingServices}</h2>
@@ -242,7 +242,7 @@ const Dashboard = () => {
           >
             <div className="card-body text-white d-flex flex-column justify-content-center align-items-center text-center p-4">
               <div className="mb-3">
-                <FaClipboardList size={40} className="mb-2" />
+                <FaClipboardList size={40} className="icon mb-2" />
               </div>
               <h6 className="card-title mb-2">Pending Services</h6>
               <h2 className="display-5 fw-bold mb-0">{pendingServices}</h2>
@@ -258,7 +258,7 @@ const Dashboard = () => {
           >
             <div className="card-body text-white d-flex flex-column justify-content-center align-items-center text-center p-4">
               <div className="mb-3">
-                <FaCheckCircle size={40} className="mb-2" />
+                <FaCheckCircle size={40} className="icon mb-2" />
               </div>
               <h6 className="card-title mb-2">Completed</h6>
               <h2 className="display-5 fw-bold mb-0">{completedServices}</h2>
@@ -268,13 +268,13 @@ const Dashboard = () => {
 
         {/* Total Services Card */}
         <div className="col-lg-2 col-md-6">
-          <div className="card border-0 shadow-sm h-100 bg-white">
+          <div className="card border-0 shadow-sm h-100 bg-info text-white">
             <div className="card-body d-flex flex-column justify-content-center align-items-center text-center p-4">
               <div className="mb-3">
-                <FaChartLine size={40} className="mb-2 text-primary" />
+                <FaChartLine size={40} className="icon mb-2" />
               </div>
-              <h6 className="card-title mb-2 text-dark">Total Services</h6>
-              <h2 className="display-5 fw-bold mb-0 text-dark">
+              <h6 className="card-title mb-2">Total Services</h6>
+              <h2 className="display-5 fw-bold mb-0">
                 {pendingServices + ongoingServices + completedServices}
               </h2>
             </div>

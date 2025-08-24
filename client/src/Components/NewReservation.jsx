@@ -6,7 +6,6 @@ import BASE_URL from "../config";
 const NewReservation = () => {
   const [serviceTypes, setServiceTypes] = useState([]);
   const [vehicles, setVehicles] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [serviceDescription, setServiceDescription] = useState("");
   const [serviceDuration, setServiceDuration] = useState(0);
@@ -52,7 +51,6 @@ const NewReservation = () => {
           if (data && data.length > 0) {
             setVehicles(data);
           }
-          setIsLoading(false);
         }
       } catch (error) {
         console.log(error);
@@ -126,7 +124,7 @@ const NewReservation = () => {
     <div className="container pt-3 d-flex justify-content-center">
       <div className="card p-4 rounded shadow-sm col-md-6 col-12">
         <form onSubmit={handleSubmit}>
-          <h4 className="mb-4">New Service Reservation</h4>
+          <h3 className="mb-4 text-darkblue fw-bold">New Service Reservation</h3>
           {/* Vehicle Selection */}
           <div className="mb-3">
             <label htmlFor="vehicle" className="form-label">

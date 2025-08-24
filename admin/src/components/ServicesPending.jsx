@@ -7,6 +7,7 @@ import "datatables.net-dt/css/dataTables.dataTables.css";
 import "datatables.net-responsive-dt/css/responsive.dataTables.css";
 import "datatables.net-buttons-dt/css/buttons.dataTables.css";
 import DateTimePicker from "react-datetime-picker";
+import toastr from "toastr";
 import { BASE_URL } from "../config.js";
 
 const ServicesPending = () => {
@@ -21,6 +22,8 @@ const ServicesPending = () => {
   const [editReservationModal, setEditReservationModal] = useState(false);
   const [cancelReservationConfirmation, setCancelReservationConfirmation] =
     useState(false);
+  const [isStarting, setIsStarting] = useState(false);
+  const [isEditting, setIsEditting] = useState(false);
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -56,12 +59,16 @@ const ServicesPending = () => {
         info: true,
         autoWidth: true,
         responsive: true,
+        columnDefs: [
+          { targets: -1, width: "150px", orderable: false }, // last column
+        ],
       });
     }
   }, [tableData, loading]); // Re-run only when data is updated
 
   const startReservation = async () => {
     if (!selectedReservation) return;
+    setIsStarting(true);
     const startTime = startDateTime.toISOString();
     const endTime = endDateTime ? endDateTime.toISOString() : null;
     try {
@@ -85,17 +92,21 @@ const ServicesPending = () => {
         setStartReservationModal(false);
         setSelectedReservation(null);
         setEndDateTime(null);
+        toastr.success("Reservation started successfully");
       } else {
         const errorData = await response.json();
         console.error("Error starting reservation:", errorData);
       }
     } catch (error) {
       console.error("Error starting reservation:", error);
+    } finally {
+      setIsStarting(false);
     }
   };
 
   const editReservation = async () => {
     if (!selectedReservation) return;
+    setIsEditting(true);
     const startTime = startDateTime.toISOString();
     const endTime = endDateTime ? endDateTime.toISOString() : null;
     try {
@@ -119,12 +130,42 @@ const ServicesPending = () => {
         setEditReservationModal(false);
         setSelectedReservation(null);
         setEndDateTime(null);
+        toastr.success("Reservation edited successfully");
       } else {
         const errorData = await response.json();
         console.error("Error editing reservation:", errorData);
       }
     } catch (error) {
       console.error("Error editing reservation:", error);
+    } finally {
+      setIsEditting(false);
+    }
+  };
+
+  const cancelReservation = async () => {
+    if (!selectedReservation) return;
+    try {
+      const response = await fetch(`${BASE_URL}/cancelReservation`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          cancelReason: document.getElementById("cancelReason").value || "",
+          reservationID: selectedReservation.reservation_id,
+          vehicleNumber: selectedReservation.vehicle_id,
+        }),
+      });
+      if (response.ok) {
+        selectedReservation.status_name = "Cancelled";
+        setSelectedReservation(null);
+        setEditReservationModal(false);
+      } else {
+        const errorData = await response.json();
+        console.error("Error canceling reservation:", errorData);
+      }
+    } catch (error) {
+      console.error("Error canceling reservation:", error);
     }
   };
 
@@ -149,11 +190,10 @@ const ServicesPending = () => {
                         <th>Res. ID</th>
                         <th>Vehicle No</th>
                         <th>Service Name</th>
-                        <th>Service Date</th>
-                        <th>Time start</th>
-                        <th>Time due</th>
+                        <th>From</th>
+                        <th>To</th>
                         <th>Description</th>
-                        <th>Controls</th>
+                        <th style={{ width: "400px" }}>Controls</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -167,13 +207,19 @@ const ServicesPending = () => {
                               {new Date(row.reserve_date).toLocaleDateString(
                                 "en-CA"
                               )}
+                              {"  "}
+                              {row.start_time.substring(0, 5)}
                             </td>
-                            <td>{row.start_time}</td>
-                            <td>{row.end_time}</td>
+                            <td>
+                              {new Date(row.end_date).toLocaleDateString(
+                                "en-CA"
+                              )}{" "}
+                              {row.end_time.substring(0, 5)}
+                            </td>
                             <td>{row.notes}</td>
                             <td>
                               <button
-                                className="btn btn-success btn-sm me-2"
+                                className="btn btn-success btn-sm mr-1"
                                 onClick={() => {
                                   setSelectedReservation(row);
                                   setStartReservationModal(true);
@@ -293,8 +339,9 @@ const ServicesPending = () => {
                       onClick={() => {
                         startReservation();
                       }}
+                      disabled={isStarting}
                     >
-                      Start Now
+                      {isStarting ? "Starting..." : "Start Reservation"}
                     </button>
                   ) : (
                     <>
@@ -307,6 +354,7 @@ const ServicesPending = () => {
                           setSelectedReservation(null);
                           setStartReservationModal(false);
                         }}
+                        disabled={isEditting}
                       >
                         Edit
                       </button>

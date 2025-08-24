@@ -199,13 +199,15 @@ const VehicleRegister = () => {
       }
     } catch (err) {
       toastr.error(err.message || "Network error. Please try again.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
     <div className="container pt-3">
       <div>
-        <h2 className="mb-4 text-darkblue">Vehicle Information Form</h2>
+        <h2 className="mb-4 text-darkblue fw-bold">Vehicle Information Form</h2>
 
         {!profileUpdated && (
           <div className="alert alert-danger" role="alert">
@@ -398,7 +400,15 @@ const VehicleRegister = () => {
                 className="btn btn-primary me-2"
                 disabled={!profileUpdated || isSubmitting}
               >
-                Submit
+                {isSubmitting && (
+                  <spinner
+                    className="spinner-border spinner-border-sm me-2"
+                    role="status"
+                  >
+                    <span className="visually-hidden">Loading...</span>
+                  </spinner>
+                )}
+                {isSubmitting ? "Submitting..." : "Submit"}
               </button>
               <button
                 type="reset"

@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from "react";
-<<<<<<< HEAD
 import { BASE_URL } from "../config.js";
+import toastr from "toastr";
 
 const Notifications = () => {
   const [notificationTypes, setNotificationTypes] = useState([]);
   const [message, setMessage] = useState("");
-  const [startDate, setStartDate] = useState(null);
-  const [endDate, setEndDate] = useState(null);
+  const [startDate, setStartDate] = useState(new Date().toISOString().split("T")[0]);
+  const [endDate, setEndDate] = useState(new Date().toISOString().split("T")[0]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   useEffect(() => {
     const fetchNotificationTypes = async () => {
       try {
@@ -30,17 +31,20 @@ const Notifications = () => {
   }, []);
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsSubmitting(true);
     if (!message || !startDate || !endDate) {
-      alert("Please fill in all fields");
+      toastr.error("Please fill in all fields");
+      setIsSubmitting(false); 
       return;
     }
     if (new Date(startDate) > new Date(endDate)) {
-      alert("Start date cannot be after end date");
+      toastr.error("Start date cannot be later than end date");
+      setIsSubmitting(false);
       return;
     }
 
     try {
-      const response = await fetch(`${BASE_URL}/sendNotification`, {
+      const response = await fetch(`${BASE_URL}/addNotification`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -51,14 +55,20 @@ const Notifications = () => {
           endDate,
           message,
         }),
+        credentials: "include",
       });
       if (response.ok) {
-        alert("Notification sent successfully");
+        toastr.success("Notification sent successfully");
+        setMessage("");
+        setStartDate(new Date().toISOString().split("T")[0]);
+        setEndDate(new Date().toISOString().split("T")[0]);
       } else {
         console.error("Failed to send notification");
       }
     } catch (error) {
       console.error("Error sending notification:", error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
   return (
@@ -74,7 +84,9 @@ const Notifications = () => {
               <div className="card-body">
                 <p>Send new notification to all users</p>
                 {/* Inline Row */}
-                <form className="d-md-flex justify-content-between mb-3">
+                <form
+                  className="d-md-flex justify-content-between mb-3"
+                >
                   {/* Notification Type */}
                   <div className="form-group col-md-3 mr-3">
                     <label htmlFor="notifType" className="mr-2">
@@ -101,6 +113,8 @@ const Notifications = () => {
                       type="date"
                       id="startDate"
                       className="form-control"
+                      onChange={(e) => setStartDate(e.target.value)}
+                      value={startDate}
                     />
                   </div>
 
@@ -109,7 +123,13 @@ const Notifications = () => {
                     <label htmlFor="endDate" className="mr-2">
                       End
                     </label>
-                    <input type="date" id="endDate" className="form-control" />
+                    <input
+                      type="date"
+                      id="endDate"
+                      className="form-control"
+                      onChange={(e) => setEndDate(e.target.value)}
+                      value={endDate}
+                    />
                   </div>
                 </form>
 
@@ -121,12 +141,14 @@ const Notifications = () => {
                     className="form-control"
                     placeholder="Enter message"
                     rows="3"
+                    onChange={(e) => setMessage(e.target.value)}
+                    value={message}
                   />
                 </div>
 
                 {/* Submit Button */}
-                <button type="submit" className="btn btn-primary">
-                  Send
+                <button type="submit" onClick={handleSubmit} className="btn btn-primary" disabled={isSubmitting}>
+                  {isSubmitting ? "Sending..." : "Send Notification"}
                 </button>
               </div>
             </div>
@@ -135,13 +157,6 @@ const Notifications = () => {
         </div>
       </div>
     </section>
-=======
-
-const Notifications = () => {
-  
-  return (
-   <div></div>
->>>>>>> 3a4beb09bf377ff440cbfef26f7c3a6f1518ee5b
   );
 };
 

@@ -178,10 +178,11 @@ const VehicleInfo = () => {
             <div className="card-body p-4">
               <div className="row">
                 {/* Vehicle Image */}
-                <div className="col-lg-4 mb-4 mb-lg-0">
+                <div className="col-lg-4 mb-4 mb-lg-0 d-flex justify-content-center align-items-center">
                   <div className="position-relative">
+                    <label className="text-muted">Vehicle image</label>
                     <img
-                      src={`${BASE_IMAGES_URL}${vehicleData.imgpath}`}
+                      src={`${vehicleData.imgpath}`}
                       style={{
                         height: "280px",
                         width: "100%",

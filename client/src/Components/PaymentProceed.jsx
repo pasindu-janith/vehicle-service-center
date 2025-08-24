@@ -6,16 +6,11 @@ import {
   FaCalendarAlt,
   FaTools,
   FaMoneyBillWave,
-  FaCheckCircle,
   FaShieldAlt,
   FaArrowLeft,
-  FaClock,
   FaTag,
-  FaCalculator,
-  FaLock,
-  FaExclamationTriangle,
 } from "react-icons/fa";
-import { MdPayment, MdSecurity, MdVerifiedUser } from "react-icons/md";
+import { MdPayment } from "react-icons/md";
 import { BiLoaderAlt, BiReceipt } from "react-icons/bi";
 import { IoMdInformationCircle } from "react-icons/io";
 import "bootstrap/dist/css/bootstrap.min.css";

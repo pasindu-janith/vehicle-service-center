@@ -39,9 +39,9 @@ const Sidebar = () => {
   return (
     <aside className="main-sidebar sidebar-dark-primary elevation-4">
       {/* Brand Logo */}
-      <a href="index3.html" className="brand-link">
+      <Link to="/dashboard" className="brand-link">
         <span className="brand-text font-weight-light">Shan Automobile</span>
-      </a>
+      </Link>
       {/* Sidebar */}
       <div className="sidebar">
         <div className="user-panel mt-3 pb-3 mb-3 d-flex">
@@ -196,11 +196,14 @@ const Sidebar = () => {
               </Link>
             </li>
             <li className="nav-item">
-              <Link to="/messages" className="nav-link">
+              <Link to="/notifications" className={`nav-link ${
+                  location.pathname === "/notifications" ? "active" : ""
+                }`}>
                 <i className="nav-icon fas fa-regular fa-comment" />
-                <p>Messages</p>
+                <p>Notifications</p>
               </Link>
             </li>
+            
             {/* <li className="nav-item">
               <Link to="/login" className="nav-link">
                 <i className="nav-icon fas fa-chart-pie" />

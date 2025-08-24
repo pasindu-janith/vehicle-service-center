@@ -11,6 +11,7 @@ import "react-datetime-picker/dist/DateTimePicker.css";
 import "react-calendar/dist/Calendar.css";
 import "react-clock/dist/Clock.css"; // Required for the clock UI
 import "./styles/datetime.css";
+import toastr from "toastr";
 import { BASE_URL } from "../config.js";
 import EndReservationModal from "./EndReservationModal"; // Import the new component
 import ProgressModal from "./ProgressModal"; // Import the progress modal component
@@ -23,16 +24,13 @@ const ServicesOngoing = () => {
   const [selectedReservation, setSelectedReservation] = useState(null);
   const [editReservationModal, setEditReservationModal] = useState(false);
   const [endReservationModal, setEndReservationModal] = useState(false);
+  const [isEnding, setIsEnding] = useState(false);
   const [progressModal, setProgressModal] = useState(false);
-  const [cancelReservationConfirmation, setCancelReservationConfirmation] = useState(false);
+  const [cancelReservationConfirmation, setCancelReservationConfirmation] =
+    useState(false);
+  const [isEditting, setIsEditting] = useState(false);
   const tableRef = useRef(null);
   const dtInstance = useRef(null); // To store the DataTable instance
-
-  const [progressData, setProgressData] = useState({
-    duration: "0h 0m",
-    remaining: "0h 0m",
-    percentage: 0,
-  });
 
   useEffect(() => {
     const fetchData = async () => {
@@ -69,11 +67,16 @@ const ServicesOngoing = () => {
         info: true,
         autoWidth: true,
         responsive: true,
+        columnDefs: [
+          { targets: -1, width: "150px", orderable: false }, // last column
+        ],
       });
     }
   }, [tableData, loading]); // Re-run only when data is updated
 
   const handleEndReservation = async (formData) => {
+    if (!selectedReservation) return;
+    setIsEnding(true);
     try {
       const response = await fetch(`${BASE_URL}/endReservation`, {
         method: "POST",
@@ -82,29 +85,31 @@ const ServicesOngoing = () => {
         },
         body: JSON.stringify(formData),
       });
-      
+
       if (response.ok) {
-        const updatedData = await response.json();
+        // const updatedData = await response.json();
         setTableData((prevData) =>
-          prevData.map((row) =>
-            row.reservation_id === selectedReservation.reservation_id
-              ? { ...row, ...updatedData }
-              : row
+          prevData.filter(
+            (row) => row.reservation_id !== selectedReservation.reservation_id
           )
         );
         setEndReservationModal(false);
         setSelectedReservation(null);
+        toastr.success("Reservation ended successfully");
       } else {
         const errorData = await response.json();
         console.error("Error ending reservation:", errorData);
       }
     } catch (error) {
       console.error("Error ending reservation:", error);
+    } finally {
+      setIsEnding(false);
     }
   };
 
   const editReservation = async () => {
     if (!selectedReservation) return;
+    setIsEditting(true);
     const startTime = startDateTime.toISOString();
     const endTime = endDateTime ? endDateTime.toISOString() : null;
     try {
@@ -131,12 +136,15 @@ const ServicesOngoing = () => {
         setEditReservationModal(false);
         setSelectedReservation(null);
         setEndDateTime(null);
+        toastr.success("Reservation edited successfully");
       } else {
         const errorData = await response.json();
         console.error("Error editing reservation:", errorData);
       }
     } catch (error) {
       console.error("Error editing reservation:", error);
+    } finally {
+      setIsEditting(false);
     }
   };
 
@@ -211,7 +219,9 @@ const ServicesOngoing = () => {
                           <td>{row.vehicle_id}</td>
                           <td>{row.service_name}</td>
                           <td>
-                            {new Date(row.reserve_date).toLocaleDateString("en-CA")}
+                            {new Date(row.reserve_date).toLocaleDateString(
+                              "en-CA"
+                            )}
                             {"  "}
                             {row.start_time.substring(0, 5)}
                           </td>
@@ -237,7 +247,9 @@ const ServicesOngoing = () => {
                                 setSelectedReservation(row);
                                 setEditReservationModal(true);
                                 const temp =
-                                  row.reserve_date.split("T")[0] + " " + row.start_time;
+                                  row.reserve_date.split("T")[0] +
+                                  " " +
+                                  row.start_time;
                                 setStartDateTime(new Date(temp));
                               }}
                             >
@@ -281,6 +293,7 @@ const ServicesOngoing = () => {
         startDateTime={startDateTime}
         onClose={handleCloseEndModal}
         onEndReservation={handleEndReservation}
+        isEnding={isEnding}
       />
 
       {/* Progress Modal - Now using the separate component */}
@@ -370,8 +383,9 @@ const ServicesOngoing = () => {
                     editReservation();
                     setSelectedReservation(null);
                   }}
+                  disabled={isEditting}
                 >
-                  Edit
+                  {isEditting ? "Saving..." : "Save Changes"}
                 </button>
                 <button
                   className="btn btn-danger"
@@ -411,7 +425,10 @@ const ServicesOngoing = () => {
           <div className="modal-dialog modal-dialog-centered" role="document">
             <div className="modal-content">
               <div className="modal-header">
-                <h5 className="modal-title" id="cancelReservationConfirmationLabel">
+                <h5
+                  className="modal-title"
+                  id="cancelReservationConfirmationLabel"
+                >
                   Cancel Reservation
                 </h5>
                 <button

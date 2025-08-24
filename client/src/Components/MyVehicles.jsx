@@ -4,10 +4,9 @@ import images from "../Assets/assets";
 import { MdDelete, MdDirectionsCar, MdCalendarToday, MdBrandingWatermark } from "react-icons/md";
 import { IoMdInformationCircleOutline, IoMdClose } from "react-icons/io";
 import { FaPlus, FaCar, FaExclamationTriangle } from "react-icons/fa";
-import { BiLoaderAlt } from "react-icons/bi";
 import { useEffect } from "react";
 import "./styles/Dashboard.css";
-import BASE_URL, { BASE_IMAGES_URL } from "../config";
+import BASE_URL from "../config";
 
 const MyVehicle = () => {
   const [vehicles, setVehicles] = useState([]);
@@ -114,7 +113,7 @@ const MyVehicle = () => {
                   {/* Vehicle Image */}
                   <div className="position-relative overflow-hidden" style={{ height: "220px" }}>
                     <img
-                      src={`${BASE_IMAGES_URL}${vehicle.imgpath}`}
+                      src={`${vehicle.imgpath}`}
                       className="card-img-top w-100 h-100"
                       style={{ objectFit: "cover" }}
                       alt={`${vehicle.vehicle_brand} ${vehicle.model}`}

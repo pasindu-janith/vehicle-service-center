@@ -21,7 +21,10 @@ import {
   loadServiceTypes,
   proceedCashPayment, 
   addNotification,
-  loadNotificationTypes
+  loadNotificationTypes,
+  loadCancelledServices,
+  getReservationMessages,
+  sendReservationMessage,
 } from "./controller.mjs";
 
 
@@ -34,6 +37,7 @@ adminRouter.get("/logout", adminLogout);
 adminRouter.get("/authAdmin", authAdmin);
 adminRouter.get("/loadOngoingServices", loadOngoingServices);
 adminRouter.get("/loadPendingServices", loadPendingServices);
+adminRouter.get("/loadCancelledServices", loadCancelledServices);
 adminRouter.get("/loadCompletedServices", loadCompletedServices);
 adminRouter.get("/filterReservationData", loadReservationWithFilter);
 adminRouter.get("/loadServiceTypes", loadServiceTypes);
@@ -51,5 +55,7 @@ adminRouter.post("/reset-password", resetAdminPassword);
 adminRouter.post("/proceedCashPayment", proceedCashPayment);
 adminRouter.post("/addNotification", addNotification);
 adminRouter.get("/loadNotificationTypes", loadNotificationTypes);
+adminRouter.get("/getReservationMessages", getReservationMessages);
+adminRouter.post("/sendReservationMessage", sendReservationMessage);
 
 export default adminRouter;

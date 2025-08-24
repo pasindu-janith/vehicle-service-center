@@ -8,14 +8,15 @@ const EndReservationModal = ({
   setEndDateTime,
   startDateTime,
   onClose,
-  onEndReservation
+  onEndReservation,
+  isEnding,
 }) => {
   const [extraItems, setExtraItems] = useState([]);
   const [extraItem, setExtraItem] = useState({ description: "", price: "" });
   const [serviceCost, setServiceCost] = useState("");
   const [serviceDiscount, setServiceDiscount] = useState("0.00");
   const [finalAmount, setFinalAmount] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(isEnding || false);
 
   const handleAddExtraItem = () => {
     const price = parseFloat(extraItem.price);
@@ -264,8 +265,9 @@ const EndReservationModal = ({
               type="button"
               className="btn btn-success"
               onClick={handleEndReservation}
+              disabled={isSubmitting}
             >
-              End now
+              {isSubmitting ? "Ending..." : "End Reservation"}
             </button>
           </div>
         </div>

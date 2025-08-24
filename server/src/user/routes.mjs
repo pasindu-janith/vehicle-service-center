@@ -31,6 +31,8 @@ import {
   generatePayHash,
   fetchReservationData,
   getReservationMessages,
+  loadDashboardNotifications,
+  sendReservationMessage,
 } from "./controller.mjs";
 import upload from "../middleware/upload.mjs";
 
@@ -71,5 +73,7 @@ userRouter.get("/loadPaymentPageData", loadPaymentPageData);
 userRouter.post("/pay-hash", generatePayHash);
 userRouter.get("/fetchReservationData", fetchReservationData);
 userRouter.get("/getReservationMessages", getReservationMessages);
+userRouter.get("/loadDashboardNotifications", loadDashboardNotifications);
+userRouter.post("/sendReservationMessage", sendReservationMessage);
 export default userRouter;
 

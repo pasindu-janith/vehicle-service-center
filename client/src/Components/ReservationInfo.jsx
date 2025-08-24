@@ -1,10 +1,9 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { CiCircleInfo } from "react-icons/ci";
+import { motion } from "framer-motion";
 import {
   FiClock,
-  FiUser,
-  FiMessageCircle,
   FiCheckCircle,
   FiAlertCircle,
   FiPlayCircle,
@@ -13,12 +12,13 @@ import { FaBarsProgress } from "react-icons/fa6";
 import { FaCarAlt } from "react-icons/fa";
 import { MdNotes } from "react-icons/md";
 import BASE_URL from "../config.js";
+import AdminChatbox from "./AdminChatBox.jsx";
 
 const ReservationInfo = () => {
   const { resid: reservationID } = useParams();
   const navigate = useNavigate();
   const [activeReservation, setActiveReservation] = useState(null);
-  const [messages, setMessages] = useState([]);
+  // const [messages, setMessages] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [remainingTime, setRemainingTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -40,7 +40,6 @@ const ReservationInfo = () => {
         if (response.ok) {
           const data = await response.json();
           setActiveReservation(data.reservationData);
-          setMessages(data.messages || []);
           console.log("Reservation data:", data.messages);
 
           const reservationData = data.reservationData;
@@ -207,14 +206,21 @@ const ReservationInfo = () => {
     return "bg-primary";
   };
 
+
   if (isLoading) {
     return (
       <div className="container mt-5 mb-5 vh-100 d-flex align-items-center justify-content-center">
         <div className="text-center">
-          <div className="spinner-border text-primary" role="status" style={{ width: "4rem", height: "4rem" }}>
+          <div
+            className="spinner-border text-primary"
+            role="status"
+            style={{ width: "4rem", height: "4rem" }}
+          >
             <span className="visually-hidden">Loading...</span>
           </div>
-          <h5 className="mt-3 text-muted">Loading reservation information...</h5>
+          <h5 className="mt-3 text-muted">
+            Loading reservation information...
+          </h5>
         </div>
       </div>
     );
@@ -232,12 +238,7 @@ const ReservationInfo = () => {
         <div className="col-12">
           <div className="d-flex align-items-center mb-3">
             <div>
-              <h1
-                className="mb-1 main-title fw-bold"
-                style={{
-                  
-                }}
-              >
+              <h1 className="mb-1 main-title fw-bold" style={{}}>
                 Service Overview
               </h1>
               <p className="text-muted mb-0 fs-6">
@@ -273,7 +274,9 @@ const ReservationInfo = () => {
           >
             <div className="card-body text-dark text-center py-4">
               <div className="text-dark small text-uppercase">
-                <FiClock size={16} className="me-1" />Start Time</div>
+                <FiClock size={16} className="me-1" />
+                Start Time
+              </div>
               <div className="fs-5 fw-bold">
                 {activeReservation ? (
                   <>
@@ -300,7 +303,10 @@ const ReservationInfo = () => {
               className="card-body text-dark text-center py-4"
               style={{ backgroundColor: "#bee4ffff" }}
             >
-              <div className="text-dark small text-uppercase"><FiClock size={16} className="me-1" />End Time</div>
+              <div className="text-dark small text-uppercase">
+                <FiClock size={16} className="me-1" />
+                End Time
+              </div>
               <div className="fs-5 fw-bold">
                 {activeReservation ? (
                   <>
@@ -475,15 +481,15 @@ const ReservationInfo = () => {
                         </div>
                       ) : activeReservation.status_name === "Completed" ? (
                         <div className="text-success fw-medium">
-                          ✅ Service completed successfully
+                          Service completed successfully
                         </div>
                       ) : activeReservation.status_name === "Pending" ? (
                         <div className="text-warning fw-medium">
-                          ⏳ Service has not started yet
+                          Service has not started yet
                         </div>
                       ) : (
                         <div className="text-danger fw-medium">
-                          ❌ Service was cancelled
+                          Service was cancelled
                         </div>
                       )
                     ) : (
@@ -494,12 +500,14 @@ const ReservationInfo = () => {
                   {activeReservation &&
                     (activeReservation.status_name === "Ongoing" ? (
                       <div className="progress" style={{ height: "12px" }}>
-                        <div
+                        <motion.div
                           className={`progress-bar progress-bar-striped progress-bar-animated ${getProgressBarColor(
                             getProgressPercentage()
                           )}`}
                           role="progressbar"
-                          style={{ width: `${getProgressPercentage()}%` }}
+                          initial={{ width: "0%" }}
+                          animate={{ width: `${getProgressPercentage()}%` }}
+                          transition={{ duration: 1, ease: "easeInOut" }}
                           aria-valuemin="0"
                           aria-valuemax="100"
                         />
@@ -524,7 +532,7 @@ const ReservationInfo = () => {
         </div>
 
         {/* Messages Section */}
-        <div className="col-lg-4">
+        {/* <div className="col-lg-4">
           <div className="card border-0 shadow-sm h-100">
             <div className="card-header bg-white border-0 py-4">
               <div className="d-flex align-items-center">
@@ -544,7 +552,7 @@ const ReservationInfo = () => {
                   messages.map((msg) => (
                     <div
                       key={msg.id}
-                      className={`p-3 mb-3 rounded-3 shadow-sm ${
+                      className={`py-2 px-3 mb-3 rounded-3 shadow-sm ${
                         msg.role === "1"
                           ? "bg-white border border-primary border-opacity-25"
                           : "border"
@@ -565,7 +573,16 @@ const ReservationInfo = () => {
                           </div>
                         </div>
                         <small className="text-muted">
-                          {new Date(msg.created_at).toLocaleString()}
+                          {new Date(msg.created_at)
+                            .toLocaleString("en-GB", {
+                              year: "numeric",
+                              month: "2-digit",
+                              day: "2-digit",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                              hour12: true,
+                            })
+                            .toUpperCase()}
                         </small>
                       </div>
                       <div className="text-dark">{msg.message}</div>
@@ -584,8 +601,30 @@ const ReservationInfo = () => {
                 )}
               </div>
             </div>
+            <div className="card-footer bg-white border-0 p-3">
+              <form onSubmit={handleSendMessage} className="d-flex">
+                <input
+                  type="text"
+                  className="form-control me-2"
+                  placeholder="Type your message..."
+                  onKeyDown={handleKeyPress}
+                  value={newMessage}
+                  onChange={(e) => setNewMessage(e.target.value)}
+                  ref={inputRef}
+                />
+                <button
+                  type="submit"
+                  className="btn btn-primary"
+                  disabled={newMessage.trim() === ""}
+                >
+                  Send
+                </button>
+              </form>
+              
+            </div>
           </div>
-        </div>
+        </div> */}
+        <AdminChatbox reservationId={reservationID}/>
       </div>
     </div>
   );

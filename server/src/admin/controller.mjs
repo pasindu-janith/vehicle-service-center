@@ -80,6 +80,38 @@ export const authAdmin = async (req, res) => {
   }
 };
 
+// Helper function to check if the user is an admin
+const checkAdmin = async (adminToken, res) => {
+  try {
+    if (!adminToken) {
+      return res
+        .status(401)
+        .send({ message: "No authentication token provided" });
+    }
+    // Verify token and get admin ID
+    const decodedToken = decodeToken(adminToken);
+    if (!decodedToken) {
+      return res.status(401).send({ message: "Invalid or expired token" });
+    }
+
+    const adminID = decodedToken.adminID;
+
+    // Fetch admin from database
+    const checkAdmin = await pool.query(
+      "SELECT * FROM users WHERE user_id = $1 AND user_type_id = $2 AND status = $3",
+      [adminID, "1", "1"]
+    );
+
+    if (checkAdmin.rows.length === 0) {
+      return false;
+    }
+  } catch (error) {
+    console.error("Error checking admin:", error);
+    return false;
+  }
+  return true;
+};
+
 // New reset password controller
 export const resetAdminPassword = async (req, res) => {
   try {
@@ -308,6 +340,19 @@ export const loadPendingServices = async (req, res) => {
       ["Pending"]
     );
     res.status(200).send(pendingServices.rows);
+  } catch (error) {
+    console.error("Error loading pending services:", error);
+    res.status(500).send("Internal Server Error");
+  }
+};
+
+export const loadCancelledServices = async (req, res) => {
+  try {
+    const cancelServices = await pool.query(
+      "SELECT * FROM reservations INNER JOIN service_type ON reservations.service_type_id=service_type.service_type_id WHERE reservation_status=(SELECT reservation_status_id FROM reservation_status WHERE status_name=$1) LIMIT 100",
+      ["Cancelled"]
+    );
+    res.status(200).send(cancelServices.rows);
   } catch (error) {
     console.error("Error loading pending services:", error);
     res.status(500).send("Internal Server Error");
@@ -1183,17 +1228,24 @@ export const loadNotificationTypes = async (req, res) => {
 
 export const addNotification = async (req, res) => {
   try {
-    const { type, message, from, to } = req.body;
+    const { type, message, startDate, endDate } = req.body;
+    const { adminToken } = req.cookies;
 
-    if (!title || !message) {
+    if (!adminToken) {
       return res
-        .status(400)
-        .send({ message: "Title and message are required" });
+        .status(401)
+        .send({ message: "No authentication token provided" });
+    }
+
+    const isAdmin = checkAdmin(adminToken, res);
+
+    if (!startDate || !message || !endDate) {
+      return res.status(400).send({ message: "message are required" });
     }
 
     const newNotification = await pool.query(
-      "INSERT INTO notifications (title, message, link, created_at) VALUES ($1, $2, $3, $4) RETURNING *",
-      [title, message, link || null, toSQLDateTime(new Date())]
+      "INSERT INTO notifications (message, date_range, notification_type) VALUES ($1, $2, $3) RETURNING *",
+      [message, `[${startDate}, ${endDate}]`, type || 1]
     );
 
     res.status(201).send(newNotification.rows[0]);
@@ -1202,3 +1254,68 @@ export const addNotification = async (req, res) => {
     res.status(500).send("Internal Server Error");
   }
 };
+
+export const getReservationMessages = async (req, res) => {
+  try {
+    const { resid } = req.query;
+    const { adminToken } = req.cookies;
+    if (!adminToken) {
+      return res
+        .status(401)
+        .send({ message: "No authentication token provided" });
+    }
+    const isAdmin = checkAdmin(adminToken, res);
+    if (!isAdmin) {
+      return res.status(401).send({ message: "Unauthorized" });
+    }
+
+    if (!resid) {
+      return res.status(400).send({ message: "Reservation ID is required" });
+    }
+    const messages = await pool.query(
+      `SELECT * FROM reservation_messages r INNER JOIN user_type u ON r.role=u.user_type_id WHERE reservation_id = $1 ORDER BY created_at ASC`,
+      [resid]
+    );
+    if (messages.rows.length === 0) {
+      return res
+        .status(404)
+        .send({ message: "No messages found for this reservation" });
+    }
+    return res.status(200).send(messages.rows);
+  } catch (error) {
+    console.log(error);
+    res.status(500).send("Internal Server Error");
+  }
+};
+
+export const sendReservationMessage = async (req, res) => {
+  try {
+    const { reservationId, message } = req.body;
+    const { adminToken } = req.cookies;
+    if (!adminToken) {
+      return res
+        .status(401)
+        .send({ message: "No authentication token provided" });
+    }
+    const isAdmin = checkAdmin(adminToken, res);
+    if (!isAdmin) {
+      return res.status(401).send({ message: "Unauthorized" });
+    }
+
+    if (!reservationId || !message) {
+      return res
+        .status(400)
+        .send({ message: "Reservation ID and message are required" });
+    }
+
+    const newMessage = await pool.query(
+      "INSERT INTO reservation_messages (reservation_id, message, role, created_at) VALUES ($1, $2, $3, $4) RETURNING *",
+      [reservationId, message, "1", toSQLDateTime(new Date())]
+    );
+
+    res.status(201).send(newMessage.rows[0]);
+  } catch (error) {
+    console.error("Error adding reservation message:", error);
+    res.status(500).send("Internal Server Error");
+  }
+}

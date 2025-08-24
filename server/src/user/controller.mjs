@@ -4,7 +4,7 @@ import { decodeToken, tokenGen, tokenGenLogin } from "../utils/jwt.mjs";
 import { verifyToken } from "../utils/jwt.mjs";
 import { sendEmail } from "../utils/email.mjs";
 import { sendSMS } from "../utils/sms.mjs";
-
+import supabase from "../middleware/supabase.mjs";
 import dotenv from "dotenv";
 import crypto from "crypto";
 
@@ -623,8 +623,9 @@ export const registerVehicle = async (req, res) => {
       transmission,
       fuelType,
     } = req.body;
+    const file = req.file;
 
-    const imagePath = req.file ? `/uploads/${req.file.filename}` : null;
+    // const imagePath = req.file ? `/uploads/${req.file.filename}` : null;
     const { token } = req.cookies;
     const userID = getUserIDFromToken(token, res);
     if (
@@ -639,9 +640,23 @@ export const registerVehicle = async (req, res) => {
     ) {
       return res.status(400).json({ message: "All fields are required" });
     }
-    if (!imagePath) {
+    if (!file) {
       return res.status(400).json({ message: "Vehicle image is required" });
     }
+    const fileName = `${Date.now()}-${Math.floor(
+      Math.random() * 1000000000
+    )}${file.originalname.substring(file.originalname.lastIndexOf("."))}`;
+
+    const { error } = await supabase.storage
+      .from("vehicle-images")
+      .upload(fileName, file.buffer, {
+        contentType: file.mimetype,
+      });
+
+    if (error) return res.status(500).json({ error: error.message });
+
+    // build public URL manually (same format as your DB value)
+    const publicUrl = `${process.env.SUPABASE_URL}/storage/v1/object/public/vehicle-images/${fileName}`;
 
     const checkVehicle = await pool.query(
       "SELECT * FROM vehicles WHERE license_plate = $1",
@@ -668,7 +683,7 @@ export const registerVehicle = async (req, res) => {
           "1", // Set status to active
           fuelType,
           transmission,
-          imagePath,
+          publicUrl,
           licensePlate,
         ]
       );
@@ -690,7 +705,7 @@ export const registerVehicle = async (req, res) => {
         "1",
         fuelType,
         transmission,
-        imagePath,
+        publicUrl, // Use the public URL of the uploaded image
       ]
     );
 
@@ -1454,11 +1469,6 @@ export const fetchReservationData = async (req, res) => {
       [resid, userID]
     );
 
-    const reservationMessages = await pool.query(
-      `SELECT * FROM reservation_messages WHERE reservation_id = $1 ORDER BY created_at DESC`,
-      [resid]
-    );
-
     if (reservationData.rows.length === 0) {
       return res
         .status(404)
@@ -1466,7 +1476,6 @@ export const fetchReservationData = async (req, res) => {
     }
     return res.status(200).send({
       reservationData: reservationData.rows[0],
-      messages: reservationMessages.rows,
     });
   } catch (error) {
     console.log(error);
@@ -1514,7 +1523,7 @@ export const getReservationMessages = async (req, res) => {
       return res.status(400).send({ message: "Reservation ID is required" });
     }
     const messages = await pool.query(
-      `SELECT * FROM reservation_messages WHERE reservation_id = $1 ORDER BY created_at DESC`,
+      `SELECT * FROM reservation_messages WHERE reservation_id = $1 ORDER BY created_at ASC`,
       [resid]
     );
     if (messages.rows.length === 0) {
@@ -1526,5 +1535,140 @@ export const getReservationMessages = async (req, res) => {
   } catch (error) {
     console.log(error);
     res.status(500).send("Internal Server Error");
+  }
+};
+
+export const sendReservationMessage = async (req, res) => {
+  try {
+    const { reservationId, message } = req.body;
+    const { token } = req.cookies;
+    const userID = getUserIDFromToken(token, res);
+    if (!userID) {
+      return res.status(401).send({ message: "Unauthorized" });
+    }
+    if (!reservationId || !message) {
+      return res
+        .status(400)
+        .send({ message: "Reservation ID and message are required" });
+    }
+    const checkReservation = await pool.query(
+      `SELECT * FROM reservations r 
+      INNER JOIN vehicles v ON r.vehicle_id = v.license_plate
+      WHERE r.reservation_id = $1 AND v.user_id = $2`,
+      [reservationId, userID]
+    );
+    if (checkReservation.rows.length === 0) {
+      return res.status(400).send({ message: "Invalid Reservation ID" });
+    }
+    const insertMessage = await pool.query(
+      `INSERT INTO reservation_messages (reservation_id, role, message, created_at) 
+      VALUES ($1, $2, $3, $4)`,
+      [reservationId, "2", message, new Date()]
+    );
+    return res.status(200).send({ message: "Message sent" });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send("Internal Server Error");
+  }
+};
+
+export const loadDashboardNotifications = async (req, res) => {
+  try {
+    const { token } = req.cookies;
+    const { today } = req.query;
+    const userID = getUserIDFromToken(token, res);
+    if (!userID) {
+      return res.status(401).send({ message: "Unauthorized" });
+    }
+    const notifications = await pool.query(
+      `SELECT * FROM notifications n INNER JOIN notification_type t 
+      ON n.notification_type=t.notification_type_id WHERE (user_id = $1 OR user_id IS NULL) AND date_range @> DATE '${today}' ORDER BY id DESC LIMIT 7`,
+      [userID]
+    );
+    if (notifications.rows.length === 0) {
+      return res
+        .status(404)
+        .send({ message: "No notifications found for this user" });
+    }
+    return res.status(200).send(notifications.rows);
+  } catch (error) {
+    console.log(error);
+    res.status(500).send("Internal Server Error");
+  }
+};
+
+export const updatePaymentDetails = async (req, res) => {
+  try {
+    const {
+      merchant_id,
+      order_id, // invoice_id
+      payment_id,
+      payhere_amount,
+      payhere_currency,
+      status_code,
+      md5sig,
+      custom_1, // we can use this for customer_id
+      custom_2, // we can use this for reservation_id
+      method,
+      status_message,
+    } = req.body;
+
+    const localSig = crypto
+      .createHash("md5")
+      .update(
+        merchant_id +
+          order_id +
+          payhere_amount +
+          payhere_currency +
+          status_code +
+          crypto.createHash("md5").update(MERCHANT_SECRET).digest("hex")
+      )
+      .digest("hex")
+      .toUpperCase();
+
+    if (localSig !== md5sig) {
+      return res.status(400).send("Invalid signature");
+    }
+
+    const checkInvoice = await pool.query(
+      "SELECT * FROM invoices WHERE invoice_id = $1",
+      [order_id]
+    );
+
+    if (checkInvoice.rows.length === 0) {
+      await pool.query(
+        `INSERT INTO invoices
+          (invoice_id, customer_id, reservation_id, service_cost, discount, final_amount, created_datetime)
+         VALUES ($1, $2, $3, $4, $5, $6, NOW())`,
+        [
+          order_id, // invoice_id
+          custom_1 || "CUS000", // customer_id from custom_1
+          custom_2 || null, // reservation_id from custom_2
+          payhere_amount, // service_cost
+          0, // discount (or calculate separately)
+          payhere_amount, // final_amount
+        ]
+      );
+    } else if (status_code === "2") {
+      // Update invoice if already exists
+      await pool.query(
+        `UPDATE invoices 
+         SET final_amount = $1 
+         WHERE invoice_id = $2`,
+        [payhere_amount, order_id]
+      );
+    }
+
+    await pool.query(
+      `INSERT INTO payment 
+       (invoice_id, payhere_order_id, payment_method, transact_amount, transaction_datetime, transaction_status) 
+       VALUES ($1, $2, $3, $4, NOW(), $5)`,
+      [order_id, payment_id, method, payhere_amount, status_message]
+    );
+
+    res.send("Invoice and Payment recorded");
+  } catch (err) {
+    console.error("PayHere notify error:", err);
+    res.status(500).send("Server error");
   }
 };

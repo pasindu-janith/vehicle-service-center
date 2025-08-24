@@ -14,17 +14,14 @@ const ServicesCancelled = () => {
   const [loading, setLoading] = useState(true);
   const tableRef = useRef(null);
   const dtInstance = useRef(null); // To store the DataTable instance
-  const [startDateTime, setStartDateTime] = useState(new Date());
   const [endDateTime, setEndDateTime] = useState(null);
   const [selectedReservation, setSelectedReservation] = useState(null);
-  const [startReservationModal, setStartReservationModal] = useState(false);
-  const [editReservationModal, setEditReservationModal] = useState(false);
-  const [cancelReservationConfirmation, setCancelReservationConfirmation] =
+  const [restoreReservationConfirmation, setRestoreReservationConfirmation] =
     useState(false);
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch(`${BASE_URL}/loadPendingServices`);
+        const response = await fetch(`${BASE_URL}/loadCancelledServices`);
         if (response.ok) {
           const jsonData = await response.json();
           setTableData(jsonData);
@@ -82,7 +79,7 @@ const ServicesCancelled = () => {
             (row) => row.reservation_id !== selectedReservation.reservation_id
           )
         );
-        setStartReservationModal(false);
+        
         setSelectedReservation(null);
         setEndDateTime(null);
       } else {
@@ -91,40 +88,6 @@ const ServicesCancelled = () => {
       }
     } catch (error) {
       console.error("Error starting reservation:", error);
-    }
-  };
-
-  const editReservation = async () => {
-    if (!selectedReservation) return;
-    const startTime = startDateTime.toISOString();
-    const endTime = endDateTime ? endDateTime.toISOString() : null;
-    try {
-      const response = await fetch(
-        `${BASE_URL}/editReservation?reservationId=${
-          selectedReservation.reservation_id
-        }&startDateTime=${startTime.toLocaleString()}&endDateTime=${endTime.toLocaleString()}`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
-      if (response.ok) {
-        setTableData((prevData) =>
-          prevData.filter(
-            (row) => row.reservation_id !== selectedReservation.reservation_id
-          )
-        );
-        setEditReservationModal(false);
-        setSelectedReservation(null);
-        setEndDateTime(null);
-      } else {
-        const errorData = await response.json();
-        console.error("Error editing reservation:", errorData);
-      }
-    } catch (error) {
-      console.error("Error editing reservation:", error);
     }
   };
 
@@ -145,7 +108,6 @@ const ServicesCancelled = () => {
       if (response.ok) {
         selectedReservation.status_name = "Cancelled";
         setSelectedReservation(null);
-        setEditReservationModal(false);
       } else {
         const errorData = await response.json();
         console.error("Error canceling reservation:", errorData);
@@ -161,8 +123,8 @@ const ServicesCancelled = () => {
         <div className="row">
           <div className="col-12">
             <div className="card">
-              <div className="card-header bg-info">
-                <h3 className="card-title">Pending Services</h3>
+              <div className="card-header bg-danger">
+                <h3 className="card-title">Cancelled Services</h3>
               </div>
               <div className="card-body">
                 <div className="table-responsive">
@@ -176,9 +138,8 @@ const ServicesCancelled = () => {
                         <th>Res. ID</th>
                         <th>Vehicle No</th>
                         <th>Service Name</th>
-                        <th>Service Date</th>
-                        <th>Time start</th>
-                        <th>Time due</th>
+                        <th>Start</th>
+                        <th>End</th>
                         <th>Description</th>
                         <th>Controls</th>
                       </tr>
@@ -194,29 +155,25 @@ const ServicesCancelled = () => {
                               {new Date(row.reserve_date).toLocaleDateString(
                                 "en-CA"
                               )}
+                              {"  "}
+                              {row.start_time.substring(0, 5)}
                             </td>
-                            <td>{row.start_time}</td>
-                            <td>{row.end_time}</td>
+                            <td>
+                              {new Date(row.end_date).toLocaleDateString(
+                                "en-CA"
+                              )}{" "}
+                              {row.end_time.substring(0, 5)}
+                            </td>
                             <td>{row.notes}</td>
                             <td>
                               <button
                                 className="btn btn-success btn-sm me-2"
                                 onClick={() => {
                                   setSelectedReservation(row);
-                                  setStartReservationModal(true);
+                                  setRestoreReservationConfirmation(true);
                                 }}
                               >
-                                Start
-                              </button>
-
-                              <button
-                                className="btn btn-primary btn-sm"
-                                onClick={() => {
-                                  setSelectedReservation(row);
-                                  setEditReservationModal(true);
-                                }}
-                              >
-                                Edit
+                                Restore
                               </button>
                             </td>
                           </tr>
@@ -237,136 +194,8 @@ const ServicesCancelled = () => {
         </div>
       </div>
 
-      {(startReservationModal || editReservationModal) &&
-        selectedReservation && (
-          <div
-            className="modal fade show"
-            id="reservationDetailsModal"
-            tabIndex="-1"
-            role="dialog"
-            aria-labelledby="startReservationModalLabel"
-            aria-hidden="true"
-            style={{ display: "block" }} // Only needed if you want to show the modal immediately
-          >
-            <div className="modal-dialog modal-dialog-centered" role="document">
-              <div className="modal-content">
-                <div className="modal-header">
-                  <h5 className="modal-title" id="startReservationModalLabel">
-                    {startReservationModal
-                      ? "Start Reservation"
-                      : "Edit Reservation"}
-                  </h5>
-                  <button
-                    type="button"
-                    className="close"
-                    data-dismiss="modal"
-                    aria-label="Close"
-                    onClick={() => {
-                      setSelectedReservation(null),
-                        setStartReservationModal(false);
-                      setEditReservationModal(false);
-                    }}
-                  >
-                    <span aria-hidden="true">&times;</span>
-                  </button>
-                </div>
-                <div className="modal-body d-flex align-items-center">
-                  <div className="col-md-8 col-12">
-                    <div className="form-group">
-                      <label htmlFor="">Reservation ID</label>
-                      <input
-                        type="text"
-                        className="form-control mb-3"
-                        id="reservationId"
-                        value={selectedReservation.reservation_id}
-                        readOnly
-                      />
-                      <label htmlFor="vehicleNumber">Vehicle Number</label>
-                      <input
-                        type="text"
-                        className="form-control mb-3"
-                        id="vehicleNumber"
-                        value={selectedReservation.vehicle_id}
-                        readOnly
-                      />
-                      <label htmlFor="serviceType">Service Type</label>
-                      <input
-                        type="text"
-                        className="form-control mb-3"
-                        value={selectedReservation.service_name}
-                        readOnly
-                      />
 
-                      <label htmlFor="startTimeModal">Start time</label>
-                      <DateTimePicker
-                        onChange={(date) => setStartDateTime(date)}
-                        value={startDateTime}
-                        className="datetimepick col-12 mb-3"
-                      />
-                      <label htmlFor="">End time</label>
-                      <DateTimePicker
-                        onChange={(date) => setEndDateTime(date)}
-                        value={endDateTime}
-                        minDate={startDateTime}
-                        className="datetimepick col-12 mb-3"
-                      />
-                    </div>
-                  </div>
-                </div>
-                <div className="modal-footer">
-                  {startReservationModal ? (
-                    <button
-                      type="button"
-                      className="btn btn-primary"
-                      onClick={() => {
-                        startReservation();
-                      }}
-                    >
-                      Start Now
-                    </button>
-                  ) : (
-                    <>
-                      <button
-                        type="button"
-                        className="btn btn-primary me-2"
-                        onClick={() => {
-                          // Handle start reservation logic here
-                          editReservation();
-                          setSelectedReservation(null);
-                          setStartReservationModal(false);
-                        }}
-                      >
-                        Edit
-                      </button>
-                      <button
-                        className="btn btn-danger"
-                        onClick={() => {
-                          setCancelReservationConfirmation(true);
-                        }}
-                      >
-                        Cancel Reservation
-                      </button>
-                    </>
-                  )}
-                  <button
-                    type="button"
-                    className="btn btn-secondary"
-                    data-dismiss="modal"
-                    onClick={() => {
-                      setSelectedReservation(null),
-                        setStartReservationModal(false);
-                      setEditReservationModal(false);
-                    }}
-                  >
-                    Close
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-      {cancelReservationConfirmation && selectedReservation && (
+      {restoreReservationConfirmation && selectedReservation && (
         <div
           className="modal fade show"
           id="cancelReservationConfirmation"
@@ -391,7 +220,7 @@ const ServicesCancelled = () => {
                   data-dismiss="modal"
                   aria-label="Close"
                   onClick={() => {
-                    setCancelReservationConfirmation(false);
+                    setRestoreReservationConfirmation(false);
                     setSelectedReservation(null);
                   }}
                 >
@@ -419,7 +248,7 @@ const ServicesCancelled = () => {
                     setSelectedReservation(null);
                   }}
                 >
-                  Yes, Cancel
+                  Yes, Restore
                 </button>
                 <button
                   type="button"

@@ -172,9 +172,9 @@ const Vehicle = () => {
                   <div className="row">
                     <div className="col-md-7 col-12">
                       <img
-                        src={`${BASE_IMAGES_URL}${
+                        src={
                           selectedVehicle ? selectedVehicle.imgpath : images.car
-                        }`}
+                        }
                         style={{
                           height: "200px",
                           width: "auto",

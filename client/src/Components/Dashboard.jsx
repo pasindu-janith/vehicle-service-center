@@ -26,29 +26,7 @@ const Dashboard = () => {
   const { user } = useUser();
 
   // Sample notifications with enhanced styling
-  const notifications = [
-    {
-      id: 1,
-      message: "Reminder: Your vehicle is due for an oil change in 3 days.",
-      type: "reminder",
-      icon: FaClock,
-      time: "2 hours ago",
-    },
-    {
-      id: 2,
-      message: "Special Offer: 20% off on all tire services this week!",
-      type: "offer",
-      icon: FaGift,
-      time: "1 day ago",
-    },
-    {
-      id: 3,
-      message: "Important: Your last service invoice is pending payment.",
-      type: "alert",
-      icon: FaExclamationTriangle,
-      time: "3 days ago",
-    },
-  ];
+  const [notifications, setNotifications] = useState([]);
 
   const [events, setEvents] = useState([]);
   const [pendingServices, setPendingServices] = useState(0);
@@ -133,11 +111,11 @@ const Dashboard = () => {
 
   const getNotificationIcon = (type) => {
     switch (type) {
-      case "reminder":
+      case "Reminder":
         return FaClock;
-      case "offer":
+      case "Offer":
         return FaGift;
-      case "alert":
+      case "Alert":
         return FaExclamationTriangle;
       default:
         return FaBell;
@@ -146,17 +124,35 @@ const Dashboard = () => {
 
   const getNotificationColor = (type) => {
     switch (type) {
-      case "reminder":
+      case "Reminder":
         return "primary";
-      case "offer":
+      case "Offer":
         return "success";
-      case "alert":
+      case "Alert":
         return "danger";
       default:
         return "secondary";
     }
   };
 
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        const response = await fetch(`${BASE_URL}/loadDashboardNotifications?today=${new Date().toISOString().split("T")[0]}`, {
+          method: "GET",
+          credentials: "include",
+        });
+        if (response.ok) {
+          const data = await response.json();
+          // Process notifications data if needed
+          setNotifications(data);
+        }
+      } catch (error) {
+        console.error("Error fetching notifications:", error);
+      }
+    };
+    fetchNotifications();
+  }, []);
   return (
     <div
       className="container px-4 py-4 bg-transparent"
@@ -479,9 +475,11 @@ const Dashboard = () => {
                   <p className="text-muted mb-0">No new notifications</p>
                 </div>
               ) : (
-                <div className="notification-list">
+                <div className="notification-list overflow-hidden" style={{ maxHeight: "400px" }}>
                   {notifications.map((notification, index) => {
-                    const IconComponent = notification.icon;
+                    const IconComponent = getNotificationIcon(
+                      notification.type_name
+                    );
                     return (
                       <motion.div
                         key={notification.id}
@@ -489,21 +487,13 @@ const Dashboard = () => {
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: index * 0.1 }}
                         className={`alert alert-${getNotificationColor(
-                          notification.type
+                          notification.type_name
                         )} border-0 mb-3`}
-                        style={{
-                          backgroundColor:
-                            notification.type === "reminder"
-                              ? "#e3f2fd"
-                              : notification.type === "offer"
-                              ? "#e8f5e8"
-                              : "#ffebee",
-                        }}
                       >
                         <div className="d-flex align-items-start">
                           <IconComponent
                             className={`text-${getNotificationColor(
-                              notification.type
+                              notification.type_name
                             )} me-3 mt-1`}
                             size={18}
                           />
@@ -511,7 +501,6 @@ const Dashboard = () => {
                             <p className="mb-1 text-dark">
                               {notification.message}
                             </p>
-                            
                           </div>
                         </div>
                       </motion.div>
@@ -523,7 +512,6 @@ const Dashboard = () => {
           </div>
         </div>
       </div>
-
     </div>
   );
 };

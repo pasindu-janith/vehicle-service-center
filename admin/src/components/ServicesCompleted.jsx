@@ -19,7 +19,6 @@ const ServicesCompleted = () => {
   const [selectedReservation, setSelectedReservation] = useState(null);
   const [paymentModal, setPaymentModal] = useState(false);
 
-  
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -60,13 +59,16 @@ const ServicesCompleted = () => {
         info: true,
         autoWidth: true,
         responsive: true,
+        columnDefs: [
+          { targets: -1, width: "150px", orderable: false }, // last column
+        ],
       });
     }
   }, [tableData, loading]); // Re-run only when data is updated
 
   const proceedPayment = async () => {
     if (!selectedReservation) return;
-    
+
     try {
       const response = await fetch(`${BASE_URL}/proceedCashPayment`, {
         method: "POST",
@@ -104,7 +106,7 @@ const ServicesCompleted = () => {
       console.error("Error marking payment as completed:", error);
       toastr.error("An error occurred while processing the payment.");
     }
-  }
+  };
 
   return (
     <section className="content pt-2">

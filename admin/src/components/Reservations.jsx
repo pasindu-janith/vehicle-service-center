@@ -27,15 +27,18 @@ const Reservations = () => {
   const [startReservationModal, setStartReservationModal] = useState(false);
   const [editReservationModal, setEditReservationModal] = useState(false);
   const [endReservationModal, setEndReservationModal] = useState(false);
+  const [isEnding, setIsEnding] = useState(false);
+  const [isEditting, setIsEditting] = useState(false);
+  const [isStarting, setIsStarting] = useState(false);
   const [cancelReservationConfirmation, setCancelReservationConfirmation] =
     useState(false);
-  const [extraItems, setExtraItems] = useState([]);
-  const [extraItem, setExtraItem] = useState({ description: "", price: "" });
+  // const [extraItems, setExtraItems] = useState([]);
+  // const [extraItem, setExtraItem] = useState({ description: "", price: "" });
   const tableRef = useRef(null);
   const dtInstance = useRef(null); // To store the DataTable instance
-  const [serviceCost, setServiceCost] = useState("");
-  const [serviceDiscount, setServiceDiscount] = useState("0.00");
-  const [finalAmount, setFinalAmount] = useState("");
+  // const [serviceCost, setServiceCost] = useState("");
+  // const [serviceDiscount, setServiceDiscount] = useState("0.00");
+  // const [finalAmount, setFinalAmount] = useState("");
 
   useEffect(() => {
     const fetchData = async () => {
@@ -114,30 +117,9 @@ const Reservations = () => {
     }
   };
 
-  // const loadServiceRecords = async () => {
-  //   if (!selectedReservation) return;
-  //   try {
-  //     const response = await fetch(
-  //       `${BASE_URL}/getServiceRecords?reservationId=${selectedReservation.reservation_id}`,
-  //       {
-  //         method: "GET",
-  //       }
-  //     );
-  //     if (response.ok) {
-  //       const data = await response.json();
-  //       setServiceRecords(data);
-  //       setServiceRecordsModal(true);
-  //     } else {
-  //       const errorData = await response.json();
-  //       console.error("Error fetching service records:", errorData);
-  //     }
-  //   } catch (error) {
-  //     console.error("Error fetching service records:", error);
-  //   }
-  // };
-
   const startReservation = async () => {
     if (!selectedReservation) return;
+    setIsStarting(true);
     const startTime = startDateTime.toISOString();
     const endTime = endDateTime ? endDateTime.toISOString() : null;
     try {
@@ -164,12 +146,15 @@ const Reservations = () => {
         setStartReservationModal(false);
         setSelectedReservation(null);
         setEndDateTime(null);
+        toastr.success("Reservation started successfully");
       } else {
         const errorData = await response.json();
         console.error("Error starting reservation:", errorData);
       }
     } catch (error) {
       console.error("Error starting reservation:", error);
+    } finally {
+      setIsStarting(false);
     }
   };
 
@@ -179,6 +164,8 @@ const Reservations = () => {
   };
 
   const handleEndReservation = async (formData) => {
+    if (!selectedReservation) return;
+    setIsEnding(true);
     try {
       const response = await fetch(`${BASE_URL}/endReservation`, {
         method: "POST",
@@ -199,17 +186,21 @@ const Reservations = () => {
         );
         setEndReservationModal(false);
         setSelectedReservation(null);
+        toastr.success("Reservation ended successfully");
       } else {
         const errorData = await response.json();
         console.error("Error ending reservation:", errorData);
       }
     } catch (error) {
       console.error("Error ending reservation:", error);
+    } finally {
+      setIsEnding(false);
     }
   };
 
   const editReservation = async () => {
     if (!selectedReservation) return;
+    setIsEditting(true);
     const startTime = startDateTime.toISOString();
     const endTime = endDateTime ? endDateTime.toISOString() : null;
     try {
@@ -236,12 +227,15 @@ const Reservations = () => {
         setEditReservationModal(false);
         setSelectedReservation(null);
         setEndDateTime(null);
+        toastr.success("Reservation edited successfully");
       } else {
         const errorData = await response.json();
         console.error("Error editing reservation:", errorData);
       }
     } catch (error) {
       console.error("Error editing reservation:", error);
+    } finally {
+      setIsEditting(false);
     }
   };
 
@@ -261,6 +255,9 @@ const Reservations = () => {
       });
       if (response.ok) {
         selectedReservation.status_name = "Cancelled";
+        toastr.success(
+          `Reservation ${selectedReservation.reservation_id} cancelled`
+        );
         setSelectedReservation(null);
         setEditReservationModal(false);
       } else {
@@ -474,7 +471,6 @@ const Reservations = () => {
                                   className="btn btn-primary btn-sm"
                                   onClick={() => {
                                     setSelectedReservation(row);
-                                    loadServiceRecords();
                                   }}
                                 >
                                   Info
@@ -585,8 +581,9 @@ const Reservations = () => {
                       onClick={() => {
                         startReservation();
                       }}
+                      disabled={isStarting}
                     >
-                      Start Now
+                      {isStarting ? "Starting..." : "Start now"}
                     </button>
                   ) : (
                     <>
@@ -599,8 +596,9 @@ const Reservations = () => {
                           setSelectedReservation(null);
                           setStartReservationModal(false);
                         }}
+                        disabled={isEditting}
                       >
-                        Edit
+                        {isEditting ? "Saving..." : "Save Changes"}
                       </button>
                       <button
                         className="btn btn-danger"
@@ -639,6 +637,7 @@ const Reservations = () => {
         startDateTime={startDateTime}
         onClose={handleCloseEndModal}
         onEndReservation={handleEndReservation}
+        isEnding={isEnding}
       />
 
       {cancelReservationConfirmation && selectedReservation && (

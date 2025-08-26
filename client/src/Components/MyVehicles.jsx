@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import images from "../Assets/assets";
 import { MdDelete, MdDirectionsCar, MdCalendarToday, MdBrandingWatermark } from "react-icons/md";
 import { IoMdInformationCircleOutline, IoMdClose } from "react-icons/io";
 import { FaPlus, FaCar, FaExclamationTriangle } from "react-icons/fa";

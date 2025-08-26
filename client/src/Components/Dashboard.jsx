@@ -11,16 +11,15 @@ import {
   FaGift,
   FaCalendarAlt,
   FaChartLine,
-  FaEye,
 } from "react-icons/fa";
 import { MdDashboard, MdNotifications } from "react-icons/md";
-import { BiTime } from "react-icons/bi";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import "./styles/Dashboard.css";
 import { useUser } from "../Context/UserContext";
 import { motion } from "framer-motion";
 import BASE_URL from "../config.js";
+import OngoingReservationsTable from "./OngoingReservationsTable.jsx";
 
 const Dashboard = () => {
   const { user } = useUser();
@@ -32,6 +31,7 @@ const Dashboard = () => {
   const [pendingServices, setPendingServices] = useState(0);
   const [ongoingServices, setOngoingServices] = useState(0);
   const [completedServices, setCompletedServices] = useState(0);
+  const [inProgress, setInProgress] = useState(null); // State to hold ongoing reservations
 
   useEffect(() => {
     const loadReservations = async () => {
@@ -46,7 +46,7 @@ const Dashboard = () => {
             var countPending = 0;
             var countOngoing = 0;
             var countCompleted = 0;
-
+            let ongoingList = [];
             const formattedEvents = data.reduce((acc, item) => {
               const date = item.reserve_date.split("T")[0];
               const title =
@@ -64,7 +64,10 @@ const Dashboard = () => {
                   ) || "Reserved";
 
               if (item.status_name === "Pending") countPending++;
-              if (item.status_name === "Ongoing") countOngoing++;
+              if (item.status_name === "Ongoing") {
+                ongoingList.push(item); // Collect ongoing reservation
+                countOngoing++;
+              }
               if (item.status_name === "Completed") countCompleted++;
 
               const existingEvent = acc.find((event) => event.date === date);
@@ -80,6 +83,7 @@ const Dashboard = () => {
             setPendingServices(countPending);
             setOngoingServices(countOngoing);
             setCompletedServices(countCompleted);
+            setInProgress(ongoingList); // Update state with ongoing reservations
           }
         }
       } catch (error) {
@@ -138,10 +142,15 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchNotifications = async () => {
       try {
-        const response = await fetch(`${BASE_URL}/loadDashboardNotifications?today=${new Date().toISOString().split("T")[0]}`, {
-          method: "GET",
-          credentials: "include",
-        });
+        const response = await fetch(
+          `${BASE_URL}/loadDashboardNotifications?today=${
+            new Date().toISOString().split("T")[0]
+          }`,
+          {
+            method: "GET",
+            credentials: "include",
+          }
+        );
         if (response.ok) {
           const data = await response.json();
           // Process notifications data if needed
@@ -281,124 +290,16 @@ const Dashboard = () => {
       {/* Service Status Table */}
       <div className="row mb-4">
         <div className="col-12">
-          <div className="card border-0 shadow-sm">
-            <div className="card-header bg-white border-bottom">
-              <div className="d-flex align-items-center">
-                <FaChartLine className="text-primary me-2" size={20} />
-                <h5 className="fw-bold mb-0 text-dark">
-                  Service Status Overview
-                </h5>
+          {inProgress ? (
+            <OngoingReservationsTable ongoing={inProgress} />
+          ) : (
+            <div className="card d-flex justify-content-center align-items-center" style={{ height: '150px' }}>
+              <div className="spinner-grow text-primary" role="status" style={{ width: '3rem', height: '3rem' }}>
+                <span className="visually-hidden">Loading...</span>
               </div>
+              <h5 className="text-muted mt-3">Loading your progress...</h5>
             </div>
-            <div className="card-body p-0">
-              <div className="table-responsive">
-                <table className="table table-hover align-middle mb-0">
-                  <thead className="bg-light">
-                    <tr>
-                      <th scope="col" className="fw-bold text-dark px-4 py-3">
-                        Service ID
-                      </th>
-                      <th
-                        scope="col"
-                        className="fw-bold text-dark py-3"
-                        style={{ width: "30%" }}
-                      >
-                        Progress
-                      </th>
-                      <th scope="col" className="fw-bold text-dark py-3">
-                        Status
-                      </th>
-                      <th scope="col" className="fw-bold text-dark py-3">
-                        Time Remaining
-                      </th>
-                      <th scope="col" className="fw-bold text-dark py-3">
-                        Action
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td className="px-4 py-3">
-                        <span className="fw-bold text-primary">#SRV001</span>
-                      </td>
-                      <td className="py-3">
-                        <div className="d-flex align-items-center">
-                          <div
-                            className="progress flex-grow-1 me-2"
-                            style={{ height: "8px" }}
-                          >
-                            <div
-                              className="progress-bar bg-primary"
-                              role="progressbar"
-                              style={{ width: "70%" }}
-                              aria-valuenow="70"
-                              aria-valuemin="0"
-                              aria-valuemax="100"
-                            ></div>
-                          </div>
-                          <small className="text-muted fw-medium">70%</small>
-                        </div>
-                      </td>
-                      <td className="py-3">
-                        <span className="badge bg-warning text-dark px-3 py-2">
-                          In Progress
-                        </span>
-                      </td>
-                      <td className="py-3">
-                        <div className="d-flex align-items-center">
-                          <BiTime className="text-muted me-1" size={16} />
-                          <span className="text-muted">1h 45m</span>
-                        </div>
-                      </td>
-                      <td className="py-3">
-                        <button className="btn btn-outline-primary btn-sm">
-                          <FaEye className="me-1" size={14} />
-                          View Details
-                        </button>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="px-4 py-3">
-                        <span className="fw-bold text-success">#SRV002</span>
-                      </td>
-                      <td className="py-3">
-                        <div className="d-flex align-items-center">
-                          <div
-                            className="progress flex-grow-1 me-2"
-                            style={{ height: "8px" }}
-                          >
-                            <div
-                              className="progress-bar bg-success"
-                              role="progressbar"
-                              style={{ width: "100%" }}
-                              aria-valuenow="100"
-                              aria-valuemin="0"
-                              aria-valuemax="100"
-                            ></div>
-                          </div>
-                          <small className="text-muted fw-medium">100%</small>
-                        </div>
-                      </td>
-                      <td className="py-3">
-                        <span className="badge bg-success px-3 py-2">
-                          Completed
-                        </span>
-                      </td>
-                      <td className="py-3">
-                        <span className="text-muted">--</span>
-                      </td>
-                      <td className="py-3">
-                        <button className="btn btn-outline-primary btn-sm">
-                          <FaEye className="me-1" size={14} />
-                          View Details
-                        </button>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
+          )}
         </div>
       </div>
 
@@ -407,7 +308,7 @@ const Dashboard = () => {
         {/* Calendar Widget */}
         <div className="col-lg-6">
           <div className="card border-0 shadow-sm h-100">
-            <div className="card-header bg-white border-bottom">
+            <div className="card-header bg-white border-bottom py-3">
               <div className="d-flex align-items-center">
                 <FaCalendarAlt className="text-primary me-2" size={20} />
                 <h5 className="fw-bold mb-0 text-dark">Service Calendar</h5>
@@ -455,7 +356,7 @@ const Dashboard = () => {
         {/* Notifications */}
         <div className="col-lg-6">
           <div className="card border-0 shadow-sm h-100">
-            <div className="card-header bg-white border-bottom">
+            <div className="card-header bg-white border-bottom py-3">
               <div className="d-flex align-items-center justify-content-between">
                 <div className="d-flex align-items-center">
                   <MdNotifications className="text-primary me-2" size={22} />
@@ -475,7 +376,10 @@ const Dashboard = () => {
                   <p className="text-muted mb-0">No new notifications</p>
                 </div>
               ) : (
-                <div className="notification-list overflow-hidden" style={{ maxHeight: "400px" }}>
+                <div
+                  className="notification-list overflow-hidden"
+                  style={{ maxHeight: "400px" }}
+                >
                   {notifications.map((notification, index) => {
                     const IconComponent = getNotificationIcon(
                       notification.type_name

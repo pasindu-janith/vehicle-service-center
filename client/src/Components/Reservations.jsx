@@ -1,17 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import {
-  CiCircleInfo,
-  CiCalendar,
-  CiClock2,
-  CiSearch,
-  CiFilter,
-  CiEdit,
-  CiTrash,
-} from "react-icons/ci";
+import { CiCalendar, CiClock2, CiSearch, CiFilter } from "react-icons/ci";
+import { FaTrash, FaEdit } from "react-icons/fa";
 import { BiPlus } from "react-icons/bi";
 import { MdPayment } from "react-icons/md";
 import { MdOutlineBookmark } from "react-icons/md";
+import { IoMdInformationCircleOutline } from "react-icons/io";
 import "./styles/Dashboard.css";
 import BASE_URL from "../config.js";
 
@@ -26,7 +20,14 @@ const Reservations = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [viewMode, setViewMode] = useState("table"); // table or card
   const navigate = useNavigate();
-
+  const [formData, setFormData] = useState({
+    vehicle: "",
+    serviceType: "",
+    serviceDate: null,
+    serviceTime: null,
+    serviceEndTime: "",
+    notes: "",
+  });
   useEffect(() => {
     const loadReservations = async () => {
       try {
@@ -86,6 +87,7 @@ const Reservations = () => {
           headers: {
             "Content-Type": "application/json",
           },
+          credentials: "include",
         }
       );
       if (response.ok) {
@@ -187,7 +189,7 @@ const Reservations = () => {
                     setShowEditModal(true);
                   }}
                 >
-                  <CiEdit size={16} className="me-1" />
+                  <FaEdit size={16} className="me-1" />
                   Edit
                 </button>
                 <button
@@ -197,7 +199,7 @@ const Reservations = () => {
                     setShowDeleteModal(true);
                   }}
                 >
-                  <CiTrash size={16} />
+                  <FaTrash size={16} />
                 </button>
               </>
             )}
@@ -213,14 +215,14 @@ const Reservations = () => {
               </button>
             )}
             <button
-              className="btn btn-sm btn-info"
+              className="btn btn-sm btn-info text-white"
               onClick={() =>
                 navigate(
                   `/myaccount/reservation-info/${reservation.reservation_id}`
                 )
               }
             >
-              <CiCircleInfo size={16} />
+              <IoMdInformationCircleOutline size={16} />
             </button>
           </div>
         </div>
@@ -438,7 +440,7 @@ const Reservations = () => {
                               }}
                               title="Edit reservation"
                             >
-                              <CiEdit size={16} />
+                              <FaEdit size={16} />
                             </button>
                             <button
                               className="btn btn-sm btn-danger"
@@ -448,7 +450,7 @@ const Reservations = () => {
                               }}
                               title="Cancel reservation"
                             >
-                              <CiTrash size={16} />
+                              <FaTrash size={16} />
                             </button>
                           </>
                         )}
@@ -464,7 +466,7 @@ const Reservations = () => {
                           </button>
                         )}
                         <button
-                          className="btn btn-sm btn-info"
+                          className="btn btn-sm btn-info text-white"
                           onClick={() =>
                             navigate(
                               `/myaccount/reservation-info/${reservation.reservation_id}`
@@ -472,7 +474,7 @@ const Reservations = () => {
                           }
                           title="View details"
                         >
-                          <CiCircleInfo size={16} />
+                          <IoMdInformationCircleOutline size={16} />
                         </button>
                       </div>
                     </td>
@@ -507,13 +509,88 @@ const Reservations = () => {
               </div>
               <div className="modal-body pt-0">
                 <div className="alert alert-info border-0">
-                  <strong>Reservation ID:</strong> #
+                  <strong>Reservation ID:</strong> 
                   {selectedReservation.reservation_id}
                 </div>
-                <p className="text-muted">
-                  Edit reservation form will be implemented here with the
-                  specific fields needed for your reservation system.
-                </p>
+                {/* Edit form fields go here */}
+                <div className="mb-3">
+                  <label htmlFor="serviceDate" className="form-label">
+                    Preferred Date <span className="text-danger">*</span>
+                  </label>
+                  <input
+                    type="date"
+                    className="form-control"
+                    id="serviceDate"
+                    name="serviceDate"
+                    value={formData.serviceDate || ""}
+                    min={new Date().toISOString().split("T")[0]} // Disable previous days
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setFormData((prev) => ({
+                        ...prev,
+                        serviceDate: value,
+                      }));
+                    }}
+                    required
+                  />
+                </div>
+                <div className="mb-3">
+                  <label htmlFor="serviceTime" className="form-label">
+                    Preferred Time <span className="text-danger">*</span>
+                  </label>
+                  <select
+                    className="form-select"
+                    id="serviceTime"
+                    name="serviceTime"
+                    required
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      if (value !== "") {
+                        setFormData((prev) => ({
+                          ...prev,
+                          serviceTime: value,
+                        }));
+                      }
+                    }}
+                  >
+                    <option selected disabled value>
+                      Choose a time
+                    </option>
+                    {Array.from({ length: (18 - 8) * 4 }, (_, index) => {
+                      const hours = 8 + Math.floor(index / 4);
+                      const minutes = (index % 4) * 15;
+                      const time = `${hours
+                        .toString()
+                        .padStart(2, "0")}:${minutes
+                        .toString()
+                        .padStart(2, "0")}:00`;
+                      return (
+                        <option key={time} value={time}>
+                          {time.slice(0, 5)}
+                        </option>
+                      );
+                    })}
+                  </select>
+                </div>
+                <div className="mb-3">
+                  <label htmlFor="notes" className="form-label">
+                    Additional Notes
+                  </label>
+                  <textarea
+                    className="form-control"
+                    id="notes"
+                    name="notes"
+                    rows="3"
+                    value={formData.notes}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        notes: e.target.value,
+                      }))
+                    }
+                  ></textarea>
+
+                  </div>
               </div>
               <div className="modal-footer border-0">
                 <button
@@ -557,13 +634,10 @@ const Reservations = () => {
                   }}
                 ></button>
               </div>
-              <div className="modal-body pt-0">
-                <div className="text-center mb-3">
-                  <CiTrash size={48} className="text-danger mb-2" />
-                </div>
+              <div className="modal-body pt-3">
                 <p className="text-center">
-                  Are you sure you want to cancel reservation{" "}
-                  <strong>#{selectedReservation.reservation_id}</strong>?
+                  Are you sure you want to cancel reservation number{" "}
+                  <strong>{selectedReservation.reservation_id}</strong>?
                 </p>
                 <div className="alert alert-warning border-0">
                   <small>

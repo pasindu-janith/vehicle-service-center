@@ -60,7 +60,7 @@ const UserPanel = () => {
           <Route path="vehicle-info/:id" element={<VehicleInfo />} />
           <Route path="reservation-info/:resid" element={<ReservationInfo />} />
           <Route path="proceed-payment" element={<PaymentProceed />} />
-          <Route path="payment-success" element={<PaymentInvoice />} />
+          <Route path="payment-success/:resid" element={<PaymentInvoice />} />
         </Routes>
         <UserPanelFooter />
       </UserProvider>

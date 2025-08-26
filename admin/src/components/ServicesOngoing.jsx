@@ -242,7 +242,7 @@ const ServicesOngoing = () => {
                               End
                             </button>
                             <button
-                              className="btn btn-primary btn-sm"
+                              className="btn btn-primary btn-sm mr-1"
                               onClick={() => {
                                 setSelectedReservation(row);
                                 setEditReservationModal(true);
@@ -253,7 +253,18 @@ const ServicesOngoing = () => {
                                 setStartDateTime(new Date(temp));
                               }}
                             >
-                              Edit
+                              <i className="fa fa-cog" aria-hidden="true"></i>
+                            </button>
+                            <button
+                              className="btn btn-sm btn-info"
+                              onClick={() => {
+                                window.location.href = `/message?resid=${row.reservation_id}`;
+                              }}
+                            >
+                              <i
+                                className="fa fa-envelope"
+                                aria-hidden="true"
+                              ></i>
                             </button>
                           </td>
                           <td>

@@ -1318,4 +1318,64 @@ export const sendReservationMessage = async (req, res) => {
     console.error("Error adding reservation message:", error);
     res.status(500).send("Internal Server Error");
   }
-}
+};
+
+export const restoreCancelledReservation = async (req, res) => {
+  try {
+    const { reservationID } = req.body;
+
+    if (!reservationID) {
+      return res.status(400).send({ message: "Reservation ID is required" });
+    }
+
+    const checkReservation = await pool.query(
+      `SELECT * FROM reservations WHERE reservation_id = $1`,
+      [reservationID]
+    );
+
+    if (checkReservation.rows.length === 0) {
+      return res.status(400).send({ message: "Invalid Reservation ID" });
+    }
+
+    if (checkReservation.rows[0].reservation_status !== 4) {
+      return res
+        .status(400)
+        .send({ message: "Only cancelled reservations can be restored" });
+    }
+
+    const restoreReservation = await pool.query(
+      "UPDATE reservations SET reservation_status = $1 WHERE reservation_id=$2 RETURNING *",
+      ["1", reservationID]
+    );
+
+    if (restoreReservation.rowCount === 0) {
+      return res.status(404).send({ message: "Reservation not found" });
+    }
+
+    return res
+      .status(200)
+      .send({ message: "Reservation restored successfully" });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send("Internal Server Error"); // If the token is invalid or the user does not exist, it returns an error message
+  }
+};
+
+export const loadPaymentPageData = async (req, res) => {
+  try {
+    const loadPayments = await pool.query(
+      `SELECT * FROM invoices i INNER JOIN reservations r ON i.reservation_id = r.reservation_id
+      INNER JOIN payments p ON i.invoice_id = p.invoice_id INNER JOIN service_type s ON r.service_type_id = s.service_type_id
+      INNER JOIN users u ON u.user_id = i.customer_id`
+    );
+    if (loadPayments.rows.length === 0) {
+      return res.status(404).send({ message: "No payment records found" });
+    }
+
+    res.status(200).send(loadPayments.rows);
+  } catch (error) {
+    console.error("Error loading payment page data:", error);
+    res.status(500).send("Internal Server Error");
+  }
+};
+

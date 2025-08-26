@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef } from "react";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import images from "../assets/assets";
-import { BiLoaderAlt, BiReceipt } from "react-icons/bi";
+import { BiReceipt } from "react-icons/bi";
+import BASE_URL from "../config";
 
 const PaymentInvoice = () => {
   const invoiceRef = useRef();
@@ -54,6 +55,29 @@ const PaymentInvoice = () => {
     tax: 0, // Assuming no tax for auto service
     total: 6000,
   };
+
+  useEffect(() => {
+    setIsLoading(true);
+    const loadInvoice = async () => {
+      try {
+        const response = await fetch(`${BASE_URL}/loadInvoiceData`, {
+          method: "GET",
+          credentials: "include",
+        });
+        if (response.ok) {
+          const data = await response.json();
+          if (data && data.length > 0) {
+            setVehicles(data);
+          }
+          setIsLoading(false);
+        }
+      } catch (error) {
+        console.log(error);
+        setIsLoading(false);
+      }
+    };
+    loadInvoice();
+  }, []);
 
   const handleDownload = async () => {
     const input = invoiceRef.current;
@@ -160,13 +184,13 @@ const PaymentInvoice = () => {
           <div className="col-6">
             <h5 className="text-info mb-3">Customer Information</h5>
             <div className="mb-2">
-              <strong>Customer:</strong> {invoiceData.customerName}
+              <strong>Customer:</strong> {`${invoiceData.first_name} ${invoiceData.last_name}`}
             </div>
             <div className="mb-2">
-              <strong>Email:</strong> {invoiceData.customerEmail}
+              <strong>Email:</strong> {invoiceData.email}
             </div>
             <div className="mb-2">
-              <strong>Phone:</strong> {invoiceData.customerPhone}
+              <strong>Phone:</strong> {invoiceData.mobile_no}
             </div>
           </div>
         </div>

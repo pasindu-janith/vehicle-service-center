@@ -6,22 +6,26 @@ import "datatables.net-buttons-dt";
 import "datatables.net-dt/css/dataTables.dataTables.css";
 import "datatables.net-responsive-dt/css/responsive.dataTables.css";
 import "datatables.net-buttons-dt/css/buttons.dataTables.css";
-import DateTimePicker from "react-datetime-picker";
 import { BASE_URL } from "../config.js";
+import toastr from "toastr";
 
 const ServicesCancelled = () => {
   const [tableData, setTableData] = useState([]);
   const [loading, setLoading] = useState(true);
   const tableRef = useRef(null);
-  const dtInstance = useRef(null); // To store the DataTable instance
-  const [endDateTime, setEndDateTime] = useState(null);
+  const dtInstance = useRef(null);
   const [selectedReservation, setSelectedReservation] = useState(null);
   const [restoreReservationConfirmation, setRestoreReservationConfirmation] =
     useState(false);
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch(`${BASE_URL}/loadCancelledServices`);
+        const response = await fetch(`${BASE_URL}/loadCancelledServices`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
         if (response.ok) {
           const jsonData = await response.json();
           setTableData(jsonData);
@@ -57,63 +61,32 @@ const ServicesCancelled = () => {
     }
   }, [tableData, loading]); // Re-run only when data is updated
 
-  const startReservation = async () => {
-    if (!selectedReservation) return;
-    const startTime = startDateTime.toISOString();
-    const endTime = endDateTime ? endDateTime.toISOString() : null;
-    try {
-      const response = await fetch(
-        `${BASE_URL}/startReservation?reservationId=${
-          selectedReservation.reservation_id
-        }&startDateTime=${startTime.toLocaleString()}&endDateTime=${endTime.toLocaleString()}`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
-      if (response.ok) {
-        setTableData((prevData) =>
-          prevData.filter(
-            (row) => row.reservation_id !== selectedReservation.reservation_id
-          )
-        );
-        
-        setSelectedReservation(null);
-        setEndDateTime(null);
-      } else {
-        const errorData = await response.json();
-        console.error("Error starting reservation:", errorData);
-      }
-    } catch (error) {
-      console.error("Error starting reservation:", error);
-    }
-  };
-
-  const cancelReservation = async () => {
+  const restoreReservation = async () => {
     if (!selectedReservation) return;
     try {
-      const response = await fetch(`${BASE_URL}/cancelReservation`, {
+      const response = await fetch(`${BASE_URL}/restoreCancelledReservation`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          cancelReason: document.getElementById("cancelReason").value || "",
           reservationID: selectedReservation.reservation_id,
-          vehicleNumber: selectedReservation.vehicle_id,
         }),
       });
       if (response.ok) {
-        selectedReservation.status_name = "Cancelled";
-        setSelectedReservation(null);
+        // Refresh the table data after successful restoration
+        const updatedData = tableData.filter(
+          (item) => item.reservation_id !== selectedReservation.reservation_id
+        );
+        setTableData(updatedData);
+        toastr.success(
+          "Reservation restored successfully. Check pending services."
+        );
       } else {
-        const errorData = await response.json();
-        console.error("Error canceling reservation:", errorData);
+        console.error("Failed to restore reservation");
       }
     } catch (error) {
-      console.error("Error canceling reservation:", error);
+      console.error("Error restoring reservation:", error);
     }
   };
 
@@ -167,13 +140,24 @@ const ServicesCancelled = () => {
                             <td>{row.notes}</td>
                             <td>
                               <button
-                                className="btn btn-success btn-sm me-2"
+                                className="btn btn-success btn-sm mr-2"
                                 onClick={() => {
                                   setSelectedReservation(row);
                                   setRestoreReservationConfirmation(true);
                                 }}
                               >
                                 Restore
+                              </button>
+                              <button
+                                className="btn btn-sm btn-info"
+                                onClick={() => {
+                                  window.location.href = `/message?resid=${row.reservation_id}`;
+                                }}
+                              >
+                                <i
+                                  className="fa fa-envelope"
+                                  aria-hidden="true"
+                                ></i>
                               </button>
                             </td>
                           </tr>
@@ -194,7 +178,6 @@ const ServicesCancelled = () => {
         </div>
       </div>
 
-
       {restoreReservationConfirmation && selectedReservation && (
         <div
           className="modal fade show"
@@ -212,7 +195,7 @@ const ServicesCancelled = () => {
                   className="modal-title"
                   id="cancelReservationConfirmationLabel"
                 >
-                  Cancel Reservation
+                  Restore Reservation
                 </h5>
                 <button
                   type="button"
@@ -228,23 +211,15 @@ const ServicesCancelled = () => {
                 </button>
               </div>
               <div className="modal-body">
-                Are you sure you want to cancel this reservation?
-                <label htmlFor="cancelReason">Cancellation message</label>
-                <input
-                  type="text"
-                  className="form-control mt-2"
-                  placeholder="Enter cancellation reason (optional)"
-                  id="cancelReason"
-                  required
-                />
+                Are you sure you want to restore this reservation?
               </div>
               <div className="modal-footer">
                 <button
                   type="button"
                   className="btn btn-danger"
                   onClick={() => {
-                    cancelReservation();
-                    setCancelReservationConfirmation(false);
+                    restoreReservation();
+                    setRestoreReservationConfirmation(false);
                     setSelectedReservation(null);
                   }}
                 >
@@ -255,7 +230,7 @@ const ServicesCancelled = () => {
                   className="btn btn-secondary"
                   data-dismiss="modal"
                   onClick={() => {
-                    setCancelReservationConfirmation(false);
+                    setRestoreReservationConfirmation(false);
                   }}
                 >
                   No, Go Back

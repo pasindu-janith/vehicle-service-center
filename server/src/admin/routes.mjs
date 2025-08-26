@@ -25,6 +25,8 @@ import {
   loadCancelledServices,
   getReservationMessages,
   sendReservationMessage,
+  restoreCancelledReservation,
+  loadPaymentPageData
 } from "./controller.mjs";
 
 
@@ -57,5 +59,6 @@ adminRouter.post("/addNotification", addNotification);
 adminRouter.get("/loadNotificationTypes", loadNotificationTypes);
 adminRouter.get("/getReservationMessages", getReservationMessages);
 adminRouter.post("/sendReservationMessage", sendReservationMessage);
-
+adminRouter.post("/restoreCancelledReservation", restoreCancelledReservation);
+adminRouter.get("/loadPaymentPageData", loadPaymentPageData);
 export default adminRouter;

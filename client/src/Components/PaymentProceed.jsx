@@ -15,7 +15,7 @@ import { BiLoaderAlt, BiReceipt } from "react-icons/bi";
 import { IoMdInformationCircle } from "react-icons/io";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import BASE_URL from "../config.js";
+import BASE_URL,{BASE_CLIENT_URL} from "../config.js";
 
 const MERCHANT_ID = "1230724"; // Replace with your real merchant ID
 
@@ -107,9 +107,9 @@ const PaymentProceed = () => {
       const payment = {
         sandbox: true,
         merchant_id: MERCHANT_ID,
-        return_url: "http://localhost:5173/myaccount/payment-success",
-        cancel_url: "http://localhost:5173/myaccount/payment-failed",
-        notify_url: "https://your-backend.com/api/payhere-notify",
+        return_url: `${BASE_CLIENT_URL}/myaccount/payment-success/${reservationData.reservation_id}`,
+        cancel_url: `${BASE_CLIENT_URL}/myaccount/payment-failed`,
+        notify_url: `${BASE_URL}/payhere-notify`,
         order_id: reservationData.reservation_id,
         items: reservationData.service_name,
         amount,
@@ -218,7 +218,7 @@ const PaymentProceed = () => {
                         </small>
                       </div>
                       <span className="fw-bold text-dark fs-5">
-                        #{reservationData?.reservation_id || "N/A"}
+                        {reservationData?.reservation_id || "N/A"}
                       </span>
                     </div>
                   </div>

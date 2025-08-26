@@ -1258,24 +1258,145 @@ export const loadAllUserReservations = async (req, res) => {
 export const cancelReservation = async (req, res) => {
   try {
     const reservationID = req.query.rid;
+    const { token } = req.cookies;
+    const userID = getUserIDFromToken(token, res);
 
     if (!reservationID) {
       return res.status(400).send({ message: "Reservation ID is required" });
     }
 
+    const checkUser = await pool.query(
+      "SELECT * FROM users WHERE user_id = $1",
+      [userID]
+    );
+    if (checkUser.rows.length === 0) {
+      return res.status(400).send({ message: "Invalid User" });
+    }
+
     const checkReservation = await pool.query(
-      "SELECT * FROM reservations WHERE reservation_id = $1",
-      [reservationID]
+      "SELECT * FROM reservations r INNER JOIN service_type st ON r.service_type_id=st.service_type_id WHERE reservation_id = $1 AND vehicle_id IN (SELECT license_plate FROM vehicles WHERE user_id = $2 AND status=$3) AND reservation_status=$4",
+      [reservationID, userID, "1", "1"]
     );
     if (checkReservation.rows.length === 0) {
-      return res.status(400).send({ message: "Invalid Reservation ID" });
+      return res
+        .status(400)
+        .send({ message: "This Reservation cannot be cancelled" });
     }
 
     const cancelReservation = await pool.query(
       "UPDATE reservations SET reservation_status = $1 WHERE reservation_id=$2",
       ["4", reservationID]
     );
+    sendEmail(
+      checkUser.rows[0].email,
+      "Shan Automobile and Hybrid Workshop, Reservation Cancelled",
+      `
+      <!DOCTYPE html>
+      <html>  
+      <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Reservation Cancelled</title>
+      <style>
+        body {
+          font-family: 'Segoe UI', Arial, sans-serif;
+          background-color: #f4f4f4;
+          margin: 0;
+          padding: 0;
+          color: #333333;
+        }
+        .email-wrapper {
+          max-width: 600px;
+          margin: 0 auto;
+          background-color: #ffffff;
+          border-radius: 6px;
+          overflow: hidden;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        .header {
+          background-color: rgb(140, 0, 0);
+          padding: 20px;
+          text-align: center;
+        }
+        .header h1 {  
+          color: #ffffff;
+          margin: 0;
+          font-size: 22px;
+        } 
+        .content {
+          padding: 30px 25px;
+        }
+        .content p {
+          font-size: 15px;
+          margin-bottom: 20px;
+          color: #555555;
+        }
+        .details {
+          background-color: #f9f9f9;
+          padding: 15px 20px;
+          border: 1px solid #dddddd;
+          border-radius: 4px;
+          margin-bottom: 25px;
+        }
+        .details ul {
+          list-style: none;
+          padding: 0;
+          margin: 0;
+        }
+        .details li {
+          font-size: 15px;
+          padding: 8px 0;
+          border-bottom: 1px solid #eeeeee;
+        }
+        .details li:last-child {
+          border-bottom: none;
+        }
+        .details strong {
+          color: rgb(140, 0, 0);
+        } 
+        .footer {
+          background-color: #f4f4f4;
+          padding: 15px;
+          font-size: 12px;
+          color: #777777;
+          text-align: center;
+        }
+        @media screen and (max-width: 600px) {
+          .content {
+            padding: 20px;
+          }
+        }
+      </style>
+      </head>
+      <body>
+      <div class="email-wrapper">
+        <div class="header">
+          <h1>Reservation Cancelled</h1>
+        </div>  
+        <div class="content">
+          <p>Dear Customer,</p>
+          <p>Your reservation with the following details has been successfully cancelled:</p>
+          <div class="details">
+            <ul>
+              <li><strong>Reservation ID:</strong> ${checkReservation.rows[0].reservation_id}</li>
+              <li><strong>Vehicle ID:</strong> ${checkReservation.rows[0].vehicle_id}</li>
+              <li><strong>Service Type:</strong> ${checkReservation.rows[0].service_name}</li>
+              <li><strong>Service Date:</strong> ${checkReservation.rows[0].reserve_date}</li>
+              <li><strong>Reserved Time:</strong> ${checkReservation.rows[0].start_time}</li>
+              <li><strong>Cancelled By:</strong> User(${userID})checkReservation.rows[0].notes}</li>
+            </ul>
+          </div>
+          <p>If you did not make this cancellation, please contact us immediately.</p>
+        </div>
+        <div class="footer">
 
+          <p>This email was sent by Shan Automobile and Hybrid Workshop. If you did not make this cancellation, please contact us immediately.</p>
+        </div>
+        </div>
+        </body>
+        </html>
+    `
+    );
     return res.status(200).send({ message: "Reservation cancelled" });
   } catch (error) {
     console.log(error);
@@ -1367,8 +1488,8 @@ export const fetchVehicleData = async (req, res) => {
   }
 };
 
-// Load service record payment data for the user for payment page
-export const loadServiceRecordPayment = async (req, res) => {
+// Load service record pending payment data for the user for payment page
+export const loadPendingPayment = async (req, res) => {
   try {
     const { token } = req.cookies;
     const userID = getUserIDFromToken(token, res);
@@ -1381,8 +1502,8 @@ export const loadServiceRecordPayment = async (req, res) => {
       INNER JOIN service_records AS sr ON sr.reservation_id = r.reservation_id
       INNER JOIN service_type AS st ON r.service_type_id = st.service_type_id
       INNER JOIN vehicles AS v ON r.vehicle_id = v.license_plate
-      WHERE v.user_id = $1 AND r.reservation_status = $2`,
-      [userID, "3"]
+      WHERE v.user_id = $1 AND r.reservation_status = $2 AND is_paid = $3`,
+      [userID, "3", "0"]
     );
     if (paymentData.rows.length === 0) {
       return res.status(404).send({ message: "No service records found" });
@@ -1522,6 +1643,16 @@ export const getReservationMessages = async (req, res) => {
     if (!resid) {
       return res.status(400).send({ message: "Reservation ID is required" });
     }
+    const checkReservation = await pool.query(
+      `SELECT * FROM reservations r
+      INNER JOIN vehicles v ON r.vehicle_id = v.license_plate
+      WHERE r.reservation_id = $1 AND v.user_id = $2`,
+      [resid, userID]
+    );
+    if (checkReservation.rows.length === 0) {
+      return res.status(400).send({ message: "Invalid Reservation ID" });
+    }
+
     const messages = await pool.query(
       `SELECT * FROM reservation_messages WHERE reservation_id = $1 ORDER BY created_at ASC`,
       [resid]
@@ -1601,14 +1732,14 @@ export const updatePaymentDetails = async (req, res) => {
   try {
     const {
       merchant_id,
-      order_id, // invoice_id
+      order_id,
       payment_id,
       payhere_amount,
       payhere_currency,
       status_code,
       md5sig,
-      custom_1, // we can use this for customer_id
-      custom_2, // we can use this for reservation_id
+      custom_1, // we can use this for customer id
+      custom_2, // we can use this for discount
       method,
       status_message,
     } = req.body;
@@ -1621,7 +1752,11 @@ export const updatePaymentDetails = async (req, res) => {
           payhere_amount +
           payhere_currency +
           status_code +
-          crypto.createHash("md5").update(MERCHANT_SECRET).digest("hex")
+          crypto
+            .createHash("md5")
+            .update(MERCHANT_SECRET)
+            .digest("hex")
+            .toUpperCase()
       )
       .digest("hex")
       .toUpperCase();
@@ -1631,44 +1766,113 @@ export const updatePaymentDetails = async (req, res) => {
     }
 
     const checkInvoice = await pool.query(
-      "SELECT * FROM invoices WHERE invoice_id = $1",
-      [order_id]
+      `SELECT * FROM reservations r INNER JOIN service_records sr ON 
+      r.reservation_id=sr.reservation_id WHERE reservation_id = $1 AND is_paid=$2`,
+      [order_id, "0"]
     );
 
-    if (checkInvoice.rows.length === 0) {
-      await pool.query(
-        `INSERT INTO invoices
-          (invoice_id, customer_id, reservation_id, service_cost, discount, final_amount, created_datetime)
-         VALUES ($1, $2, $3, $4, $5, $6, NOW())`,
-        [
-          order_id, // invoice_id
-          custom_1 || "CUS000", // customer_id from custom_1
-          custom_2 || null, // reservation_id from custom_2
-          payhere_amount, // service_cost
-          0, // discount (or calculate separately)
-          payhere_amount, // final_amount
-        ]
-      );
-    } else if (status_code === "2") {
-      // Update invoice if already exists
-      await pool.query(
-        `UPDATE invoices 
-         SET final_amount = $1 
-         WHERE invoice_id = $2`,
-        [payhere_amount, order_id]
-      );
+    if (status_code !== 2) {
+      return res.status(400).send("Payment not successful");
     }
 
+    if (checkInvoice.rows.length === 0) {
+      return res.status(400).send("Invalid or already paid reservation");
+    }
+
+    const invoice = await pool.query(
+      `INSERT INTO invoices
+          (customer_id, reservation_id, service_cost, discount, final_amount, created_datetime)
+         VALUES ($1, $2, $3, $4, $5, $6) RETURNING invoice_id`,
+      [
+        custom_1,
+        order_id, // reservation_id
+        payhere_amount + custom_2 || 0,
+        custom_2 || 0,
+        payhere_amount,
+        new Date(),
+      ]
+    );
+    const invoiceID = invoice.rows[0].invoice_id;
     await pool.query(
       `INSERT INTO payment 
-       (invoice_id, payhere_order_id, payment_method, transact_amount, transaction_datetime, transaction_status) 
+       (invoice_id, payhere_order_id, transact_amount, transaction_datetime, transaction_status) 
        VALUES ($1, $2, $3, $4, NOW(), $5)`,
-      [order_id, payment_id, method, payhere_amount, status_message]
+      [invoiceID, payment_id, method, payhere_amount, new Date(), "SUCCESS"]
     );
 
-    res.send("Invoice and Payment recorded");
+    await pool.query(
+      `UPDATE service_records SET is_paid=$1 WHERE reservation_id=$2`,
+      ["1", order_id]
+    );
+
+    res.status(200).send("Invoice and Payment recorded");
   } catch (err) {
     console.error("PayHere notify error:", err);
     res.status(500).send("Server error");
+  }
+};
+
+export const loadCompletedPayments = async (req, res) => {
+  try {
+    const { token } = req.cookies;
+    const userID = getUserIDFromToken(token, res);
+    if (!userID) {
+      return res.status(401).send({ message: "Unauthorized" });
+    }
+
+    const checkUser = await pool.query(
+      "SELECT * FROM users WHERE user_id = $1",
+      [userID]
+    );
+    if (checkUser.rows.length === 0) {
+      return res.status(400).send({ message: "Invalid User" });
+    }
+
+    const loadPayments = await pool.query(
+      `SELECT * FROM invoices i INNER JOIN reservations r ON i.reservation_id = r.reservation_id
+      INNER JOIN payments p ON i.invoice_id = p.invoice_id INNER JOIN service_type s ON r.service_type_id = s.service_type_id
+      INNER JOIN users u ON u.user_id = i.customer_id WHERE p.payment_status = $1 AND u.user_id = $2`,
+      ["SUCCESS", userID]
+    );
+    if (loadPayments.rows.length === 0) {
+      return res
+        .status(404)
+        .send({ message: "No completed payment records found" });
+    }
+
+    res.status(200).send(loadPayments.rows);
+  } catch (error) {
+    console.error("Error loading completed payment page data:", error);
+    res.status(500).send("Internal Server Error");
+  }
+};
+
+export const loadInvoiceData = async () => {
+  try {
+    const { token } = req.cookies;
+    const { resid } = req.ouery;
+    const userID = getUserIDFromToken(token, res);
+    if (!userID) {
+      return res.status(401).send({ message: "Unauthorized" });
+    }
+    if (!resid) {
+      return res.status(400).send({ message: "Reservation ID is required" });
+    }
+    const invoiceData = await pool.query(
+      `SELECT * FROM invoices i INNER JOIN reservations r ON i.reservation_id = r.reservation_id
+      INNER JOIN payments p ON i.invoice_id = p.invoice_id INNER JOIN service_type s ON r.service_type_id = s.service_type_id
+      INNER JOIN users u ON u.user_id = i.customer_id WHERE p.payment_status = $1 AND u.user_id = $2 AND r.reservation_id=$3`,
+      ["SUCCESS", userID, resid]
+    );
+    
+    if (invoiceData.rows.length === 0) {
+      return res
+        .status(404)
+        .send({ message: "No invoice data found for this reservation" });
+    }
+    return res.status(200).send(invoiceData.rows[0]);
+  } catch (error) {
+    console.log(error);
+    res.status(500).send("Internal Server Error");
   }
 };

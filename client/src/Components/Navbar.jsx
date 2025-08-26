@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import images from '../Assets/assets';
+import images from '../Assets/assets.js';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './styles/Navbar.css';
 

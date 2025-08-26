@@ -161,13 +161,24 @@ const ServicesCompleted = () => {
                           </td>
                           <td>
                             <button
-                              className="btn btn-sm btn-primary"
+                              className="btn btn-sm btn-primary mr-1"
                               onClick={() => {
                                 setSelectedReservation(row);
                                 setServiceRecordsModal(true);
                               }}
                             >
                               Show
+                            </button>
+                            <button
+                              className="btn btn-sm btn-info"
+                              onClick={() => {
+                                window.location.href = `/message?resid=${row.reservation_id}`;
+                              }}
+                            >
+                              <i
+                                className="fa fa-envelope"
+                                aria-hidden="true"
+                              ></i>
                             </button>
                           </td>
                         </tr>

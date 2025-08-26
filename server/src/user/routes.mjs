@@ -26,17 +26,19 @@ import {
   cancelReservation,
   deleteVehicle,
   fetchVehicleData,
-  loadServiceRecordPayment,
+  loadPendingPayment,
   loadPaymentPageData,
   generatePayHash,
   fetchReservationData,
   getReservationMessages,
   loadDashboardNotifications,
   sendReservationMessage,
+  updatePaymentDetails,
+  loadCompletedPayments,
+  loadInvoiceData,
 } from "./controller.mjs";
 import upload from "../middleware/upload.mjs";
 
-//User functions here
 
 const userRouter = Router();
 
@@ -68,12 +70,15 @@ userRouter.get("/loadAllUserReservations", loadAllUserReservations);
 userRouter.put("/cancelReservation", cancelReservation);
 userRouter.put("/deleteVehicle", deleteVehicle);
 userRouter.get("/fetchVehicleData", fetchVehicleData);
-userRouter.get("/loadServiceRecordPayment", loadServiceRecordPayment);
+userRouter.get("/loadServiceRecordPayment", loadPendingPayment);
 userRouter.get("/loadPaymentPageData", loadPaymentPageData);
 userRouter.post("/pay-hash", generatePayHash);
 userRouter.get("/fetchReservationData", fetchReservationData);
 userRouter.get("/getReservationMessages", getReservationMessages);
 userRouter.get("/loadDashboardNotifications", loadDashboardNotifications);
 userRouter.post("/sendReservationMessage", sendReservationMessage);
+userRouter.post("/payhere-notify", updatePaymentDetails);
+userRouter.get("/loadCompletedPayments", loadCompletedPayments);
+userRouter.post("/loadInvoiceData", loadInvoiceData);
 export default userRouter;
 

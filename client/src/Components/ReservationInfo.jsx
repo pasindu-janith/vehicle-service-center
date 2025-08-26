@@ -78,6 +78,22 @@ const ReservationInfo = () => {
     loadReservationInfo();
   }, [reservationID, navigate]);
 
+  useEffect(() => {
+    let timer;
+    if (remainingTime > 0) {
+      timer = setInterval(() => {
+        setRemainingTime((prev) => {
+          if (prev <= 1000) {
+            clearInterval(timer);
+            return 0;
+          }
+          return prev - 1000;
+        });
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [remainingTime]);
+
   const formatTime12Hour = (timeStr) => {
     if (!timeStr) return "";
     const [hour, minute] = timeStr.split(":");

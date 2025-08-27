@@ -142,7 +142,7 @@ const PaymentInvoice = () => {
             </div>
             <div className="mb-2">
               <strong>Payment:</strong>{" "}
-              {new Date(invoiceData.payment_method).toLocaleTimeString()}
+              {invoiceData.payment_method}
             </div>
           </div>
 

@@ -86,7 +86,7 @@ export const registerUser = async (req, res) => {
     );
     const messageText = `Your OTP for Shan Automobile and Hybrid Workshop registration is ${otpGenerated}. Please do not share this OTP with anyone.`;
     const smsResponse = await sendSMS("+94" + mobile, messageText);
-    if (!smsResponse.success) {
+    if (smsResponse.status != "success") {
       return res.status(500).send({ message: "Failed to send OTP via SMS" });
     }
 
@@ -269,7 +269,7 @@ const sendVerificationEmail = async (email) => {
           }
           .header {
             background-color: rgb(140, 0, 0);
-            padding: 30px 20px;
+            padding: 20px 20px;
             text-align: center;
           }
           .header h1 {
@@ -599,10 +599,10 @@ export const logout = async (req, res) => {
   res.clearCookie("token", {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
-    sameSite: "None", 
-    path: "/",          
+    sameSite: "None",
+    path: "/",
   });
-  
+
   res.status(200).send({ message: "Logged out" });
 };
 

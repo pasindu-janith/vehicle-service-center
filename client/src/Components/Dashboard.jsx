@@ -12,7 +12,8 @@ import {
   FaCalendarAlt,
   FaChartLine,
 } from "react-icons/fa";
-import { MdDashboard, MdNotifications } from "react-icons/md";
+import { MdDashboard, MdNotifications,MdInfoOutline} from "react-icons/md";
+
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import "./styles/Dashboard.css";
@@ -32,10 +33,12 @@ const Dashboard = () => {
   const [ongoingServices, setOngoingServices] = useState(0);
   const [completedServices, setCompletedServices] = useState(0);
   const [inProgress, setInProgress] = useState(null); // State to hold ongoing reservations
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const loadReservations = async () => {
       try {
+        setIsLoading(true);
         const response = await fetch(`${BASE_URL}/loadAllUserReservations`, {
           method: "GET",
           credentials: "include",
@@ -88,6 +91,8 @@ const Dashboard = () => {
         }
       } catch (error) {
         console.error("Error loading reservations:", error);
+      } finally {
+        setIsLoading(false);
       }
     };
     loadReservations();
@@ -290,11 +295,35 @@ const Dashboard = () => {
       {/* Service Status Table */}
       <div className="row mb-4">
         <div className="col-12">
-          {inProgress ? (
-            <OngoingReservationsTable ongoing={inProgress} />
+          {!isLoading ? (
+            inProgress && inProgress.length > 0 ? (
+              <OngoingReservationsTable reservations={inProgress} />
+            ) : (
+              <div
+                className="card d-flex justify-content-center align-items-center py-4"
+              >
+                <MdInfoOutline className="text-muted mb-3" size={50} />
+                <h5 className="text-muted mb-0">
+                  You have no ongoing services at the moment.
+                </h5>
+                <button
+                  className="btn btn-primary mt-3"
+                  onClick={() => (window.location.href = "/myaccount/add-reservation")}
+                >
+                  Book a Service
+                </button>
+              </div>
+            )
           ) : (
-            <div className="card d-flex justify-content-center align-items-center" style={{ height: '150px' }}>
-              <div className="spinner-grow text-primary" role="status" style={{ width: '3rem', height: '3rem' }}>
+            <div
+              className="card d-flex justify-content-center align-items-center"
+              style={{ height: "150px" }}
+            >
+              <div
+                className="spinner-grow text-primary"
+                role="status"
+                style={{ width: "3rem", height: "3rem" }}
+              >
                 <span className="visually-hidden">Loading...</span>
               </div>
               <h5 className="text-muted mt-3">Loading your progress...</h5>
@@ -377,8 +406,12 @@ const Dashboard = () => {
                 </div>
               ) : (
                 <div
-                  className="notification-list overflow-hidden"
-                  style={{ maxHeight: "400px" }}
+                  className="notification-list"
+                  style={{
+                    maxHeight: "400px",
+                    overflowX: "hidden",
+                    overflowY: "visible",
+                  }}
                 >
                   {notifications.map((notification, index) => {
                     const IconComponent = getNotificationIcon(

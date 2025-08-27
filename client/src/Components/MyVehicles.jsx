@@ -211,7 +211,7 @@ const MyVehicle = () => {
                   <p className="text-muted mb-4">
                     Start by adding your first vehicle to get started
                   </p>
-                  <Link to="/myaccount/add-vehicle" className="btn btn-primary btn-lg">
+                  <Link to="/myaccount/add-vehicle" className="btn btn-primary">
                     <FaPlus className="me-2" />
                     Add Your First Vehicle
                   </Link>

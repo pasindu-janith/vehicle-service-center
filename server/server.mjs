@@ -17,6 +17,7 @@ const allowedOrigins = [
   "http://localhost:3001",
   "https://vehicle-service-center-client.vercel.app",
   "https://vehicle-service-center.vercel.app",
+  
 ];
 
 app.use(

@@ -12,7 +12,7 @@ import { FaBarsProgress } from "react-icons/fa6";
 import { FaCarAlt } from "react-icons/fa";
 import { MdNotes } from "react-icons/md";
 import BASE_URL from "../config.js";
-import AdminChatbox from "./AdminChatBox.jsx";
+import AdminChatbox from "./AdminChatbox.jsx";
 
 const ReservationInfo = () => {
   const { resid: reservationID } = useParams();

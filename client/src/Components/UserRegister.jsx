@@ -64,10 +64,12 @@ const RegisterForm = () => {
 
     // Check for at least one uppercase letter, one lowercase letter, and one number
     if (
-      !/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{8,}$/.test(formData.password)
+      !/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/.test(
+        formData.password
+      )
     ) {
       toastr.error(
-        "Password must contain at least one uppercase letter, one lowercase letter, and one number."
+        "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character"
       );
       return;
     }
@@ -91,23 +93,20 @@ const RegisterForm = () => {
       setMessage({ text: "", type: "" });
 
       // Send data to backend API
-      const response = await fetch(
-        `${BASE_URL}/register`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            fname: formData.fname,
-            lname: formData.lname,
-            email: formData.email,
-            mobile: formData.mobile,
-            password: formData.password,
-            repassword: formData.repassword,
-          }),
-        }
-      );
+      const response = await fetch(`${BASE_URL}/register`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          fname: formData.fname,
+          lname: formData.lname,
+          email: formData.email,
+          mobile: formData.mobile,
+          password: formData.password,
+          repassword: formData.repassword,
+        }),
+      });
 
       const data = await response.json();
 

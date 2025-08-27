@@ -140,8 +140,8 @@ const PaymentProceed = () => {
   if (isLoading) {
     return (
       <div
-        className="container-fluid d-flex justify-content-center align-items-center"
-        style={{ minHeight: "100vh", backgroundColor: "#f8f9fa" }}
+        className="container-fluid d-flex justify-content-center align-items-center bg-transparent"
+        style={{ minHeight: "100vh" }}
       >
         <div className="text-center">
           <spinner className="spinner-border text-primary mb-3" role="status" style={{ width: "4rem", height: "4rem" }}>

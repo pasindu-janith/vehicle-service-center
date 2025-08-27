@@ -45,17 +45,17 @@ export const registerUser = async (req, res) => {
     const now = new Date();
     const currentDateTime = now.toISOString().slice(0, 19).replace("T", " ");
     const formattedDate = now.toISOString().split("T")[0];
-
+    console.log(new Date().toISOString());
     if (checkMobile.rows.length === 0) {
       const addMobile = await pool.query(
-        "INSERT INTO mobile_number (mobile_no, otp, otp_datetime) VALUES ($1, $2, $3) RETURNING mobile_id",
-        [mobile, hashedOTP, currentDateTime]
+        "INSERT INTO mobile_number (mobile_no, otp, otp_datetime, isotpverified) VALUES ($1, $2, $3, $4) RETURNING mobile_id",
+        [mobile, hashedOTP, new Date(), false]
       );
       var mobileid = addMobile.rows[0].mobile_id;
     } else {
       const updateMobile = await pool.query(
         "UPDATE mobile_number SET otp = $1, otp_datetime = $2 WHERE mobile_no = $3 RETURNING mobile_id",
-        [hashedOTP, currentDateTime, mobile]
+        [hashedOTP, new Date().toLocaleString(), mobile]
       );
       var mobileid = checkMobile.rows[0].mobile_id;
     }
@@ -84,14 +84,13 @@ export const registerUser = async (req, res) => {
         addressID,
       ]
     );
-    // const messageText = `Your OTP for Shan Automobile and Hybrid Workshop registration is ${otpGenerated}. Please do not share this OTP with anyone.`;
-    // const smsResponse = await sendSMS("+94" + mobile, messageText);
-    // if (smsResponse.status != "success") {
-    //   return res.status(500).send({ message: "Failed to send OTP via SMS" });
-    // }
+    const messageText = `Your OTP for Shan Automobile and Hybrid Workshop registration is ${otpGenerated}. Please do not share this OTP with anyone.`;
+    const smsResponse = await sendSMS("+94" + mobile, messageText);
+    if (smsResponse.status != "success") {
+      return res.status(500).send({ message: "Failed to send OTP via SMS" });
+    }
 
     const emailResponse = await sendVerificationEmail(email);
-    console.log(emailResponse);
     if (!emailResponse.success) {
       return res
         .status(500)
@@ -374,7 +373,7 @@ export const otpVerify = async (req, res) => {
     if (mobileData.otp_datetime) {
       const otpDateTime = new Date(mobileData.otp_datetime);
       const currentDateTime = new Date();
-      const timeDifference = currentDateTime - otpDateTime;
+      const timeDifference = currentDateTime.getTime() - otpDateTime.getTime();
       const otpValidityDuration = 5 * 60 * 1000; // 5 minutes in milliseconds
       if (timeDifference > otpValidityDuration) {
         return res.status(400).send({

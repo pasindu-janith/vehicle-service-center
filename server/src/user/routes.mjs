@@ -79,6 +79,6 @@ userRouter.get("/loadDashboardNotifications", loadDashboardNotifications);
 userRouter.post("/sendReservationMessage", sendReservationMessage);
 userRouter.post("/payhere-notify", updatePaymentDetails);
 userRouter.get("/loadCompletedPayments", loadCompletedPayments);
-userRouter.post("/loadInvoiceData", loadInvoiceData);
+userRouter.get("/loadInvoiceData", loadInvoiceData);
 export default userRouter;
 

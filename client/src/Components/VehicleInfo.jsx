@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import {
-  BiLoaderAlt,
   BiCar,
   BiCalendar,
   BiEditAlt,
@@ -19,7 +18,7 @@ import {
 import { AiOutlineFileText, AiOutlineEye } from "react-icons/ai";
 import { FiSettings, FiTool } from "react-icons/fi";
 import "./styles/Dashboard.css";
-import BASE_URL, { BASE_IMAGES_URL } from "../config.js";
+import BASE_URL from "../config.js";
 import toastr from "toastr";
 
 const VehicleInfo = () => {

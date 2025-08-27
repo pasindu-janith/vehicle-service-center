@@ -4,72 +4,33 @@ import html2canvas from "html2canvas";
 import images from "../assets/assets";
 import { BiReceipt } from "react-icons/bi";
 import BASE_URL from "../config";
+import { useParams } from "react-router-dom";
 
 const PaymentInvoice = () => {
+  const { resid } = useParams();
   const invoiceRef = useRef();
-  const [isLoading, setIsLoading] = useState(false);
-  const invoiceData = {
-    id: "INV-20250621-001",
-    date: "2025-06-21T18:30:00",
-    customerName: "Pasindu Janith",
-    customerEmail: "pasindu.janith@gmail.com",
-    customerPhone: "+94 77 123 4567",
-    reservationDetails: {
-      reservationId: "RSV-20250621-020",
-      vehicleNumber: "CAR-1234",
-      vehicleModel: "Toyota Prius",
-      serviceDate: "2025-06-21T09:00:00",
-      serviceType: "Full Service Package",
-      mechanic: "John Silva",
-      serviceStatus: "Completed",
-    },
-    services: [
-      {
-        description: "Vehicle Service Package A",
-        qty: 1,
-        rate: 3500,
-        category: "Service",
-      },
-      {
-        description: "Oil Change (Synthetic)",
-        qty: 1,
-        rate: 1500,
-        category: "Service",
-      },
-      {
-        description: "Air Filter Replacement",
-        qty: 1,
-        rate: 800,
-        category: "Parts",
-      },
-      {
-        description: "Brake Fluid Top-up",
-        qty: 1,
-        rate: 500,
-        category: "Service",
-      },
-    ],
-    subtotal: 6300,
-    discount: 300,
-    discountPercentage: 5,
-    tax: 0, // Assuming no tax for auto service
-    total: 6000,
-  };
+  const [isLoading, setIsLoading] = useState(true);
+  const [invoiceData, setInvoiceData] = useState(null);
+  const [reservationData, setReservationData] = useState(null);
 
   useEffect(() => {
     setIsLoading(true);
     const loadInvoice = async () => {
       try {
-        const response = await fetch(`${BASE_URL}/loadInvoiceData`, {
-          method: "GET",
-          credentials: "include",
-        });
+        const response = await fetch(
+          `${BASE_URL}/loadInvoiceData?resid=${resid}`,
+          {
+            method: "GET",
+            credentials: "include",
+          }
+        );
         if (response.ok) {
           const data = await response.json();
-          if (data && data.length > 0) {
-            setVehicles(data);
+          if (data && data.invoiceData && data.completedService) {
+            setInvoiceData(data.invoiceData);
+            setReservationData(data.completedService);
+            setIsLoading(false);
           }
-          setIsLoading(false);
         }
       } catch (error) {
         console.log(error);
@@ -121,9 +82,9 @@ const PaymentInvoice = () => {
         style={{ minHeight: "100vh", backgroundColor: "#f8f9fa" }}
       >
         <div className="text-center">
-          <spinner className="spinner-border text-primary" role="status">
+          <div className="spinner-border text-primary" role="status">
             <span className="visually-hidden">Loading...</span>
-          </spinner>
+          </div>
           <h4 className="mt-3">Generating Invoice...</h4>
         </div>
       </div>
@@ -169,22 +130,23 @@ const PaymentInvoice = () => {
           <div className="col-6">
             <h5 className="text-success mb-3">Invoice Information</h5>
             <div className="mb-2">
-              <strong>Invoice ID:</strong> {invoiceData.id}
+              <strong>Invoice ID:</strong> {invoiceData.invoice_id}
             </div>
             <div className="mb-2">
               <strong>Invoice Date:</strong>{" "}
-              {new Date(invoiceData.date).toLocaleDateString()}
+              {new Date(invoiceData.created_datetime).toLocaleDateString()}
             </div>
             <div className="mb-2">
               <strong>Invoice Time:</strong>{" "}
-              {new Date(invoiceData.date).toLocaleTimeString()}
+              {new Date(invoiceData.created_datetime).toLocaleTimeString()}
             </div>
           </div>
 
           <div className="col-6">
             <h5 className="text-info mb-3">Customer Information</h5>
             <div className="mb-2">
-              <strong>Customer:</strong> {`${invoiceData.first_name} ${invoiceData.last_name}`}
+              <strong>Customer:</strong>{" "}
+              {`${invoiceData.first_name} ${invoiceData.last_name} (${invoiceData.customer_id})`}
             </div>
             <div className="mb-2">
               <strong>Email:</strong> {invoiceData.email}
@@ -202,31 +164,27 @@ const PaymentInvoice = () => {
             <div className="col-6">
               <div className="mb-2">
                 <strong>Reservation ID:</strong>{" "}
-                {invoiceData.reservationDetails.reservationId}
+                {reservationData.reservation_id}
               </div>
               <div className="mb-2">
-                <strong>Vehicle Number:</strong>{" "}
-                {invoiceData.reservationDetails.vehicleNumber}
+                <strong>Vehicle Number:</strong> {reservationData.license_plate}
               </div>
               <div className="mb-2">
                 <strong>Vehicle Model:</strong>{" "}
-                {invoiceData.reservationDetails.vehicleModel}
+                {reservationData.vehicle_brand + " " + reservationData.model}
               </div>
             </div>
             <div className="col-6">
               <div className="mb-2">
                 <strong>Service Date:</strong>{" "}
-                {new Date(
-                  invoiceData.reservationDetails.serviceDate
-                ).toLocaleDateString()}
+                {new Date(reservationData.end_date).toLocaleDateString()}
               </div>
               <div className="mb-2">
-                <strong>Service Type:</strong>{" "}
-                {invoiceData.reservationDetails.serviceType}
+                <strong>Service Type:</strong> {reservationData.service_name}
               </div>
               <div className="mb-2">
                 <strong>Service Description:</strong>{" "}
-                {invoiceData.reservationDetails.mechanic}
+                {reservationData.service_description}
               </div>
             </div>
           </div>
@@ -245,12 +203,12 @@ const PaymentInvoice = () => {
             </tr>
           </thead>
           <tbody>
-            {invoiceData.services.map((service, index) => (
+            {reservationData.payment_items.map((service, index) => (
               <tr key={index}>
                 <td>{index + 1}</td>
                 <td>{service.description}</td>
                 <td className="text-end">
-                  {(service.qty * service.rate).toFixed(2)}
+                  {(service.price).toFixed(2)}
                 </td>
               </tr>
             ))}
@@ -267,17 +225,17 @@ const PaymentInvoice = () => {
                     <strong>Subtotal:</strong>
                   </td>
                   <td className="text-end">
-                    Rs. {invoiceData.subtotal.toFixed(2)}
+                    Rs. {invoiceData.service_cost}
                   </td>
                 </tr>
                 <tr>
                   <td className="text-end">
                     <strong>
-                      Discount ({invoiceData.discountPercentage}%):
+                      Discount:
                     </strong>
                   </td>
                   <td className="text-end text-success">
-                    - Rs. {invoiceData.discount.toFixed(2)}
+                    - Rs. {invoiceData.discount}
                   </td>
                 </tr>
                 {invoiceData.tax > 0 && (
@@ -295,7 +253,7 @@ const PaymentInvoice = () => {
                     <strong>Grand Total:</strong>
                   </td>
                   <td className="text-end">
-                    <strong>Rs. {invoiceData.total.toFixed(2)}</strong>
+                    <strong>Rs. {invoiceData.final_amount.toFixed(2)}</strong>
                   </td>
                 </tr>
               </tbody>

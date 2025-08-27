@@ -1249,9 +1249,9 @@ export const loadAllUserReservations = async (req, res) => {
     }
     const user = checkUser.rows[0];
     const reservations = await pool.query(
-      `SELECT * FROM reservations NATURAL JOIN service_type INNER JOIN reservation_status 
-      ON reservations.reservation_status=reservation_status.reservation_status_id WHERE vehicle_id 
-      IN (SELECT license_plate FROM vehicles WHERE user_id = $1 AND status=$2)`,
+      `SELECT * FROM reservations r NATURAL JOIN service_type INNER JOIN reservation_status rs
+      ON r.reservation_status=rs.reservation_status_id LEFT JOIN service_records sr ON r.reservation_id=sr.reservation_id
+      WHERE vehicle_id IN (SELECT license_plate FROM vehicles WHERE user_id = $1 AND status=$2)`,
       [userID, "1"]
     );
     return res.status(200).send(reservations.rows);

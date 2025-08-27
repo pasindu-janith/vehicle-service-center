@@ -454,17 +454,18 @@ const Reservations = () => {
                             </button>
                           </>
                         )}
-                        {reservation.status_name === "Completed" && (
-                          <button
-                            className="btn btn-sm btn-success"
-                            onClick={() => {
-                              window.location.href = `/myaccount/proceed-payment?resid=${reservation.reservation_id}`;
-                            }}
-                            title="Proceed to payment"
-                          >
-                            <MdPayment size={16} />
-                          </button>
-                        )}
+                        {reservation.status_name === "Completed" &&
+                          reservation.is_paid == false && (
+                            <button
+                              className="btn btn-sm btn-success"
+                              onClick={() => {
+                                window.location.href = `/myaccount/proceed-payment?resid=${reservation.reservation_id}`;
+                              }}
+                              title="Proceed to payment"
+                            >
+                              <MdPayment size={16} />
+                            </button>
+                          )}
                         <button
                           className="btn btn-sm btn-info text-white"
                           onClick={() =>
@@ -509,7 +510,7 @@ const Reservations = () => {
               </div>
               <div className="modal-body pt-0">
                 <div className="alert alert-info border-0">
-                  <strong>Reservation ID:</strong> 
+                  <strong>Reservation ID:</strong>
                   {selectedReservation.reservation_id}
                 </div>
                 {/* Edit form fields go here */}
@@ -589,8 +590,7 @@ const Reservations = () => {
                       }))
                     }
                   ></textarea>
-
-                  </div>
+                </div>
               </div>
               <div className="modal-footer border-0">
                 <button

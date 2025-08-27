@@ -112,7 +112,7 @@ const Login = () => {
     <div className="container-fluid">
       <div className="row">
         <div
-          className="col-md-6 d-md-block d-none vh-100 position-fixed"
+          className="col-md-6 d-md-block d-none h-100 position-fixed"
           style={{
             backgroundColor: "rgba(255, 0, 0, 0.7)",
             clipPath: "polygon(0% 0%, 88% 0%, 100% 100%, 0% 100%)",

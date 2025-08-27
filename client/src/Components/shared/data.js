@@ -1,4 +1,4 @@
-import images from "../../Assets/assets";
+import images from "../../assets/assets";
 
 const services = [
   {

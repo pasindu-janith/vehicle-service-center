@@ -4,7 +4,6 @@ import images from "../assets/assets";
 import "./css/styles.css";
 import toastr from "toastr";
 import BASE_URL from "../config.js";
-import { BiLoaderAlt } from "react-icons/bi";
 
 const Login = () => {
   const navigate = useNavigate();

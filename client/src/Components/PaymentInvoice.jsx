@@ -140,6 +140,10 @@ const PaymentInvoice = () => {
               <strong>Invoice Time:</strong>{" "}
               {new Date(invoiceData.created_datetime).toLocaleTimeString()}
             </div>
+            <div className="mb-2">
+              <strong>Payment:</strong>{" "}
+              {new Date(invoiceData.payment_method).toLocaleTimeString()}
+            </div>
           </div>
 
           <div className="col-6">

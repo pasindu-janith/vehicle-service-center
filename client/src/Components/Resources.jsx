@@ -4,7 +4,7 @@ import MainHeaderText from "./Headers";
 import StaffCard from "./StaffCard";
 import CountSection from "./CountSection";
 import "./styles/Resources.css";
-import images from "../Assets/assets";
+import images from "../assets/assets";
 import { FaCheckCircle } from "react-icons/fa";
 const Resources = () => {
   const containerRef = useRef(null);

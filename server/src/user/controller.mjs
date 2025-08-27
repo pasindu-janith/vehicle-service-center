@@ -1847,10 +1847,10 @@ export const loadCompletedPayments = async (req, res) => {
   }
 };
 
-export const loadInvoiceData = async () => {
+export const loadInvoiceData = async (req, res) => {
   try {
     const { token } = req.cookies;
-    const { resid } = req.ouery;
+    const { resid } = req.query;
     const userID = getUserIDFromToken(token, res);
     if (!userID) {
       return res.status(401).send({ message: "Unauthorized" });
@@ -1859,18 +1859,61 @@ export const loadInvoiceData = async () => {
       return res.status(400).send({ message: "Reservation ID is required" });
     }
     const invoiceData = await pool.query(
-      `SELECT * FROM invoices i INNER JOIN reservations r ON i.reservation_id = r.reservation_id
-      INNER JOIN payments p ON i.invoice_id = p.invoice_id INNER JOIN service_type s ON r.service_type_id = s.service_type_id
-      INNER JOIN users u ON u.user_id = i.customer_id WHERE p.payment_status = $1 AND u.user_id = $2 AND r.reservation_id=$3`,
+      `SELECT * FROM invoices i INNER JOIN payments p ON i.invoice_id = p.invoice_id INNER JOIN
+       users u ON u.user_id = i.customer_id INNER JOIN mobile_number m ON m.mobile_id=u.mobile_id 
+       WHERE p.payment_status = $1 AND u.user_id = $2 AND i.reservation_id=$3`,
       ["SUCCESS", userID, resid]
     );
-    
+
     if (invoiceData.rows.length === 0) {
       return res
         .status(404)
-        .send({ message: "No invoice data found for this reservation" });
+        .send({ message: "No invoice data found for this user" });
     }
-    return res.status(200).send(invoiceData.rows[0]);
+
+    const completedServices = await pool.query(
+      `SELECT sr.reservation_id, 
+          sr.service_description,
+          st.service_name, 
+          v.license_plate,
+          vt.vehicle_type,
+          vb.vehicle_brand,
+          v.model,
+          r.reserve_date, 
+          r.end_date, 
+          COALESCE(
+            json_agg(
+              json_build_object(
+                'id', pi.id,
+                'description', pi.description,
+                'price', pi.price
+              )
+            ) FILTER (WHERE pi.id IS NOT NULL), 
+            '[]'
+          ) AS payment_items
+            FROM service_records AS sr
+            INNER JOIN reservations AS r 
+            ON sr.reservation_id = r.reservation_id
+            INNER JOIN service_type AS st 
+            ON r.service_type_id = st.service_type_id
+            INNER JOIN vehicles AS v
+            ON r.vehicle_id = v.license_plate
+            INNER JOIN vehicle_type AS vt
+            ON v.vehicle_type_id = vt.vehicle_type_id
+            INNER JOIN vehicle_brand AS vb
+            ON v.vehicle_brand_id = vb.vehicle_brand_id
+            LEFT JOIN payment_item AS pi 
+            ON sr.reservation_id = pi.reservation_id
+            WHERE r.reservation_id = $1
+            GROUP BY sr.reservation_id, sr.service_description, st.service_name, r.reserve_date, r.end_date, 
+            v.license_plate, vt.vehicle_type, vb.vehicle_brand, v.model`,
+      [resid]
+    );
+
+    return res.status(200).send({
+      invoiceData: invoiceData.rows[0],
+      completedService: completedServices.rows[0],
+    });
   } catch (error) {
     console.log(error);
     res.status(500).send("Internal Server Error");

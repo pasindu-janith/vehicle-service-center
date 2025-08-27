@@ -11,7 +11,7 @@ import {
   FaTag,
 } from "react-icons/fa";
 import { MdPayment } from "react-icons/md";
-import { BiLoaderAlt, BiReceipt } from "react-icons/bi";
+import { BiReceipt } from "react-icons/bi";
 import { IoMdInformationCircle } from "react-icons/io";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { useSearchParams, useNavigate } from "react-router-dom";
@@ -32,9 +32,9 @@ const PaymentProceed = () => {
   useEffect(() => {
     // Register your callbacks
     window.payhere.onCompleted = function (orderId) {
-      console.log("Payment completed. OrderID:", orderId);
-      window.location.href =
-        "http://localhost:5173/myaccount/payment-success?resid=" + orderId;
+      console.log("Payment completed. OrderID:" + orderId);
+      setIsProcessing(false);
+      navigate(`/myaccount/payment-invoice/${orderId}`);
     };
 
     window.payhere.onDismissed = function () {
@@ -107,7 +107,7 @@ const PaymentProceed = () => {
       const payment = {
         sandbox: true,
         merchant_id: MERCHANT_ID,
-        return_url: `${BASE_CLIENT_URL}/myaccount/payment-success/${reservationData.reservation_id}`,
+        return_url: `${BASE_CLIENT_URL}/myaccount/payment-invoice/${reservationData.reservation_id}`,
         cancel_url: `${BASE_CLIENT_URL}/myaccount/payment-failed`,
         notify_url: `${BASE_URL}/payhere-notify`,
         order_id: reservationData.reservation_id,
@@ -434,7 +434,9 @@ const PaymentProceed = () => {
                 >
                   {isProcessing ? (
                     <>
-                      <BiLoaderAlt className="me-2 spinning" size={20} />
+                      <div className="spinner-border spinner-border-sm me-2" role="status">
+                        <span className="visually-hidden">Processing...</span>
+                      </div>
                       Processing...
                     </>
                   ) : (
@@ -478,19 +480,7 @@ const PaymentProceed = () => {
 
       {/* Custom Styles */}
       <style jsx>{`
-        .spinning {
-          animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-          from {
-            transform: rotate(0deg);
-          }
-          to {
-            transform: rotate(360deg);
-          }
-        }
-
+        
 
         .table-hover tbody tr:hover {
           background-color: rgba(13, 110, 253, 0.05);

@@ -1,5 +1,5 @@
 import React from "react";
-import images from "./../Assets/assets";
+import images from "./../assets/assets";
 import "./styles/Services.css";
 import MainHeaderText from "./Headers";
 import ServiceCard from "./ServiceCard";

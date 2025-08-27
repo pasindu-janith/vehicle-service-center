@@ -1,6 +1,6 @@
 import React, { useRef } from "react";
 import "./styles/Aboutus.css";
-import images from "./../Assets/assets";
+import images from "./../assets/assets";
 import LogoSlider from "./LogoSlider";
 import { FaCarAlt } from "react-icons/fa";
 import { IoIosSettings } from "react-icons/io";

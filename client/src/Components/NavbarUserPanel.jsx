@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import images from "../Assets/assets";
+import images from "../assets/assets";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./styles/Navbar.css";
 import { CgProfile } from "react-icons/cg";

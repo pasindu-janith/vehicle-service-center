@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import './styles/LogoSlider.css';
-import images from '../Assets/assets';
+import images from '../assets/assets';
 
 const logos = [
   { id: 1, src: images.logo1, alt: 'Suzuki' },

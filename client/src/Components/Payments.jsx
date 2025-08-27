@@ -266,6 +266,7 @@ export const Payments = () => {
                           <td className="py-3">
                             <div className="d-flex align-items-center">
                               <span className="fw-medium">
+                                <FaCar className="text-muted me-2" size={16} />
                                 {record.vehicle_id}
                               </span>
                             </div>
@@ -385,9 +386,6 @@ export const Payments = () => {
                           Method
                         </th>
                         <th scope="col" className="fw-bold text-dark py-3">
-                          Status
-                        </th>
-                        <th scope="col" className="fw-bold text-dark py-3">
                           Action
                         </th>
                       </tr>
@@ -418,7 +416,7 @@ export const Payments = () => {
                           </td>
                           <td className="py-3">
                             <div className="d-flex align-items-center">
-                              <FaCalendarAlt
+                              <BiCalendar
                                 className="text-muted me-2"
                                 size={14}
                               />
@@ -441,10 +439,14 @@ export const Payments = () => {
                             </span>
                           </td>
                           <td className="py-3">
-                            {getStatusBadge(record.payment_status)}
-                          </td>
-                          <td className="py-3">
-                            <button className="btn btn-outline-primary btn-sm">
+                            <button
+                              className="btn btn-outline-primary btn-sm"
+                              onClick={() =>
+                                navigate(
+                                  `/myaccount/payment-invoice/${record.reservation_id}`
+                                )
+                              }
+                            >
                               <FaEye className="me-1" size={12} />
                               Receipt
                             </button>

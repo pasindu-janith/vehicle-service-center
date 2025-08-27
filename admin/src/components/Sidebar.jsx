@@ -151,7 +151,7 @@ const Sidebar = () => {
                 <p>Reservations</p>
               </Link>
             </li>
-            <li className="nav-item">
+            {/* <li className="nav-item">
               <Link
                 to="/calendar"
                 className={`nav-link ${
@@ -161,7 +161,7 @@ const Sidebar = () => {
                 <i className="nav-icon fas fa-calendar" />
                 <p>Calendar</p>
               </Link>
-            </li>
+            </li> */}
             <li className="nav-item">
               <Link
                 to="/payment"

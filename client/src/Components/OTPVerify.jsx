@@ -116,6 +116,7 @@ const OTPVerify = () => {
     // Validate OTP
     if (otpValue.length !== 6) {
       toastr.warning("Please enter the complete 6-digit OTP");
+      setIsSubmitting(false);
       return;
     }
 
@@ -147,6 +148,8 @@ const OTPVerify = () => {
     } catch (error) {
       console.error("OTP verification error:", error);
       toastr.error("Something went wrong. Please try again.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 

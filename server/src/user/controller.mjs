@@ -84,13 +84,14 @@ export const registerUser = async (req, res) => {
         addressID,
       ]
     );
-    const messageText = `Your OTP for Shan Automobile and Hybrid Workshop registration is ${otpGenerated}. Please do not share this OTP with anyone.`;
-    const smsResponse = await sendSMS("+94" + mobile, messageText);
-    if (smsResponse.status != "success") {
-      return res.status(500).send({ message: "Failed to send OTP via SMS" });
-    }
+    // const messageText = `Your OTP for Shan Automobile and Hybrid Workshop registration is ${otpGenerated}. Please do not share this OTP with anyone.`;
+    // const smsResponse = await sendSMS("+94" + mobile, messageText);
+    // if (smsResponse.status != "success") {
+    //   return res.status(500).send({ message: "Failed to send OTP via SMS" });
+    // }
 
     const emailResponse = await sendVerificationEmail(email);
+    console.log(emailResponse);
     if (!emailResponse.success) {
       return res
         .status(500)
@@ -249,7 +250,7 @@ export const resendVerifyEmail = async (req, res) => {
 //Verify email function
 const sendVerificationEmail = async (email) => {
   const token = tokenGen({ email });
-  sendEmail(
+  return await sendEmail(
     email,
     "Shan Automobile and Hybrid Workshop, Email Verification",
     `

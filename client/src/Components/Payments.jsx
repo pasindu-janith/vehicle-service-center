@@ -7,7 +7,6 @@ import {
   FaExclamationCircle,
   FaClock,
   FaCar,
-  FaCalendarAlt,
   FaSearch,
   FaDownload,
   FaEye,
@@ -37,13 +36,14 @@ export const Payments = () => {
           const data = await response.json();
           console.log("Service records fetched successfully:", data);
           setPaymentData(data);
-          setIsLoading(false);
         }
       } catch (error) {
         console.error("Error fetching service records:", error);
+      } finally {
         setIsLoading(false);
       }
     };
+    
     const loadCompletedPayments = async () => {
       try {
         const response = await fetch(`${BASE_URL}/loadCompletedPayments`, {

@@ -72,7 +72,7 @@ const PaymentInvoice = () => {
       }
     }
 
-    pdf.save("invoice-" + invoiceData.id + ".pdf");
+    pdf.save("invoice-" + invoiceData.invoice_id + ".pdf");
   };
 
   if (isLoading) {
@@ -141,16 +141,16 @@ const PaymentInvoice = () => {
               {new Date(invoiceData.created_datetime).toLocaleTimeString()}
             </div>
             <div className="mb-2">
-              <strong>Payment:</strong>{" "}
-              {invoiceData.payment_method}
+              <strong>Payment:</strong> {invoiceData.payment_method}
             </div>
           </div>
 
           <div className="col-6">
             <h5 className="text-info mb-3">Customer Information</h5>
             <div className="mb-2">
+              <strong>Customer ID:</strong> {invoiceData.customer_id}
               <strong>Customer:</strong>{" "}
-              {`${invoiceData.first_name} ${invoiceData.last_name} (${invoiceData.customer_id})`}
+              {`${invoiceData.first_name} ${invoiceData.last_name}`}
             </div>
             <div className="mb-2">
               <strong>Email:</strong> {invoiceData.email}
@@ -175,7 +175,14 @@ const PaymentInvoice = () => {
               </div>
               <div className="mb-2">
                 <strong>Vehicle Model:</strong>{" "}
-                {reservationData.vehicle_brand + " " + reservationData.model}
+                {reservationData.vehicle_brand +
+                  " " +
+                  reservationData.model +
+                  " (" +
+                  reservationData.make_year +
+                  ")" +
+                  " - " +
+                  reservationData.vehicle_type}
               </div>
             </div>
             <div className="col-6">
@@ -211,9 +218,7 @@ const PaymentInvoice = () => {
               <tr key={index}>
                 <td>{index + 1}</td>
                 <td>{service.description}</td>
-                <td className="text-end">
-                  {(service.price).toFixed(2)}
-                </td>
+                <td className="text-end">{service.price.toFixed(2)}</td>
               </tr>
             ))}
           </tbody>
@@ -228,15 +233,11 @@ const PaymentInvoice = () => {
                   <td className="text-end">
                     <strong>Subtotal:</strong>
                   </td>
-                  <td className="text-end">
-                    Rs. {invoiceData.service_cost}
-                  </td>
+                  <td className="text-end">Rs. {invoiceData.service_cost}</td>
                 </tr>
                 <tr>
                   <td className="text-end">
-                    <strong>
-                      Discount:
-                    </strong>
+                    <strong>Discount:</strong>
                   </td>
                   <td className="text-end text-success">
                     - Rs. {invoiceData.discount}

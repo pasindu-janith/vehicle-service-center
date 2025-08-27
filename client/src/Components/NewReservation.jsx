@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { FaCar } from "react-icons/fa";
 import toastr from "toastr";
 import BASE_URL from "../config";
 
@@ -22,12 +23,9 @@ const NewReservation = () => {
   useEffect(() => {
     const loadServiceTypes = async () => {
       try {
-        const response = await fetch(
-          `${BASE_URL}/loadServiceTypes`,
-          {
-            method: "GET",
-          }
-        );
+        const response = await fetch(`${BASE_URL}/loadServiceTypes`, {
+          method: "GET",
+        });
         if (response.ok) {
           const data = await response.json();
           setServiceTypes(data);
@@ -39,13 +37,10 @@ const NewReservation = () => {
 
     const loadAllUserVehicles = async () => {
       try {
-        const response = await fetch(
-          `${BASE_URL}/loadAllUserVehicles`,
-          {
-            method: "GET",
-            credentials: "include",
-          }
-        );
+        const response = await fetch(`${BASE_URL}/loadAllUserVehicles`, {
+          method: "GET",
+          credentials: "include",
+        });
         if (response.ok) {
           const data = await response.json();
           if (data && data.length > 0) {
@@ -96,17 +91,14 @@ const NewReservation = () => {
     };
 
     try {
-      const response = await fetch(
-        `${BASE_URL}/createReservation`,
-        {
-          method: "POST",
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(data),
-        }
-      );
+      const response = await fetch(`${BASE_URL}/createReservation`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
       if (response.ok) {
         toastr.success("Reservation created successfully!");
         setIsSubmitting(false);
@@ -124,8 +116,17 @@ const NewReservation = () => {
     <div className="container pt-3 d-flex justify-content-center">
       <div className="card p-4 rounded shadow-sm col-md-6 col-12">
         <form onSubmit={handleSubmit}>
-          <h3 className="mb-4 text-darkblue fw-bold">New Service Reservation</h3>
+          <h3 className="mb-4 text-darkblue fw-bold">
+            New Service Reservation
+          </h3>
           {/* Vehicle Selection */}
+          {vehicles.length === 0 && (
+            <div className="alert alert-warning" role="alert">
+              <FaCar className="me-2" />
+              You have no vehicles registered. Please add a vehicle first before
+              making a reservation.
+            </div>
+          )}
           <div className="mb-3">
             <label htmlFor="vehicle" className="form-label">
               Select Your Vehicle <span className="text-danger">*</span>
@@ -267,9 +268,10 @@ const NewReservation = () => {
                 }));
               }}
             />
-             <p className="text-muted small">Service end time can be varied based on the workshop workload.</p>
+            <p className="text-muted small">
+              Service end time can be varied based on the workshop workload.
+            </p>
           </div>
-         
 
           {/* Notes */}
           <div className="mb-3">
@@ -293,7 +295,11 @@ const NewReservation = () => {
           </div>
           {/* Submit Button */}
           <div className="d-grid">
-            <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
+            <button
+              type="submit"
+              className="btn btn-primary"
+              disabled={isSubmitting || vehicles.length === 0}
+            >
               Reserve Now
             </button>
           </div>

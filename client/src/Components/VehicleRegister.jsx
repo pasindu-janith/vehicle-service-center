@@ -210,7 +210,7 @@ const VehicleRegister = () => {
         <h2 className="mb-4 text-darkblue fw-bold">Vehicle Information Form</h2>
 
         {!profileUpdated && (
-          <div className="alert alert-danger" role="alert">
+          <div className="alert alert-warning" role="alert">
             Update your profile information first to register a vehicle.
             <Link to="/myaccount/settings">Update profile</Link>
           </div>

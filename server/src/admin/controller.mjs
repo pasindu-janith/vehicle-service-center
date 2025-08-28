@@ -32,7 +32,7 @@ export const adminLogin = async (req, res) => {
 
     res.cookie("adminToken", adminToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV == "production",
+      secure: process.env.NODE_ENV === "production",
       sameSite: "None",
       maxAge: cookieExpiration,
       path: "/",

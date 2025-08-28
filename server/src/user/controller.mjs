@@ -419,70 +419,95 @@ const sendPasswordResetEmail = async (email) => {
     email,
     "Shan Automobile and Hybrid Workshop, Reset Account Password",
     `
-    <!DOCTYPE html>
+   <!DOCTYPE html>
     <html>
     <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Reset Password</title>
-      <style>
-        body {
-          font-family: 'Arial', sans-serif;
-          line-height: 1.6;
-          color:rgb(33, 33, 33);
-          max-width: 600px;
-          margin: 0 auto;
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reset Password</title>
+    <style>
+      body {
+        font-family: 'Segoe UI', Arial, sans-serif;
+        background-color: #f4f4f4;
+        margin: 0;
+        padding: 0;
+        color: #333333;
+      }
+      .email-wrapper {
+        max-width: 600px;
+        margin: 0 auto;
+        background-color: #ffffff;
+        border-radius: 6px;
+        overflow: hidden;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+      }
+      .header {
+        background-color: rgb(140, 0, 0);
+        padding: 20px;
+        text-align: center;
+      }
+      .header h1 {
+        color: #ffffff;
+        margin: 0;
+        font-size: 22px;
+      }
+      .content {
+        padding: 30px 25px;
+      }
+      .content p {
+        font-size: 15px;
+        margin-bottom: 20px;
+        color: #555555;
+      }
+      .btn {
+        background-color: rgb(245, 161, 161);
+        color: #ffffff !important;
+        padding: 12px 24px;
+        text-decoration: none !important;
+        border-radius: 4px;
+        font-weight: bold;
+        display: inline-block;
+        font-size: 15px;
+      }
+      .btn:hover {
+        background-color: rgb(118, 0, 0);
+      }
+      .footer {
+        background-color: #f4f4f4;
+        padding: 15px;
+        font-size: 12px;
+        color: #777777;
+        text-align: center;
+      }
+      @media screen and (max-width: 600px) {
+        .content {
           padding: 20px;
         }
-
-        h1 {
-          color:rgb(133, 0, 0);
-          margin-bottom: 20px;
-          font-size: 24px;
-          text-align: center;
-        }
-        p {
-          margin-bottom: 25px;
-          font-size: 16px;
-        }
-        .btn {
-          background-color:rgb(245, 161, 161);
-          color: white;
-          padding: 12px 24px;
-          text-decoration: none;
-          border-radius: 4px;
-          display: inline-block;
-        }
-        .btn:hover {
-          background-color:rgb(118, 0, 0);
-        }
-        .container {
-          background-color: #f9f9f9;
-          border: 1px solid #dddddd;
-          border-radius: 5px;
-          padding: 30px;
-        }
-        .footer {
-          margin-top: 30px;
-          font-size: 12px;
-          color: #777777;
-          text-align: center;
-        }
-      </style>
+      }
+    </style>
     </head>
     <body>
-      <div class="container">
-        <h1>Shan Automobile and Hybrid Workshop Account Password Reset</h1>
-        <p>Click the following link to reset your password in your Shan Automobile and Hybrid Workshop online account:</p>
-        <div style="text-align: center;">
-          <a href="${process.env.CLIENT_URL}/login/reset-password?token=${token}" class="btn">Click to reset password</a>
-        </div>
-        <p style="margin-top: 25px;">If the button doesn't work, you can also copy and paste the following link into your browser:</p>
-        <p style="font-size: 14px;">${process.env.CLIENT_URL}/login/reset-password?token=${token}</p>
+    <div class="email-wrapper">
+      <div class="header">
+        <h1>Password Reset</h1>
+      </div>
+      <div class="content">
+        <p>Dear User,</p>
+        <p>Click the button below to reset your password in your Shan Automobile and Hybrid Workshop account:</p>
+
+        <p style="text-align: center;">
+          <a href="${process.env.CLIENT_URL}/login/reset-password?token=${token}" class="btn">Reset Password</a>
+        </p>
+
+        <p>If the button above doesn’t work, copy and paste the following link into your browser:</p>
+        <p style="font-size: 14px; color: rgb(140, 0, 0);">
+          ${process.env.CLIENT_URL}/login/reset-password?token=${token}
+        </p>
       </div>
       <div class="footer">
-        <p>This email was sent by Shan Automobile and Hybrid Workshop. If you didn't create an account, you can safely ignore this email.</p>
+        <p>This email was sent by Shan Automobile and Hybrid Workshop. If you didn't request a password reset, please ignore this email.</p>
       </div>
+    </div>
     </body>
     </html>
     `
@@ -1796,7 +1821,7 @@ export const updatePaymentDetails = async (req, res) => {
         payhere_amount + custom_2 || 0,
         custom_2 || 0,
         payhere_amount,
-        new Date(),
+        new Date().toLocaleString("en-US", { timeZone: "Asia/Colombo" }),
       ]
     );
     const invoiceID = invoice.rows[0].invoice_id;
@@ -1926,3 +1951,4 @@ export const loadInvoiceData = async (req, res) => {
     res.status(500).send("Internal Server Error");
   }
 };
+

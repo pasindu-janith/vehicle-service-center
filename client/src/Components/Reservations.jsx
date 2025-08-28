@@ -140,6 +140,42 @@ const Reservations = () => {
     });
   };
 
+  // const editReservation = async () => {
+  //   try {
+  //     const response = await fetch(
+  //       `${BASE_URL}/editReservation`,
+  //       {
+  //         method: "POST",
+  //         headers: {
+  //           "Content-Type": "application/json",
+  //         },
+  //         body: JSON.stringify({
+  //           reservation_id: selectedReservation.reservation_id,
+  //           serviceDate: formData.serviceDate,
+  //           serviceTime: formData.serviceTime,
+  //           notes: formData.notes,
+  //         }),
+  //         credentials: "include",
+  //       }
+  //     );
+  //     if (response.ok) {
+  //       setReservations((prevReservations) =>
+  //         prevReservations.map((reservation) =>
+  //           reservation.reservation_id === selectedReservation.reservation_id
+  //             ? { ...reservation, status_name: "Cancelled" }
+  //             : reservation
+  //         )
+  //       );
+  //       setShowDeleteModal(false);
+  //       setSelectedReservation(null);
+  //     } else {
+  //       console.error("Error deleting reservation:", response.statusText);
+  //     }
+  //   } catch (error) {
+  //     console.error("Error deleting reservation:", error);
+  //   }
+  // };
+
   const ReservationCard = ({ reservation }) => (
     <div className="col-lg-6 col-xl-4 mb-4">
       <div className="card h-100 shadow-sm border-0 reservation-card">

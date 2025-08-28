@@ -69,7 +69,7 @@ const Login = () => {
         throw new Error(data.message || "Login failed");
       }
 
-      if (data.token) {
+      if (data.adminToken) {
         // localStorage.setItem("admin", JSON.stringify(data.admin));
         navigate("/dashboard");
       }

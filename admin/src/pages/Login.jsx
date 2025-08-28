@@ -60,7 +60,6 @@ const Login = () => {
           password: formData.password,
           rememberMe: formData.rememberMe,
         }),
-        credentials: "include", // Include credentials for cross-origin requests
       });
 
       const data = await response.json();

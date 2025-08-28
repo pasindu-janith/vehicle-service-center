@@ -60,6 +60,7 @@ const Login = () => {
           password: formData.password,
           rememberMe: formData.rememberMe,
         }),
+        credentials: "include",
       });
 
       const data = await response.json();

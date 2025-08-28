@@ -47,7 +47,12 @@ export const adminLogin = async (req, res) => {
 
 export const adminLogout = async (req, res) => {
   try {
-    res.clearCookie("adminToken", { path: "/" });
+    res.clearCookie("adminToken", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "None",
+      path: "/",
+    });
     res.status(200).send({ message: "Logged out successfully" });
   } catch (error) {
     console.error("Error during logout:", error);
@@ -1378,4 +1383,3 @@ export const loadPaymentPageData = async (req, res) => {
     res.status(500).send("Internal Server Error");
   }
 };
-

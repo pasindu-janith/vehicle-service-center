@@ -1834,7 +1834,7 @@ export const updatePaymentDetails = async (req, res) => {
       [
         custom_1,
         order_id, // reservation_id
-        payhere_amount + custom_2 || 0,
+        (Number(payhere_amount) + Number(custom_2)) || 0,
         custom_2 || 0,
         payhere_amount,
       ]

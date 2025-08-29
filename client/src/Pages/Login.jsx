@@ -139,7 +139,7 @@ const Login = () => {
             </Link>
 
             {isLoading ? (
-              <div className="d-flex justify-content-center align-items-center vh-100">
+              <div className="d-flex justify-content-center align-items-center" style={{ height: "60vh" }}>
                 <div className="text-center">
                   <div
                     className="spinner-border text-danger"

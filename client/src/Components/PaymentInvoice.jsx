@@ -158,7 +158,7 @@ const PaymentInvoice = () => {
               <strong>Email:</strong> {invoiceData.email}
             </div>
             <div className="mb-2">
-              <strong>Phone:</strong> {invoiceData.mobile_no}
+              <strong>Phone:</strong> {"0" + invoiceData.mobile_no}
             </div>
           </div>
         </div>

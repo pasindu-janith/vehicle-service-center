@@ -15,7 +15,7 @@ import { BiReceipt } from "react-icons/bi";
 import { IoMdInformationCircle } from "react-icons/io";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import BASE_URL,{BASE_CLIENT_URL} from "../config.js";
+import BASE_URL, { BASE_CLIENT_URL } from "../config.js";
 
 const MERCHANT_ID = "1230724"; // Replace with your real merchant ID
 
@@ -33,8 +33,8 @@ const PaymentProceed = () => {
     // Register your callbacks
     window.payhere.onCompleted = function (orderId) {
       console.log("Payment completed. OrderID:" + orderId);
+      navigate(`/myaccount/payment-invoice/${orderId}`);
       setIsProcessing(false);
-      
     };
 
     window.payhere.onDismissed = function () {
@@ -146,7 +146,11 @@ const PaymentProceed = () => {
         style={{ minHeight: "100vh" }}
       >
         <div className="text-center">
-          <spinner className="spinner-border text-primary mb-3" role="status" style={{ width: "4rem", height: "4rem" }}>
+          <spinner
+            className="spinner-border text-primary mb-3"
+            role="status"
+            style={{ width: "4rem", height: "4rem" }}
+          >
             <span className="visually-hidden">Loading...</span>
           </spinner>
           <h4 className="text-muted">Loading payment details...</h4>
@@ -228,9 +232,7 @@ const PaymentProceed = () => {
                     <div className="bg-light rounded p-3">
                       <div className="d-flex align-items-center mb-2">
                         <FaReceipt className="text-muted me-2" size={16} />
-                        <small className="text-muted fw-medium">
-                          Vehicle
-                        </small>
+                        <small className="text-muted fw-medium">Vehicle</small>
                       </div>
                       <span className="fw-medium text-dark">
                         {reservationData?.vehicle_id || "N/A"}
@@ -402,9 +404,16 @@ const PaymentProceed = () => {
         {/* Payment Actions Sidebar */}
         <div className="col-lg-4">
           {/* Payment Action Card */}
-          <div className="card shadow-sm mb-4" style={{ borderColor: "#016ae2ff", borderRadius: "20px" }}>
+          <div
+            className="card shadow-sm mb-4"
+            style={{ borderColor: "#016ae2ff", borderRadius: "20px" }}
+          >
             <div
-              className="card-header text-white bg-primary" style={{ borderTopLeftRadius: "20px", borderTopRightRadius: "20px" }}
+              className="card-header text-white bg-primary"
+              style={{
+                borderTopLeftRadius: "20px",
+                borderTopRightRadius: "20px",
+              }}
             >
               <h5 className="fw-bold mb-0 d-flex align-items-center">
                 Complete Payment
@@ -436,7 +445,10 @@ const PaymentProceed = () => {
                 >
                   {isProcessing ? (
                     <>
-                      <div className="spinner-border spinner-border-sm me-2" role="status">
+                      <div
+                        className="spinner-border spinner-border-sm me-2"
+                        role="status"
+                      >
                         <span className="visually-hidden">Processing...</span>
                       </div>
                       Processing...
@@ -482,8 +494,6 @@ const PaymentProceed = () => {
 
       {/* Custom Styles */}
       <style jsx>{`
-        
-
         .table-hover tbody tr:hover {
           background-color: rgba(13, 110, 253, 0.05);
         }

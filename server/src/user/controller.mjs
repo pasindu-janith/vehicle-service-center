@@ -1274,7 +1274,7 @@ export const loadAllUserReservations = async (req, res) => {
     }
     const user = checkUser.rows[0];
     const reservations = await pool.query(
-      `SELECT r.vehicle_id,r.reservation_id,r.start_time,r.reserve_date,r.end_date,r.end_time,r.notes,st.service_name,rs.status_name,sr.is_paid
+      `SELECT r.vehicle_id,r.reservation_id,r.start_time,r.reserve_date,r.end_date,r.end_time,r.notes,st.service_name,rs.status_name,sr.is_paid,st.duration, r.service_type_id
       FROM reservations r NATURAL JOIN service_type st INNER JOIN reservation_status rs
       ON r.reservation_status=rs.reservation_status_id LEFT JOIN service_records sr ON r.reservation_id=sr.reservation_id
       WHERE r.vehicle_id IN (SELECT license_plate FROM vehicles WHERE user_id = $1 AND status=$2)`,
@@ -1415,13 +1415,12 @@ export const cancelReservation = async (req, res) => {
               <li><strong>Service Type:</strong> ${checkReservation.rows[0].service_name}</li>
               <li><strong>Service Date:</strong> ${checkReservation.rows[0].reserve_date}</li>
               <li><strong>Reserved Time:</strong> ${checkReservation.rows[0].start_time}</li>
-              <li><strong>Cancelled By:</strong> User(${userID})checkReservation.rows[0].notes}</li>
+              <li><strong>Cancelled By:</strong> User(${userID})</li>
             </ul>
           </div>
           <p>If you did not make this cancellation, please contact us immediately.</p>
         </div>
         <div class="footer">
-
           <p>This email was sent by Shan Automobile and Hybrid Workshop. If you did not make this cancellation, please contact us immediately.</p>
         </div>
         </div>
@@ -1952,3 +1951,229 @@ export const loadInvoiceData = async (req, res) => {
   }
 };
 
+export const editReservation = async (req, res) => {
+  try {
+    const { token } = req.cookies;
+    const userID = getUserIDFromToken(token, res);
+    const {
+      reservationId,
+      serviceType,
+      serviceDate,
+      vehicleID,
+      serviceStartTime,
+      serviceEndTime,
+      notes,
+    } = req.body;
+    console.log(req.body);
+    
+    const checkUser = await pool.query(
+      "SELECT * FROM users WHERE user_id = $1",
+      [userID]
+    );
+    if (checkUser.rows.length === 0) {
+      return res.status(400).send({ message: "Invalid User" });
+    }
+    // Check for overlapping reservation for the same vehicle
+    const vehicleOverlapCheck = await pool.query(
+      `SELECT * FROM reservations
+       WHERE vehicle_id = $1
+       AND $2 BETWEEN reserve_date AND end_date
+       AND NOT (end_time <= $3 OR start_time >= $4)
+       AND reservation_status = $5`,
+      [vehicleID, serviceDate, serviceStartTime, serviceEndTime, "1"]
+    );
+
+    if (vehicleOverlapCheck.rows.length > 0) {
+      return res.status(400).send({
+        message:
+          "This vehicle already has a reservation during the selected time.",
+      });
+    }
+
+    // Count overlapping reservations for the same service type in the requested date/time range
+    const existingReservations = await pool.query(
+      `SELECT COUNT(*) AS count FROM reservations 
+        WHERE service_type_id = $1
+        AND reservation_status = $2
+        AND (
+        (reserve_date + start_time::interval) < $3::timestamp
+        AND
+        (end_date + end_time::interval) > $4::timestamp
+        )`,
+      [
+        serviceType,
+        "1",
+        `${serviceDate} ${serviceEndTime}`, // '2025-05-24 11:00:00'
+        `${serviceDate} ${serviceStartTime}`, // '2025-05-22 10:00:00'
+      ]
+    );
+    const serviceCheck = await pool.query(
+      "SELECT * FROM service_type WHERE service_type_id = $1",
+      [serviceType]
+    );
+    if (serviceCheck.rows.length === 0) {
+      return res.status(400).send({ message: "Invalid Service Type" });
+    }
+    const service_type = serviceCheck.rows[0];
+    const currentCount = parseInt(existingReservations.rows[0].count, 10);
+    if (currentCount >= parseInt(service_type.max_count, 10)) {
+      return res.status(400).send({
+        message:
+          "Max reservations reached during this time. Try another time slot.",
+      });
+    }
+    const userEmail = await pool.query(
+      `SELECT email FROM users WHERE user_id = (SELECT user_id FROM vehicles WHERE license_plate = 
+      (SELECT vehicle_id FROM reservations WHERE reservation_id = $1))`,
+      [reservationId]
+    );
+    const email = userEmail.rows[0].email;
+
+    const updateReservation = await pool.query(
+      "UPDATE reservations SET reserve_date=$1, start_time=$2, end_date=$3, end_time=$4, notes=$5 WHERE reservation_id = $6 RETURNING *",
+      [
+        serviceDate,
+        serviceStartTime,
+        serviceDate,
+        serviceEndTime,
+        notes,
+        reservationId,
+      ]
+    );
+
+    if (updateReservation.rowCount === 0) {
+      return res.status(404).send({ message: "Reservation not found" });
+    }
+
+    const emailContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Reservation Started</title>
+
+      <style>
+        body {
+          font-family: 'Segoe UI', Arial, sans-serif;     
+          background-color: #f4f4f4;
+          margin: 0;
+          padding: 0;
+          color: #333333;
+        }
+          
+        .email-wrapper {
+          max-width: 600px;
+          margin: 0 auto;
+          background-color: #ffffff;
+          border-radius: 6px;
+          overflow: hidden;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        .header {
+          background-color: rgb(140, 0, 0);
+          padding: 20px;
+          text-align: center;
+        }
+        .header h1 {
+          color: #ffffff;
+          margin: 0;
+          font-size: 22px;
+        }
+        .content {
+          padding: 30px 25px;
+        }
+        .content p {
+          font-size: 15px;
+          margin-bottom: 18px;
+          color: #555555;
+        }
+        .details {
+          background-color: #f9f9f9;
+          padding: 15px 20px;
+          border: 1px solid #dddddd;
+          border-radius: 4px;
+          margin-bottom: 25px;
+        }
+        .details ul {
+          list-style: none;
+          padding: 0;
+          margin: 0;
+        }
+        .details li {
+          font-size: 15px;
+          padding: 8px 0;
+          border-bottom: 1px solid #eeeeee;
+        }
+        .details li:last-child {
+          border-bottom: none;
+        }
+        .details strong {
+          color: rgb(140, 0, 0);
+        }
+        .btn {
+          background-color: rgb(140, 0, 0);
+          color: #ffffff !important;
+          padding: 12px 24px;
+          text-decoration: none !important;
+          border-radius: 4px;
+          font-weight: bold;
+          display: inline-block;
+          font-size: 15px;
+        }
+        .btn:hover {
+          background-color: rgb(118, 0, 0);
+        }
+        .footer {
+          background-color: #f4f4f4;
+          padding: 15px;
+          font-size: 12px;
+          color: #777777;
+          text-align: center;
+        }
+      </style>
+      </head>
+      <body>
+      <div class="email-wrapper">
+
+        <div class="header">
+          <h1>Reservation Edited</h1>
+        </div>
+        <div class="content">
+          <p>Dear Customer,</p>
+          <p>Your reservation with ID <strong>${reservationId}</strong> has been edited by you. Below are the details:</p>
+          <div class="details">
+            <ul>
+              <li><strong>Vehicle Number:</strong> ${
+                updateReservation.rows[0].vehicle_id
+              }</li>
+              <li><strong>Service Type:</strong> ${service_type.service_name}</li>
+              <li><strong>Reservation Status:</strong> Pending</li>
+              <li><strong>Started Date:</strong> ${serviceDate.toLocaleString()}</li>
+              <li><strong>Started Time:</strong> ${serviceStartTime}</li>
+              <li><strong>Expected End Date & Time:</strong> ${serviceDate.toLocaleString()}${"  "}${serviceEndTime}</li>
+              <li><strong>Edited by:</strong> User</li>
+
+            </ul>
+          </div>
+          <p style="text-align: center;">
+            <a href="${
+              process.env.CLIENT_URL
+            }/myaccount/reservation-info/${reservationId}" class="btn">View Reservation Details</a>
+          </p>
+        </div>
+        <div class="footer">
+          <p>This email was sent by Shan Automobile and Hybrid Workshop. If you did not make this reservation, please ignore this email.</p>
+        </div>
+      </div>
+      </body>
+      </html>
+      `;
+    await sendEmail(email, "Reservation Edited", emailContent);
+
+    res.status(200).send(updateReservation.rows[0]);
+  } catch (error) {
+    console.error("Error editing reservation:", error);
+    res.status(500).send("Internal Server Error");
+  }
+};

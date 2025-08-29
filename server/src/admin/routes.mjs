@@ -26,7 +26,8 @@ import {
   getReservationMessages,
   sendReservationMessage,
   restoreCancelledReservation,
-  loadPaymentPageData
+  loadPaymentPageData,
+  loadPendingServicesCounts,
 } from "./controller.mjs";
 
 
@@ -61,4 +62,6 @@ adminRouter.get("/getReservationMessages", getReservationMessages);
 adminRouter.post("/sendReservationMessage", sendReservationMessage);
 adminRouter.post("/restoreCancelledReservation", restoreCancelledReservation);
 adminRouter.get("/loadPaymentPageData", loadPaymentPageData);
+adminRouter.get("/loadPendingServicesCounts", loadPendingServicesCounts);
+
 export default adminRouter;

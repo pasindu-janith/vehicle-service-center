@@ -36,6 +36,7 @@ import {
   updatePaymentDetails,
   loadCompletedPayments,
   loadInvoiceData,
+  editReservation,
 } from "./controller.mjs";
 import upload from "../middleware/upload.mjs";
 
@@ -80,5 +81,6 @@ userRouter.post("/sendReservationMessage", sendReservationMessage);
 userRouter.post("/payhere-notify", updatePaymentDetails);
 userRouter.get("/loadCompletedPayments", loadCompletedPayments);
 userRouter.get("/loadInvoiceData", loadInvoiceData);
+userRouter.post("/editReservation", editReservation);
 export default userRouter;
 

@@ -149,6 +149,8 @@ const PaymentInvoice = () => {
             <h5 className="text-info mb-3">Customer Information</h5>
             <div className="mb-2">
               <strong>Customer ID:</strong> {invoiceData.customer_id}
+            </div>
+            <div className="mb-2">
               <strong>Customer:</strong>{" "}
               {`${invoiceData.first_name} ${invoiceData.last_name}`}
             </div>

@@ -1817,6 +1817,12 @@ export const updatePaymentDetails = async (req, res) => {
       [order_id, "0"]
     );
 
+    const userEmailCheck = await pool.query(
+      `SELECT email FROM users WHERE user_id=$1`,
+      [custom_1]
+    );
+    const email = userEmailCheck.rows[0].email;
+
     if (status_code != "2") {
       console.log("Payment not successful");
       return res.status(400).send("Payment not successful");
@@ -1834,7 +1840,7 @@ export const updatePaymentDetails = async (req, res) => {
       [
         custom_1,
         order_id, // reservation_id
-        (Number(payhere_amount) + Number(custom_2)) || 0,
+        Number(payhere_amount) + Number(custom_2) || 0,
         custom_2 || 0,
         payhere_amount,
       ]
@@ -1867,15 +1873,122 @@ export const updatePaymentDetails = async (req, res) => {
       );
     }
 
-    console.log("Payment record inserted");
-
     await pool.query(
       `UPDATE service_records SET is_paid=$1 WHERE reservation_id=$2`,
       ["1", order_id]
     );
 
-    console.log("Service record updated");
     res.status(200).send("Invoice and Payment recorded");
+    await sendEmail(
+      email,
+      "Shan Automobile and Hybrid Workshop, Payment Successful",
+      `
+      <!DOCTYPE html>
+      <html>
+      <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Payment Successful</title>
+      <style>
+
+        body {
+          font-family: 'Segoe UI', Arial, sans-serif;
+          background-color: #f4f4f4;
+          margin: 0;
+          padding: 0;
+          color: #333333;
+        }
+        .email-wrapper {
+          max-width: 600px;
+          margin: 0 auto;
+          background-color: #ffffff;
+          border-radius: 6px;
+          overflow: hidden;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        .header {
+          background-color: rgb(140, 0, 0);
+          padding: 20px;
+          text-align: center;
+        }
+        .header h1 {
+          color: #ffffff;
+          margin: 0;
+          font-size: 22px;
+        }
+        .content {
+          padding: 30px 25px;
+        }
+        .content p {
+          font-size: 15px;
+          margin-bottom: 20px;
+          color: #555555;
+        }
+        .details {
+          background-color: #f9f9f9;
+          padding: 15px 20px;
+          border: 1px solid #dddddd;
+          border-radius: 4px;
+          margin-bottom: 25px;
+        }
+        .details ul {
+          list-style: none; 
+          padding: 0;
+          margin: 0;
+        }
+        .details li {
+          font-size: 15px;
+          padding: 8px 0;
+          border-bottom: 1px solid #eeeeee;
+        }
+        .details li:last-child {
+          border-bottom: none;
+        }
+        .details strong {
+          color: rgb(140, 0, 0);
+        }
+        .footer {
+          background-color: #f4f4f4;
+          padding: 15px;
+          font-size: 12px;
+          color: #777777;
+          text-align: center;
+        }
+        @media screen and (max-width: 600px) {
+          .content {
+            padding: 20px;
+          }
+        }
+      </style>  
+      </head>
+      <body>
+      <div class="email-wrapper">
+        <div class="header">
+          <h1>Payment Successful</h1>
+        </div>
+        <div class="content">
+          <p>Dear Customer,</p>
+          <p>Your payment has been successfully processed with the following details:</p>
+          <div class="details">
+            <ul>
+              <li><strong>Reservation ID:</strong> ${order_id}</li>
+              <li><strong>Payment Amount:</strong> LKR ${payhere_amount}</li>
+              <li><strong>Payment Method:</strong> ${method}</li>
+              <li><strong>Payment Status:</strong> SUCCESS</li>
+              <li><strong>Transaction ID:</strong> ${payment_id}</li>
+              <li><strong>Invoice ID:</strong> ${invoiceID}</li>
+            </ul>
+          </div>
+          <p>Thank you for choosing Shan Automobile and Hybrid Workshop. We appreciate your business!</p>
+        </div>
+        <div class="footer">
+          <p>This email was sent by Shan Automobile and Hybrid Workshop. If you did not make this payment, please contact us immediately.</p>
+        </div>
+        </div>
+        </body>
+        </html>
+    `
+    );
   } catch (err) {
     console.error("PayHere notify error:", err);
     res.status(500).send("Server error");

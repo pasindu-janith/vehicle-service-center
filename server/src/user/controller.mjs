@@ -1803,12 +1803,13 @@ export const updatePaymentDetails = async (req, res) => {
       [order_id, "0"]
     );
 
-    if (status_code !== 2) {
+    if (status_code != '2') {
       console.log("Payment not successful");
-      return res.status(400).send("Payment not successful");
-      
+      return res.status(400).send("Payment not successful"); 
     }
-    console.log("checkInvoice:DOne");
+
+    
+    console.log("checkInvoice:Done");
     if (checkInvoice.rows.length === 0) {
       return res.status(400).send("Invalid or already paid reservation");
     }
@@ -1826,6 +1827,8 @@ export const updatePaymentDetails = async (req, res) => {
       ]
     );
     const invoiceID = invoice.rows[0].invoice_id;
+
+    console.log("invoiceID:", invoiceID);
     await pool.query(
       `INSERT INTO payment 
        (invoice_id, payhere_order_id, transact_amount, transaction_datetime, payment_status) 
@@ -1833,11 +1836,14 @@ export const updatePaymentDetails = async (req, res) => {
       [invoiceID, payment_id, method, payhere_amount, "SUCCESS"]
     );
 
+    console.log("Payment record inserted");
+
     await pool.query(
       `UPDATE service_records SET is_paid=$1 WHERE reservation_id=$2`,
       ["1", order_id]
     );
 
+    console.log("Service record updated");
     res.status(200).send("Invoice and Payment recorded");
   } catch (err) {
     console.error("PayHere notify error:", err);

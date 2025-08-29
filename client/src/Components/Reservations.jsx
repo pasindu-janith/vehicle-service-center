@@ -6,6 +6,7 @@ import { BiPlus } from "react-icons/bi";
 import { MdPayment } from "react-icons/md";
 import { MdOutlineBookmark } from "react-icons/md";
 import { IoMdInformationCircleOutline } from "react-icons/io";
+import toastr from "toastr";
 import "./styles/Dashboard.css";
 import BASE_URL from "../config.js";
 
@@ -21,8 +22,6 @@ const Reservations = () => {
   const [viewMode, setViewMode] = useState("table"); // table or card
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    vehicle: "",
-    serviceType: "",
     serviceDate: null,
     serviceTime: null,
     serviceEndTime: "",
@@ -100,6 +99,7 @@ const Reservations = () => {
         );
         setShowDeleteModal(false);
         setSelectedReservation(null);
+        toastr.success("Reservation cancelled successfully.");
       } else {
         console.error("Error deleting reservation:", response.statusText);
       }
@@ -140,41 +140,64 @@ const Reservations = () => {
     });
   };
 
-  // const editReservation = async () => {
-  //   try {
-  //     const response = await fetch(
-  //       `${BASE_URL}/editReservation`,
-  //       {
-  //         method: "POST",
-  //         headers: {
-  //           "Content-Type": "application/json",
-  //         },
-  //         body: JSON.stringify({
-  //           reservation_id: selectedReservation.reservation_id,
-  //           serviceDate: formData.serviceDate,
-  //           serviceTime: formData.serviceTime,
-  //           notes: formData.notes,
-  //         }),
-  //         credentials: "include",
-  //       }
-  //     );
-  //     if (response.ok) {
-  //       setReservations((prevReservations) =>
-  //         prevReservations.map((reservation) =>
-  //           reservation.reservation_id === selectedReservation.reservation_id
-  //             ? { ...reservation, status_name: "Cancelled" }
-  //             : reservation
-  //         )
-  //       );
-  //       setShowDeleteModal(false);
-  //       setSelectedReservation(null);
-  //     } else {
-  //       console.error("Error deleting reservation:", response.statusText);
-  //     }
-  //   } catch (error) {
-  //     console.error("Error deleting reservation:", error);
-  //   }
-  // };
+  const calculateEndTime = (value) => {
+    const startTime = new Date(`1970-01-01T${value}`);
+    const endTime = new Date(
+      startTime.getTime() + selectedReservation.duration * 60000
+    );
+
+    // Format to HH:mm:ss
+    const formattedEndTime = endTime.toTimeString().slice(0, 5);
+
+    setFormData((prev) => ({
+      ...prev,
+      serviceEndTime: formattedEndTime,
+    }));
+  };
+
+  const editReservation = async () => {
+    try {
+      const response = await fetch(`${BASE_URL}/editReservation`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          reservationId: selectedReservation.reservation_id,
+          serviceType: selectedReservation.service_type_id,
+          vehicleId: selectedReservation.vehicle_id,
+          serviceDate: formData.serviceDate,
+          serviceStartTime: formData.serviceTime,
+          serviceEndTime: formData.serviceEndTime,
+          notes: formData.notes,
+        }),
+        credentials: "include",
+      });
+      if (response.ok) {
+        setReservations((prevReservations) =>
+          prevReservations.map((reservation) =>
+            reservation.reservation_id === selectedReservation.reservation_id
+              ? {
+                  ...reservation,
+                  reserve_date: formData.serviceDate,
+                  start_time: formData.serviceTime,
+                  // Assuming end_time is part of the reservation object
+                  end_time: formData.serviceEndTime,
+                  notes: formData.notes,
+                }
+              : reservation
+          )
+        );
+        setShowEditModal(false);
+        setSelectedReservation(null);
+        toastr.success("Reservation updated successfully.");
+      } else {
+        console.error("Error Editing reservation:", response);
+      }
+    } catch (error) {
+      console.error("Error editing reservation:", error.message);
+    }
+  };
 
   const ReservationCard = ({ reservation }) => (
     <div className="col-lg-6 col-xl-4 mb-4">
@@ -546,7 +569,7 @@ const Reservations = () => {
               </div>
               <div className="modal-body pt-0">
                 <div className="alert alert-info border-0">
-                  <strong>Reservation ID:</strong>
+                  <strong>Reservation ID: </strong>
                   {selectedReservation.reservation_id}
                 </div>
                 {/* Edit form fields go here */}
@@ -587,8 +610,10 @@ const Reservations = () => {
                           ...prev,
                           serviceTime: value,
                         }));
+                        calculateEndTime(value); // pass the new value directly
                       }
                     }}
+                    selected={formData.serviceTime}
                   >
                     <option selected disabled value>
                       Choose a time
@@ -609,6 +634,32 @@ const Reservations = () => {
                     })}
                   </select>
                 </div>
+
+                {/* Service Description */}
+                <div className="mb-3">
+                  <label htmlFor="serviceDescription" className="form-label">
+                    Service End Time (Approximated)
+                  </label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    id="serviceEndTime"
+                    name="serviceEndTime"
+                    disabled
+                    value={formData.serviceEndTime}
+                    onChange={(e) => {
+                      setFormData((prev) => ({
+                        ...prev,
+                        serviceEndTime: e.target.value,
+                      }));
+                    }}
+                  />
+                  <p className="text-muted small">
+                    Service end time can be varied based on the workshop
+                    workload.
+                  </p>
+                </div>
+
                 <div className="mb-3">
                   <label htmlFor="notes" className="form-label">
                     Additional Notes
@@ -639,7 +690,11 @@ const Reservations = () => {
                 >
                   Close
                 </button>
-                <button type="button" className="btn btn-primary">
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={editReservation}
+                >
                   Save Changes
                 </button>
               </div>

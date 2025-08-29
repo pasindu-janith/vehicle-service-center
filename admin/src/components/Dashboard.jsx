@@ -10,8 +10,8 @@ const Dashboard = () => {
   const [ongoingReservations, setOngoingReservations] = useState(0);
   const [paymentsDoneToday, setPaymentsDoneToday] = useState(0);
   const [registeredUsers, setRegisteredUsers] = useState(0);
-  const [workingRate, setWorkingRate] = useState(0);
-
+  const [donutData, setDonutData] = useState(null);
+  const [donutDataOngoing, setDonutDataOngoing] = useState(null);
   const getPreviousDates = (numDays) => {
     const dates = [];
     const today = new Date();
@@ -32,12 +32,121 @@ const Dashboard = () => {
     return dates;
   };
 
+  const loadPendingServicesCounts = async () => {
+    try {
+      const response = await fetch(`${BASE_URL}/loadPendingServicesCounts`);
+      if (response.ok) {
+        const jsonData = await response.json();
+        if (jsonData) {
+          const donutDataPending = {
+            labels: jsonData.pendingServices.map(
+              (service) => service.service_name
+            ),
+            datasets: [
+              {
+                data: jsonData.pendingServices.map((service) =>
+                  Number(service.pending_count)
+                ),
+                backgroundColor: [
+                  "#f56954",
+                  "#00a65a",
+                  "#f39c12",
+                  "#00c0ef",
+                  "#3c8dbc",
+                  "#d2d6de",
+                  "#9b59b6",
+                  "#16a085",
+                  "#e74c3c",
+                  "#2ecc71",
+                ].slice(0, jsonData.pendingServices.length),
+              },
+            ],
+          };
+
+          const donutDataOngoing = {
+            labels: jsonData.ongoingServices.map(
+              (service) => service.service_name
+            ),
+            datasets: [
+              {
+                data: jsonData.ongoingServices.map((service) =>
+                  Number(service.ongoing_count)
+                ),
+                backgroundColor: [
+                  "#f56954",
+                  "#00a65a",
+                  "#f39c12",
+                  "#00c0ef",
+                  "#3c8dbc",
+                  "#d2d6de",
+                  "#9b59b6",
+                  "#16a085",
+                  "#e74c3c",
+                  "#2ecc71",
+                ].slice(0, jsonData.ongoingServices.length),
+              },
+            ],
+          };
+
+          setDonutData(donutDataPending);
+          setDonutDataOngoing(donutDataOngoing);
+          console.log("Pending Services Data:", donutDataPending);
+          console.log("Ongoing Services Data:", donutDataOngoing);
+        } else {
+          console.error("No data received for services");
+        }
+      } else {
+        console.error("Failed to fetch pending/ongoing services counts");
+      }
+    } catch (error) {
+      console.error("Error initializing donut chart:", error);
+    }
+  };
+
   useEffect(() => {
-    // Get the canvas element for the bar chart
+    // Fetch pending services first
+    loadPendingServicesCounts();
+  }, []);
+  useEffect(() => {
+    if (!donutData || !donutDataOngoing) return;
+
+    const canvasPending = document.getElementById("donutChart");
+    const canvasOngoing = document.getElementById("donutChart1");
+    if (!canvasPending || !canvasOngoing) return;
+
+    const ctxPending = canvasPending.getContext("2d");
+    const ctxOngoing = canvasOngoing.getContext("2d");
+
+    const donutOptions = {
+      maintainAspectRatio: false,
+      responsive: true,
+    };
+
+    // Create both charts
+    const pendingChart = new Chart(ctxPending, {
+      type: "doughnut",
+      data: donutData,
+      options: donutOptions,
+    });
+
+    const ongoingChart = new Chart(ctxOngoing, {
+      type: "doughnut",
+      data: donutDataOngoing,
+      options: donutOptions,
+    });
+
+    // Cleanup both
+    return () => {
+      pendingChart.destroy();
+      ongoingChart.destroy();
+    };
+  }, [donutData, donutDataOngoing]);
+
+  useEffect(() => {
     const canvas = document.getElementById("barChart");
+    if (!canvas) return;
     const barChartCanvas = canvas.getContext("2d");
 
-    // Bar chart data
     const barChartData = {
       labels: getPreviousDates(10),
       datasets: [
@@ -56,64 +165,6 @@ const Dashboard = () => {
       ],
     };
 
-    const canvas2 = document.getElementById("donutChart");
-    const donutChartCanvas = canvas2.getContext("2d");
-
-    // Donut chart data
-    try
-    {
-      const loadPendingServicesCounts = async () => {
-        const response = await fetch(
-          `${BASE_URL}/loadPendingServicesCounts`
-        );
-        if (response.ok) {
-          const jsonData = await response.json();
-          if (jsonData) {
-            return jsonData;
-          } else {
-            console.error("No data received for pending services");
-            return null;
-          }
-        } else {
-          console.error("Failed to fetch pending services counts");
-          return null;
-        }
-      }
-    }
-    catch (error) {
-      console.error("Error initializing donut chart:", error);
-      return;
-    }
-
-    const donutData = {
-      labels: [
-        "Washing",
-        "Repair",
-        "Tyre",
-        "Interior",
-        "Oil service",
-        "Tune up",
-      ],
-      datasets: [
-        {
-          data: [700, 500, 400, 600, 300, 100],
-          backgroundColor: [
-            "#f56954",
-            "#00a65a",
-            "#f39c12",
-            "#00c0ef",
-            "#3c8dbc",
-            "#d2d6de",
-          ],
-        },
-      ],
-    };
-    var donutOptions = {
-      maintainAspectRatio: false,
-      responsive: true,
-    };
-
-    // Bar chart options
     const barChartOptions = {
       responsive: true,
       maintainAspectRatio: false,
@@ -133,38 +184,21 @@ const Dashboard = () => {
       },
     };
 
-    // Create a chart instance
-    let barChart = new Chart(barChartCanvas, {
+    const barChart = new Chart(barChartCanvas, {
       type: "bar",
       data: barChartData,
       options: barChartOptions,
     });
 
-    //Create pie or douhnut chart
-    // You can switch between pie and douhnut using the method below.
-    let donutChart = new Chart(donutChartCanvas, {
-      type: "doughnut",
-      data: donutData,
-      options: donutOptions,
-    });
-
-    // Cleanup: Destroy the chart instance when the component unmounts or re-renders
     return () => {
-      if (barChart) {
-        barChart.destroy();
-      }
-      if (donutChart) {
-        donutChart.destroy();
-      }
+      barChart.destroy();
     };
   }, []);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch(
-          `${BASE_URL}/loadDashboardCounts`
-        );
+        const response = await fetch(`${BASE_URL}/loadDashboardCounts`);
         if (response.ok) {
           const jsonData = await response.json();
           if (jsonData) {
@@ -174,6 +208,7 @@ const Dashboard = () => {
             setCompletedReservations(jsonData.completed);
             setOngoingReservations(jsonData.ongoing);
             setRegisteredUsers(jsonData.registeredUsers);
+            setPaymentsDoneToday(jsonData.todayPayments);
           } else {
             console.error("No data received");
           }
@@ -254,25 +289,13 @@ const Dashboard = () => {
                 </div>
               </div>
             </div>
-            <div className="col-lg-3 col-6">
-              {/* small box */}
-              <div className="small-box bg-info">
-                <div className="inner">
-                  <h3>
-                    10<sup style={{ fontSize: 20 }}>%</sup>
-                  </h3>
-                  <p>Working rate (Current)</p>
-                </div>
-              </div>
-            </div>
-            {/* ./col */}
 
             {/* ./col */}
             <div className="col-lg-3 col-6">
               {/* small box */}
-              <div className="small-box bg-warning">
+              <div className="small-box bg-info">
                 <div className="inner">
-                  <h3>0</h3>
+                  <h3>{paymentsDoneToday}</h3>
                   <p>Payments Done(Today)</p>
                 </div>
               </div>
@@ -280,7 +303,7 @@ const Dashboard = () => {
 
             <div className="col-lg-3 col-6">
               {/* small box */}
-              <div className="small-box bg-info">
+              <div className="small-box bg-warning">
                 <div className="inner">
                   <h3>{registeredUsers}</h3>
                   <p>Registered Users</p>
@@ -293,9 +316,10 @@ const Dashboard = () => {
         <div className="container-fluid">
           <div className="row">
             <div className="col-md-6">
+              {/* DONUT CHART */}
               <div className="card card-primary">
                 <div className="card-header">
-                  <h3 className="card-title">Service Order Progress</h3>
+                  <h3 className="card-title">Ongoing Services</h3>
                   <div className="card-tools">
                     <button
                       type="button"
@@ -314,17 +338,15 @@ const Dashboard = () => {
                   </div>
                 </div>
                 <div className="card-body">
-                  <div className="chart">
-                    <canvas
-                      id="barChart"
-                      style={{
-                        minHeight: 250,
-                        height: 250,
-                        maxHeight: 250,
-                        maxWidth: "100%",
-                      }}
-                    />
-                  </div>
+                  <canvas
+                    id="donutChart1"
+                    style={{
+                      minHeight: 250,
+                      height: 250,
+                      maxHeight: 250,
+                      maxWidth: "100%",
+                    }}
+                  />
                 </div>
                 {/* /.card-body */}
               </div>

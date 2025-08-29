@@ -181,19 +181,22 @@ const ProfileSettings = () => {
               </div>
 
               <div className="col-md-6">
-                <label htmlFor="lname" className="form-label">
+                <label htmlFor="mobile" className="form-label">
                   Mobile Number
                 </label>
-                <input
-                  type="text"
-                  className="form-control"
-                  id="mobile"
-                  name="mobile"
-                  value={formProfileData.mobile}
-                  onChange={handleChange}
-                  disabled
-                  required
-                />
+                <div className="input-group">
+                  <span className="input-group-text">+94</span>
+                  <input
+                    type="text"
+                    className="form-control"
+                    id="mobile"
+                    name="mobile"
+                    value={formProfileData.mobile}
+                    onChange={handleChange}
+                    disabled
+                    required
+                  />
+                </div>
               </div>
 
               <div className="col-md-6">

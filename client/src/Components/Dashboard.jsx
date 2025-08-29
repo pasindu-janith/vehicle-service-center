@@ -297,7 +297,7 @@ const Dashboard = () => {
         <div className="col-12">
           {!isLoading ? (
             inProgress && inProgress.length > 0 ? (
-              <OngoingReservationsTable reservations={inProgress} />
+              <OngoingReservationsTable ongoing={inProgress} />
             ) : (
               <div
                 className="card d-flex justify-content-center align-items-center py-4"

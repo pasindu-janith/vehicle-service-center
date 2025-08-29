@@ -141,13 +141,13 @@ const Login = () => {
             {isLoading ? (
               <div className="d-flex justify-content-center align-items-center vh-100">
                 <div className="text-center">
-                  <spinner
+                  <div
                     className="spinner-border text-danger"
                     role="status"
                     style={{ width: "4rem", height: "4rem" }}
                   >
                     <span className="visually-hidden">Loading...</span>
-                  </spinner>
+                  </div>
                   <h4 className="text-muted">Please Wait....</h4>
                 </div>
               </div>

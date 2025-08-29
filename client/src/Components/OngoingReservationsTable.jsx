@@ -10,6 +10,7 @@ const OngoingReservationsTable = ({ ongoing }) => {
     if (ongoing && Array.isArray(ongoing)) {
       setInProgress(ongoing);
     }
+    console.log("Ongoing reservations updated:", ongoing);
   }, [ongoing]);
 
   const formatTime12Hour = (timeStr) => {

@@ -27,7 +27,10 @@ export const adminLogin = async (req, res) => {
       return res.status(400).send({ message: "Invalid credentials" });
     }
 
-    const adminToken = tokenGenLogin({ adminID: admin.user_id, email: admin.email });
+    const adminToken = tokenGenLogin({
+      adminID: admin.user_id,
+      email: admin.email,
+    });
     const cookieExpiration = 24 * 60 * 60 * 1000;
 
     res.cookie("adminToken", adminToken, {
@@ -287,7 +290,7 @@ export const proceedCashPayment = async (req, res) => {
     );
 
     const createPayment = await pool.query(
-      "INSERT INTO payments (invoice_id, payment_method, transact_amount, transaction_datetime, transaction_status) VALUES ($1, $2, $3, $4, $5)",
+      "INSERT INTO payments (invoice_id, payment_method, transact_amount, transaction_datetime, payment_status) VALUES ($1, $2, $3, $4, $5)",
       [
         createInvoice.rows[0].invoice_id,
         "CASH",
@@ -458,13 +461,24 @@ export const countReservations = async (req, res) => {
       ["2", "1"]
     );
 
+    const todayPayments = await pool.query(
+      `SELECT COUNT(transact_amount) AS total_payments
+      FROM payments WHERE transaction_datetime::date = CURRENT_DATE AND payment_status = $1`,
+      ["SUCCESS"]
+    );
+
     res.status(200).json({
       pending: parseInt(pendingCount.rows[0].count),
       ongoing: parseInt(ongoingCount.rows[0].count),
       completed: parseInt(completedCount.rows[0].count),
       pendingToday: parseInt(pendingCountToday.rows[0].count),
-      startedToday: parseInt(startedCountToday.rows[0].count),
+      startedToday: parseInt(
+        startedCountToday.rows[0].count ? startedCountToday.rows[0].count : 0
+      ),
       registeredUsers: parseInt(registeredUsers.rows[0].count),
+      todayPayments: parseInt(
+        todayPayments.rows.length > 0 ? todayPayments.rows[0].total_payments : 0
+      ),
     });
   } catch (error) {
     console.error("Error counting reservations:", error);
@@ -789,9 +803,9 @@ export const completeReservation = async (req, res) => {
             }
             .btn {
               background-color: rgb(140, 0, 0);
-              color: #ffffff;
+              color: #ffffff !important;
               padding: 12px 24px;
-              text-decoration: none;
+              text-decoration: none !important;
               border-radius: 4px;
               font-weight: bold;
               display: inline-block;
@@ -877,6 +891,24 @@ export const editReservation = async (req, res) => {
         .status(400)
         .send({ message: "Start time must be before end time" });
     }
+    const checkReservation = await pool.query(
+      `SELECT * FROM reservations r INNER JOIN service_type st ON r.service_type_id=st.service_type_id
+      INNER JOIN reservation_status rs ON r.reservation_status=rs.reservation_status_id
+      WHERE r.reservation_id=$1`,
+      [reservationId]
+    );
+    if (checkReservation.rows.length === 0) {
+      return res.status(404).send({ message: "Reservation not found" });
+    }
+    const serviceName = checkReservation.rows[0].service_name;
+    const reservationStatus = checkReservation.rows[0].status_name;
+
+    const userEmail = await pool.query(
+      `SELECT email FROM users WHERE user_id = (SELECT user_id FROM vehicles WHERE license_plate = 
+      (SELECT vehicle_id FROM reservations WHERE reservation_id = $1))`,
+      [reservationId]
+    );
+    const email = userEmail.rows[0].email;
 
     const startDateString = toSQLDateTime(startDateTime).split(" ")[0];
     const endDateString = toSQLDateTime(endDateTime).split(" ")[0];
@@ -884,7 +916,7 @@ export const editReservation = async (req, res) => {
     const endTimeString = toSQLDateTime(endDateTime).split(" ")[1];
 
     const updateReservation = await pool.query(
-      "UPDATE reservations SET reserve_date=$3, start_time=$4, end_date=$5, end_time=$6 WHERE reservation_id = $7 RETURNING *",
+      "UPDATE reservations SET reserve_date=$1, start_time=$2, end_date=$3, end_time=$4 WHERE reservation_id = $5 RETURNING *",
       [
         startDateString,
         startTimeString,
@@ -897,7 +929,131 @@ export const editReservation = async (req, res) => {
     if (updateReservation.rowCount === 0) {
       return res.status(404).send({ message: "Reservation not found" });
     }
+    const emailContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Reservation Started</title>
 
+      <style>
+        body {
+          font-family: 'Segoe UI', Arial, sans-serif;     
+          background-color: #f4f4f4;
+          margin: 0;
+          padding: 0;
+          color: #333333;
+        }
+          
+        .email-wrapper {
+          max-width: 600px;
+          margin: 0 auto;
+          background-color: #ffffff;
+          border-radius: 6px;
+          overflow: hidden;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        .header {
+          background-color: rgb(140, 0, 0);
+          padding: 20px;
+          text-align: center;
+        }
+        .header h1 {
+          color: #ffffff;
+          margin: 0;
+          font-size: 22px;
+        }
+        .content {
+          padding: 30px 25px;
+        }
+        .content p {
+          font-size: 15px;
+          margin-bottom: 18px;
+          color: #555555;
+        }
+        .details {
+          background-color: #f9f9f9;
+          padding: 15px 20px;
+          border: 1px solid #dddddd;
+          border-radius: 4px;
+          margin-bottom: 25px;
+        }
+        .details ul {
+          list-style: none;
+          padding: 0;
+          margin: 0;
+        }
+        .details li {
+          font-size: 15px;
+          padding: 8px 0;
+          border-bottom: 1px solid #eeeeee;
+        }
+        .details li:last-child {
+          border-bottom: none;
+        }
+        .details strong {
+          color: rgb(140, 0, 0);
+        }
+        .btn {
+          background-color: rgb(140, 0, 0);
+          color: #ffffff !important;
+          padding: 12px 24px;
+          text-decoration: none !important;
+          border-radius: 4px;
+          font-weight: bold;
+          display: inline-block;
+          font-size: 15px;
+        }
+        .btn:hover {
+          background-color: rgb(118, 0, 0);
+        }
+        .footer {
+          background-color: #f4f4f4;
+          padding: 15px;
+          font-size: 12px;
+          color: #777777;
+          text-align: center;
+        }
+      </style>
+      </head>
+      <body>
+      <div class="email-wrapper">
+
+        <div class="header">
+          <h1>Reservation Started</h1>
+        </div>
+        <div class="content">
+          <p>Dear Customer,</p>
+          <p>Your reservation with ID <strong>${reservationId}</strong> has been edited by Admin. Below are the details:</p>
+          <div class="details">
+            <ul>
+              <li><strong>Vehicle Number:</strong> ${
+                updateReservation.rows[0].vehicle_id
+              }</li>
+              <li><strong>Service Type:</strong> ${serviceName}</li>
+              <li><strong>Reservation Status:</strong> ${reservationStatus}</li>
+              <li><strong>Started Date:</strong> ${startDateString}</li>
+              <li><strong>Started Time:</strong> ${startTimeString}</li>
+              <li><strong>Expected End Date & Time:</strong> ${endDateString}${"  "}${endTimeString}</li>
+              <li><strong>Edited by:</strong> Admin</li>
+
+            </ul>
+          </div>
+          <p style="text-align: center;">
+            <a href="${
+              process.env.CLIENT_URL
+            }/myaccount/reservation-info/${reservationId}" class="btn">View Reservation Details</a>
+          </p>
+        </div>
+        <div class="footer">
+          <p>This email was sent by Shan Automobile and Hybrid Workshop. If you did not make this reservation, please ignore this email.</p>
+        </div>
+      </div>
+      </body>
+      </html>
+      `;
+    await sendEmail(email, "Reservation Edited", emailContent);
     res.status(200).send(updateReservation.rows[0]);
   } catch (error) {
     console.error("Error editing reservation:", error);
@@ -1020,9 +1176,9 @@ export const cancelReservation = async (req, res) => {
               }
               .btn {
                 background-color: rgb(140, 0, 0);
-                color: #ffffff;
+                color: #ffffff !important;
                 padding: 12px 24px;
-                text-decoration: none;
+                text-decoration: none !important;
                 border-radius: 4px;
                 font-weight: bold;
                 display: inline-block;
@@ -1380,6 +1536,38 @@ export const loadPaymentPageData = async (req, res) => {
     res.status(200).send(loadPayments.rows);
   } catch (error) {
     console.error("Error loading payment page data:", error);
+    res.status(500).send("Internal Server Error");
+  }
+};
+
+export const loadPendingServicesCounts = async (req, res) => {
+  try {
+    const pendingServices = await pool.query(
+      `SELECT service_name, COUNT(*) AS pending_count 
+      FROM reservations r 
+      INNER JOIN service_type st ON r.service_type_id=st.service_type_id
+      WHERE reservation_status = (SELECT reservation_status_id FROM reservation_status WHERE status_name = $1)
+      GROUP BY service_name`,
+      ["Pending"]
+    );
+
+    const ongoingServices = await pool.query(
+      `SELECT service_name, COUNT(*) AS ongoing_count 
+      FROM reservations r 
+      INNER JOIN service_type st ON r.service_type_id=st.service_type_id
+      WHERE reservation_status = (SELECT reservation_status_id FROM reservation_status WHERE status_name = $1)
+      GROUP BY service_name`,
+      ["Ongoing"]
+    );
+
+    res
+      .status(200)
+      .send({
+        pendingServices: pendingServices.rows,
+        ongoingServices: ongoingServices.rows,
+      });
+  } catch (error) {
+    console.error("Error loading service counts:", error);
     res.status(500).send("Internal Server Error");
   }
 };

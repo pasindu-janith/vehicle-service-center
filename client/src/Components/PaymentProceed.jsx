@@ -107,9 +107,9 @@ const PaymentProceed = () => {
       const payment = {
         sandbox: true,
         merchant_id: MERCHANT_ID,
-        return_url: `${BASE_CLIENT_URL}/myaccount/payment-invoice/${reservationData.reservation_id}`,
-        cancel_url: `${BASE_CLIENT_URL}/myaccount/payment-failed`,
-        notify_url: `${BASE_URL}/payhere-notify`,
+        return_url: `https://vehicle-service-center-client.vercel.app/myaccount/payment-invoice/${reservationData.reservation_id}`,
+        cancel_url: `https://vehicle-service-center-client.vercel.app/myaccount/payment-failed`,
+        notify_url: `https://vehicle-service-center-backend.onrender.com/api/v1/user/payhere-notify`,
         order_id: reservationData.reservation_id,
         items: reservationData.service_name,
         amount,

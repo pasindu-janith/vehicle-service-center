@@ -78,11 +78,11 @@ const PaymentInvoice = () => {
   if (isLoading) {
     return (
       <div
-        className="container d-flex justify-content-center align-items-center"
-        style={{ minHeight: "100vh", backgroundColor: "#f8f9fa" }}
+        className="container d-flex justify-content-center align-items-center bg-transparent"
+        style={{ minHeight: "100vh"}}
       >
         <div className="text-center">
-          <div className="spinner-border text-primary" role="status">
+          <div className="spinner-border text-primary" role="status" style={{ width: "5rem", height: "5rem" }}>
             <span className="visually-hidden">Loading...</span>
           </div>
           <h4 className="mt-3">Generating Invoice...</h4>

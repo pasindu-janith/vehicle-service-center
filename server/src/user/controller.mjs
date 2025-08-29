@@ -1413,9 +1413,9 @@ export const cancelReservation = async (req, res) => {
               <li><strong>Reservation ID:</strong> ${checkReservation.rows[0].reservation_id}</li>
               <li><strong>Vehicle ID:</strong> ${checkReservation.rows[0].vehicle_id}</li>
               <li><strong>Service Type:</strong> ${checkReservation.rows[0].service_name}</li>
-              <li><strong>Service Date:</strong> ${checkReservation.rows[0].reserve_date}</li>
+              <li><strong>Service Date:</strong> ${checkReservation.rows[0].reserve_date.toISOString().split("T")[0]}</li>
               <li><strong>Reserved Time:</strong> ${checkReservation.rows[0].start_time}</li>
-              <li><strong>Cancelled By:</strong> User(${userID})</li>
+              <li><strong>Cancelled By:</strong> User (${userID})</li>
             </ul>
           </div>
           <p>If you did not make this cancellation, please contact us immediately.</p>
@@ -1798,7 +1798,7 @@ export const updatePaymentDetails = async (req, res) => {
 
     const checkInvoice = await pool.query(
       `SELECT * FROM reservations r INNER JOIN service_records sr ON 
-      r.reservation_id=sr.reservation_id WHERE reservation_id = $1 AND is_paid=$2`,
+      r.reservation_id=sr.reservation_id WHERE r.reservation_id = $1 AND is_paid=$2`,
       [order_id, "0"]
     );
 

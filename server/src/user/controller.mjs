@@ -1785,7 +1785,7 @@ export const updatePaymentDetails = async (req, res) => {
           status_code +
           crypto
             .createHash("md5")
-            .update(MERCHANT_SECRET)
+            .update(process.env.MERCHANT_SECRET)
             .digest("hex")
             .toUpperCase()
       )
@@ -1813,22 +1813,21 @@ export const updatePaymentDetails = async (req, res) => {
     const invoice = await pool.query(
       `INSERT INTO invoices
           (customer_id, reservation_id, service_cost, discount, final_amount, created_datetime)
-         VALUES ($1, $2, $3, $4, $5, $6) RETURNING invoice_id`,
+         VALUES ($1, $2, $3, $4, $5, NOW()) RETURNING invoice_id`,
       [
         custom_1,
         order_id, // reservation_id
         payhere_amount + custom_2 || 0,
         custom_2 || 0,
         payhere_amount,
-        new Date().toLocaleString("en-US", { timeZone: "Asia/Colombo" }),
       ]
     );
     const invoiceID = invoice.rows[0].invoice_id;
     await pool.query(
       `INSERT INTO payment 
-       (invoice_id, payhere_order_id, transact_amount, transaction_datetime, transaction_status) 
+       (invoice_id, payhere_order_id, transact_amount, transaction_datetime, payment_status) 
        VALUES ($1, $2, $3, $4, NOW(), $5)`,
-      [invoiceID, payment_id, method, payhere_amount, new Date(), "SUCCESS"]
+      [invoiceID, payment_id, method, payhere_amount, "SUCCESS"]
     );
 
     await pool.query(

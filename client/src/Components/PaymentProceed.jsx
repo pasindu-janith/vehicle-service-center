@@ -34,7 +34,7 @@ const PaymentProceed = () => {
     window.payhere.onCompleted = function (orderId) {
       console.log("Payment completed. OrderID:" + orderId);
       setIsProcessing(false);
-      navigate(`/myaccount/payment-invoice/${orderId}`);
+      
     };
 
     window.payhere.onDismissed = function () {

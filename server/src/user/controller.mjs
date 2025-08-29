@@ -1791,8 +1791,9 @@ export const updatePaymentDetails = async (req, res) => {
       )
       .digest("hex")
       .toUpperCase();
-
+      console.log("localSig:", localSig);
     if (localSig !== md5sig) {
+      console.log("Invalid signature");
       return res.status(400).send("Invalid signature");
     }
 
@@ -1803,9 +1804,11 @@ export const updatePaymentDetails = async (req, res) => {
     );
 
     if (status_code !== 2) {
+      console.log("Payment not successful");
       return res.status(400).send("Payment not successful");
+      
     }
-
+    console.log("checkInvoice:DOne");
     if (checkInvoice.rows.length === 0) {
       return res.status(400).send("Invalid or already paid reservation");
     }

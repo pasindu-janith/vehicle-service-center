@@ -124,6 +124,8 @@ const PaymentProceed = () => {
           : "",
         city: userData?.address_line3 || "",
         country: "Sri Lanka",
+        custom_1: userData ? userData.user_id : "",
+        custom_2: reservationData ? reservationData.discount : "",
       };
 
       window.payhere.startPayment(payment);

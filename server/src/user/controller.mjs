@@ -1410,11 +1410,23 @@ export const cancelReservation = async (req, res) => {
           <p>Your reservation with the following details has been successfully cancelled:</p>
           <div class="details">
             <ul>
-              <li><strong>Reservation ID:</strong> ${checkReservation.rows[0].reservation_id}</li>
-              <li><strong>Vehicle ID:</strong> ${checkReservation.rows[0].vehicle_id}</li>
-              <li><strong>Service Type:</strong> ${checkReservation.rows[0].service_name}</li>
-              <li><strong>Service Date:</strong> ${checkReservation.rows[0].reserve_date.toISOString().split("T")[0]}</li>
-              <li><strong>Reserved Time:</strong> ${checkReservation.rows[0].start_time}</li>
+              <li><strong>Reservation ID:</strong> ${
+                checkReservation.rows[0].reservation_id
+              }</li>
+              <li><strong>Vehicle ID:</strong> ${
+                checkReservation.rows[0].vehicle_id
+              }</li>
+              <li><strong>Service Type:</strong> ${
+                checkReservation.rows[0].service_name
+              }</li>
+              <li><strong>Service Date:</strong> ${
+                checkReservation.rows[0].reserve_date
+                  .toISOString()
+                  .split("T")[0]
+              }</li>
+              <li><strong>Reserved Time:</strong> ${
+                checkReservation.rows[0].start_time
+              }</li>
               <li><strong>Cancelled By:</strong> User (${userID})</li>
             </ul>
           </div>
@@ -1772,7 +1784,9 @@ export const updatePaymentDetails = async (req, res) => {
       custom_1, // we can use this for customer id
       custom_2, // we can use this for discount
       method,
-      status_message,
+      card_holder_name,
+      card_no,
+      card_expiry,
     } = req.body;
 
     const localSig = crypto
@@ -1791,7 +1805,7 @@ export const updatePaymentDetails = async (req, res) => {
       )
       .digest("hex")
       .toUpperCase();
-      console.log("localSig:", localSig);
+    console.log("localSig:", localSig);
     if (localSig !== md5sig) {
       console.log("Invalid signature");
       return res.status(400).send("Invalid signature");
@@ -1803,12 +1817,11 @@ export const updatePaymentDetails = async (req, res) => {
       [order_id, "0"]
     );
 
-    if (status_code != '2') {
+    if (status_code != "2") {
       console.log("Payment not successful");
-      return res.status(400).send("Payment not successful"); 
+      return res.status(400).send("Payment not successful");
     }
 
-    
     console.log("checkInvoice:Done");
     if (checkInvoice.rows.length === 0) {
       return res.status(400).send("Invalid or already paid reservation");
@@ -1829,12 +1842,30 @@ export const updatePaymentDetails = async (req, res) => {
     const invoiceID = invoice.rows[0].invoice_id;
 
     console.log("invoiceID:", invoiceID);
-    await pool.query(
-      `INSERT INTO payment 
-       (invoice_id, payhere_order_id, transact_amount, transaction_datetime, payment_status) 
+    if (method === "VISA" || method === "MASTER") {
+      await pool.query(
+        `INSERT INTO payments 
+       (invoice_id, payhere_order_id, payment_method, transact_amount, transaction_datetime, card_holder_name, card_no, card_expiry, payment_status) 
+       VALUES ($1, $2, $3, $4, NOW(), $5, $6, $7, $8)`,
+        [
+          invoiceID,
+          payment_id,
+          method,
+          payhere_amount,
+          card_holder_name,
+          card_no,
+          card_expiry,
+          "SUCCESS",
+        ]
+      );
+    } else {
+      await pool.query(
+        `INSERT INTO payments 
+       (invoice_id, payhere_order_id, payment_method, transact_amount, transaction_datetime, payment_status) 
        VALUES ($1, $2, $3, $4, NOW(), $5)`,
-      [invoiceID, payment_id, method, payhere_amount, "SUCCESS"]
-    );
+        [invoiceID, payment_id, method, payhere_amount, "SUCCESS"]
+      );
+    }
 
     console.log("Payment record inserted");
 
@@ -1973,7 +2004,7 @@ export const editReservation = async (req, res) => {
       notes,
     } = req.body;
     console.log(req.body);
-    
+
     const checkUser = await pool.query(
       "SELECT * FROM users WHERE user_id = $1",
       [userID]
@@ -2155,7 +2186,9 @@ export const editReservation = async (req, res) => {
               <li><strong>Vehicle Number:</strong> ${
                 updateReservation.rows[0].vehicle_id
               }</li>
-              <li><strong>Service Type:</strong> ${service_type.service_name}</li>
+              <li><strong>Service Type:</strong> ${
+                service_type.service_name
+              }</li>
               <li><strong>Reservation Status:</strong> Pending</li>
               <li><strong>Started Date:</strong> ${serviceDate.toLocaleString()}</li>
               <li><strong>Started Time:</strong> ${serviceStartTime}</li>

@@ -180,10 +180,7 @@ const PaymentInvoice = () => {
                 {reservationData.vehicle_brand +
                   " " +
                   reservationData.model +
-                  " (" +
-                  reservationData.make_year +
-                  ")" +
-                  " - " +
+                  " " +
                   reservationData.vehicle_type}
               </div>
             </div>

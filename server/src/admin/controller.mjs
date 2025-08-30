@@ -3,7 +3,10 @@ import pool from "../../db.mjs";
 import { decodeToken, tokenGen, tokenGenLogin } from "../utils/jwt.mjs";
 import { verifyToken } from "../utils/jwt.mjs";
 import { sendEmail } from "../utils/email.mjs";
+import { sendSMS } from "../utils/sms.mjs";
 import dotenv from "dotenv";
+
+dotenv.config();
 
 // Existing controllers (unchanged)
 export const adminLogin = async (req, res) => {
@@ -401,7 +404,7 @@ export const loadReservationWithFilter = async (req, res) => {
       }
       ${
         vehicleNumber && vehicleNumber !== ""
-          ? ` AND vehicle_id = '${vehicleNumber}'`
+          ? ` AND reservations.vehicle_id = '${vehicleNumber}'`
           : ""
       }
       ${
@@ -720,7 +723,8 @@ export const completeReservation = async (req, res) => {
     }
 
     const userEmail = await pool.query(
-      "SELECT email FROM users WHERE user_id = (SELECT user_id FROM vehicles WHERE license_plate = $1)",
+      `SELECT email,mobile_no FROM users u INNER JOIN mobile_number m ON 
+      u.mobile_id=m.mobile_id WHERE user_id = (SELECT user_id FROM vehicles WHERE license_plate = $1)`,
       [vehicleNumber]
     );
 
@@ -864,6 +868,10 @@ export const completeReservation = async (req, res) => {
         </html>
     `;
       await sendEmail(email, "Reservation Completed", emailContent);
+      sendSMS(
+        userEmail.rows[0].mobile_no,
+        `Your reservation with ID ${reservationId} and vehicle ${vehicleNumber} has been completed. Please check your email for details.`
+      );
     }
 
     res.status(200).send({
@@ -1560,12 +1568,10 @@ export const loadPendingServicesCounts = async (req, res) => {
       ["Ongoing"]
     );
 
-    res
-      .status(200)
-      .send({
-        pendingServices: pendingServices.rows,
-        ongoingServices: ongoingServices.rows,
-      });
+    res.status(200).send({
+      pendingServices: pendingServices.rows,
+      ongoingServices: ongoingServices.rows,
+    });
   } catch (error) {
     console.error("Error loading service counts:", error);
     res.status(500).send("Internal Server Error");
